@@ -199,13 +199,13 @@ int multiColStudy::process_event(PHCompositeNode *topNode)
 	    }
         }
     }
-  zvtx = _rzvtx[0];  
-  if(std::isnan(zvtx))
+  zvtx = _rzvtx[0];
+  _njet = 0;
+  _hitsgrone = 0;
+  if(!std::isnan(zvtx))
     {
-      if(_debug > 1) cout << "no good zvtx!" << endl;
-      goto badz;
+      
       //return Fun4AllReturnCodes::ABORTEVENT;
-    }
 
 
   TowerInfoContainer *towers[3];
@@ -239,7 +239,6 @@ int multiColStudy::process_event(PHCompositeNode *topNode)
     {
       cout << "No MBD info!" << endl;
     }
-  _hitsgrone = 0;
   int nchan = 1536;
   for(int h=0; h<_ncalotype; ++h)
     {
@@ -282,7 +281,7 @@ int multiColStudy::process_event(PHCompositeNode *topNode)
   float maxJetPhi = 0;
   float subJetE = 0;
   float subJetPhi = 0;
-  _njet = 0;
+
 
   if(jets)
     {
@@ -430,8 +429,12 @@ int multiColStudy::process_event(PHCompositeNode *topNode)
   //if(maxJetE > 4)
   //{
   if(_debug > 0) cout << "filling jet tree" << endl;
-  
- badz: _tree->Fill();
+    }
+  else
+    {
+      if(_debug > 1) cout << "no good zvtx!" << endl;
+    }
+ _tree->Fill();
   //}
   
   if(_debug > 3) cout << "end event" << endl;
