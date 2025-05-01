@@ -203,7 +203,8 @@ int multiColStudy::process_event(PHCompositeNode *topNode)
   if(std::isnan(zvtx))
     {
       if(_debug > 1) cout << "no good zvtx!" << endl;
-      return Fun4AllReturnCodes::ABORTEVENT;
+      goto badz;
+      //return Fun4AllReturnCodes::ABORTEVENT;
     }
 
 
@@ -303,7 +304,7 @@ int multiColStudy::process_event(PHCompositeNode *topNode)
 	      _frcem[_njet] = 0;
 	      _frcoh[_njet] = 0;
 	      _jet_e[_njet] = testJetE;
-	      _jet_et[_njet] = testJetE/_jet_eta[_njet];
+	      _jet_et[_njet] = testJetE/cosh(_jet_eta[_njet]);
 	      _jet_phi[_njet] = testJetPhi;
 	      int ncomp = 0;
 	      if(_jet_et[_njet] > subJetE && _jet_et[_njet] < maxJetE)
@@ -314,11 +315,8 @@ int multiColStudy::process_event(PHCompositeNode *topNode)
 	      if(_debug > 2) cout << "found a good jet!" << endl;
 	      if(_jet_et[_njet] > maxJetE)
 		{
-		  if(maxJetE > subJetE)
-		    {
-		      subJetE = maxJetE;
-		      subJetPhi = maxJetPhi;
-		    }
+		  subJetE = maxJetE;
+		  subJetPhi = maxJetPhi;
 		  maxJetE = _jet_et[_njet];
 		  maxJetPhi = _jet_phi[_njet];
 		}
@@ -382,13 +380,13 @@ int multiColStudy::process_event(PHCompositeNode *topNode)
       */
       _dphilead = abs(maxJetPhi-subJetPhi);
       if(_dphilead > M_PI) _dphilead = 2*M_PI - _dphilead;
-      if(subJetE > 4) _isdijet = 1;
+      if(subJetE > 7) _isdijet = 1;
       else _isdijet = 0;
     }
   else
     {
       if(_debug > 0) cout << "no jets" << endl;
-      return Fun4AllReturnCodes::ABORTEVENT;
+      //return Fun4AllReturnCodes::ABORTEVENT;
     }
 
   _tnjet = 0;
@@ -406,7 +404,7 @@ int multiColStudy::process_event(PHCompositeNode *topNode)
 	  _tjet_eta[_tnjet] = jet->get_eta();
 	  if(check_bad_jet_eta(_tjet_eta[_tnjet],_rzvtx[0],0.4)) continue;
 	  _tjet_e[_tnjet] = testJetE;
-	  _tjet_et[_tnjet] = testJetE/_tjet_eta[_tnjet];
+	  _tjet_et[_tnjet] = testJetE/cosh(_tjet_eta[_tnjet]);
 	  _tjet_phi[_tnjet] = testJetPhi;
 	  if(_tjet_et[_tnjet] > subJetE && _tjet_et[_tnjet] < maxJetE)
 	    {
@@ -432,7 +430,8 @@ int multiColStudy::process_event(PHCompositeNode *topNode)
   //if(maxJetE > 4)
   //{
   if(_debug > 0) cout << "filling jet tree" << endl;
-  _tree->Fill();
+  
+ badz: _tree->Fill();
   //}
   
   if(_debug > 3) cout << "end event" << endl;

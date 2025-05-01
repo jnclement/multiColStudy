@@ -16,7 +16,7 @@ int format_th1d(TH1D* hist, string xtitle, string ytitle)
   return 0;
 }
 
-int draw_th1d(TH1D* hist, TCanvas* can)
+int draw_th1d(TH1D* hist, TCanvas* can, int dijetcut)
 {
   can->cd();
   can->SetRightMargin(0.2);
@@ -27,18 +27,18 @@ int draw_th1d(TH1D* hist, TCanvas* can)
   hist->Draw("PE");
   sqrt_s_text(0.6,0.93);
   sphenixtext(0.6,0.97);
-  can->SaveAs(("/sphenix/user/jocl/projects/multiColStudy/output/plots/"+string(hist->GetName())+".pdf").c_str());
+  can->SaveAs(("/sphenix/user/jocl/projects/multiColStudy/output/plots/"+string(hist->GetName())+"_"+(dijetcut?"dc":"nc")+".png").c_str());
 
   gPad->SetLogy();
   hist->Draw("PE");
   sqrt_s_text(0.6,0.93);
   sphenixtext(0.6,0.97);
-  can->SaveAs(("/sphenix/user/jocl/projects/multiColStudy/output/plots/"+string(hist->GetName())+"_log.pdf").c_str());
+  can->SaveAs(("/sphenix/user/jocl/projects/multiColStudy/output/plots/"+string(hist->GetName())+"_"+(dijetcut?"dc":"nc")+"_log.png").c_str());
   gPad->SetLogy(0);
   return 0;
 }
 
-int draw_ratio_th1d(TH1D** hists, string histbasename, int* rn, TCanvas* can)
+int draw_ratio_th1d(TH1D** hists, string histbasename, int* rn, TCanvas* can, int dijetcut)
 {
   int nxbin = hists[0]->GetNbinsX();
   double xmax = hists[0]->GetXaxis()->GetXmax();
@@ -49,22 +49,23 @@ int draw_ratio_th1d(TH1D** hists, string histbasename, int* rn, TCanvas* can)
 
   format_th1d(ratio, hists[0]->GetXaxis()->GetTitle(), ("Ratio of "+to_string(rn[0])+" to "+to_string(rn[1])).c_str());
   
-  draw_th1d(ratio, can);
+  draw_th1d(ratio, can, dijetcut);
     
   return 0;
 }
 
-int get_and_draw_th1d(string histbasename, int* rn, TFile** histfile, string xtitle, string ytitle, TCanvas* can)
+int get_and_draw_th1d(string histbasename, int* rn, TFile** histfile, string xtitle, string ytitle, TCanvas* can, int dijetcut)
 {
   TH1D* hists[2];
   for(int i=0; i<2; ++i)
     {
       hists[i] = (TH1D*)histfile[i]->Get((histbasename+"_"+to_string(rn[i])).c_str());
+      if(std::string(hists[i]->GetName()).find("zhist") != std::string::npos) hists[i]->Rebin(10);
       format_th1d(hists[i], xtitle, ytitle);
-      draw_th1d(hists[i], can);
+      draw_th1d(hists[i], can, dijetcut);
     }
 
-  draw_ratio_th1d(hists, histbasename, rn, can);
+  draw_ratio_th1d(hists, histbasename, rn, can, dijetcut);
 
   return 0;
 }
@@ -83,7 +84,7 @@ int format_th2d(TH2D* hist, string xtitle, string ytitle, string ztitle)
   return 0;
 }
 
-int draw_th2d(TH2D* hist, TCanvas* can)
+int draw_th2d(TH2D* hist, TCanvas* can, int dijetcut)
 {
   can->cd();
   can->SetRightMargin(0.2);
@@ -94,18 +95,18 @@ int draw_th2d(TH2D* hist, TCanvas* can)
   hist->Draw("COLZ");
   sqrt_s_text(0.6,0.93);
   sphenixtext(0.6,0.97);
-  can->SaveAs(("/sphenix/user/jocl/projects/multiColStudy/output/plots/"+string(hist->GetName())+".pdf").c_str());
+  can->SaveAs(("/sphenix/user/jocl/projects/multiColStudy/output/plots/"+string(hist->GetName())+"_"+(dijetcut?"dc":"nc")+".png").c_str());
 
   gPad->SetLogz();
   hist->Draw("COLZ");
   sqrt_s_text(0.6,0.93);
   sphenixtext(0.6,0.97);
-  can->SaveAs(("/sphenix/user/jocl/projects/multiColStudy/output/plots/"+string(hist->GetName())+"_log.pdf").c_str());
+  can->SaveAs(("/sphenix/user/jocl/projects/multiColStudy/output/plots/"+string(hist->GetName())+"_"+(dijetcut?"dc":"nc")+"_log.png").c_str());
   gPad->SetLogz(0);
   return 0;
 }
 
-int draw_ratio_th2d(TH2D** hists, string histbasename, int* rn, TCanvas* can)
+int draw_ratio_th2d(TH2D** hists, string histbasename, int* rn, TCanvas* can, int dijetcut)
 {
   int nxbin = hists[0]->GetNbinsX();
   int nybin = hists[0]->GetNbinsY();
@@ -118,12 +119,12 @@ int draw_ratio_th2d(TH2D** hists, string histbasename, int* rn, TCanvas* can)
   ratio->Divide(hists[0],hists[1]);
   format_th2d(ratio, hists[0]->GetXaxis()->GetTitle(), hists[0]->GetYaxis()->GetTitle(), ("Ratio of "+to_string(rn[0])+" to "+to_string(rn[1])).c_str());
   
-  draw_th2d(ratio, can);
+  draw_th2d(ratio, can, dijetcut);
     
   return 0;
 }
 
-int get_and_draw_th2d(string histbasename, int* rn, TFile** histfile, string xtitle, string ytitle, string ztitle, TCanvas* can)
+int get_and_draw_th2d(string histbasename, int* rn, TFile** histfile, string xtitle, string ytitle, string ztitle, TCanvas* can, int dijetcut)
 {
   TH2D* hists[2];
   TH1D* projx[2];
@@ -132,25 +133,25 @@ int get_and_draw_th2d(string histbasename, int* rn, TFile** histfile, string xti
     {
       hists[i] = (TH2D*)histfile[i]->Get((histbasename+"_"+to_string(rn[i])).c_str());
       format_th2d(hists[i], xtitle, ytitle, ztitle);
-      draw_th2d(hists[i], can);
+      draw_th2d(hists[i], can,dijetcut);
       projx[i] = hists[i]->ProjectionX();
       projy[i] = hists[i]->ProjectionY();
 
       format_th1d(projx[i],hists[i]->GetXaxis()->GetTitle(),hists[i]->GetZaxis()->GetTitle());
       format_th1d(projy[i],hists[i]->GetYaxis()->GetTitle(),hists[i]->GetZaxis()->GetTitle());
 
-      draw_th1d(projx[i],can);
-      draw_th1d(projy[i],can);
+      draw_th1d(projx[i],can,dijetcut);
+      draw_th1d(projy[i],can,dijetcut);
     }
 
-  draw_ratio_th1d(projx, histbasename+"_projx", rn, can);
-  draw_ratio_th1d(projy, histbasename+"_projy", rn, can);
-  draw_ratio_th2d(hists, histbasename, rn, can);
+  draw_ratio_th1d(projx, histbasename+"_projx", rn, can, dijetcut);
+  draw_ratio_th1d(projy, histbasename+"_projy", rn, can, dijetcut);
+  draw_ratio_th2d(hists, histbasename, rn, can, dijetcut);
 
   return 0;
 }
 
-int plot(string histfilename0, string histfilename1, int rn0, int rn1)
+int plot(string histfilename0, string histfilename1, int rn0, int rn1, int dijetcut)
 {
   gStyle->SetOptStat(0);
   gStyle->SetOptTitle(0);
@@ -171,18 +172,19 @@ int plot(string histfilename0, string histfilename1, int rn0, int rn1)
 
   string ytitles[nhist] = {"Jet #phi","Jet #phi","Tower #phi","Tower #phi","Tower #phi","Tower #phi","Jet #eta","Tower #eta","Tower Detector #eta","Jet #phi","Tower #phi","Jet #eta","Tower #eta","Tower Detector #eta","Jet #phi","Tower #phi","E_{jet}^{EM}/E_{jet}","#Delta#phi","E_{jet}^{EM}/E_{jet}","E_{jet}^{EM}/E_{jet}","E_{jet}^{EM}/E_{jet}","E_{jet}^{EM}/E_{jet}"};
 
-  for(int i=0; i<nhist; ++i)
+  for(int i=nhist; i<nhist; ++i)
     {
-      get_and_draw_th2d(histnames[i],rn,histfile,xtitles[i],ytitles[i],"Event Normalized Counts",can);
+      get_and_draw_th2d(histnames[i],rn,histfile,xtitles[i],ytitles[i],"Event Normalized Counts",can,dijetcut);
     }
 
-  const int nth1d = 7;
-  string th1dnames[nth1d] = {"zhist","mbdn","mbds","mbdt","calo_hitsgrone_0","calo_hitsgrone_1","calo_hitsgrone_2"};
-  string th1dxtitl[nth1d] = {"z_{vtx} [cm]","MBD Charge [Arb.]","MBD Charge [Arb.]","MBD Charge [Arb.]","Number of Towers with E > 1 GeV","Number of Towers with E > 1 GeV","Number of Towers with E > 1 GeV"};
+  const int nth1d = 8;
+  string th1dnames[nth1d] = {"zhist","mbdn","mbds","mbdt","calo_hitsgrone_0","calo_hitsgrone_1","calo_hitsgrone_2","zhist_gr15"};
+  string th1dxtitl[nth1d] = {"z_{vtx} [cm]","MBD Charge [Arb.]","MBD Charge [Arb.]","MBD Charge [Arb.]","Number of Towers with E > 1 GeV","Number of Towers with E > 1 GeV","Number of Towers with E > 1 GeV","z_{vtx} [cm]"};
 
   for(int i=0; i<nth1d; ++i)
     {
-      get_and_draw_th1d(th1dnames[i],rn,histfile,th1dxtitl[i],"Event Normalized Counts",can);
+      get_and_draw_th1d(th1dnames[i],rn,histfile,th1dxtitl[i],"Event Normalized Counts",can,dijetcut);
+      if(i==0) i=nth1d-2;
     }
   
   return 0;

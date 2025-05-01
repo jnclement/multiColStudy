@@ -83,6 +83,7 @@ int make_hists(string tag, int rn, int nfile, int dodijetcut = 1, int issim = 0)
   TH2D* jet_ET_phi = new TH2D(("jet_ET_phi_"+to_string(rn)).c_str(),"",100,0,100,64,-M_PI,M_PI);
   TH2D* tow_ET_phi = new TH2D(("tow_ET_phi_"+to_string(rn)).c_str(),"",100,0,100,64,-M_PI,M_PI);
   TH1D* zhist = new TH1D(("zhist_"+to_string(rn)).c_str(),"",400,-200,200);
+  TH1D* zhist_gr15 = new TH1D(("zhist_gr15_"+to_string(rn)).c_str(),"",400,-200,200);
   TH1D* mbdn = new TH1D(("mbdn_"+to_string(rn)).c_str(),"",100,0,10);
   TH1D* mbds = new TH1D(("mbds_"+to_string(rn)).c_str(),"",100,0,10);
   TH1D* mbdt = new TH1D(("mbdt_"+to_string(rn)).c_str(),"",100,0,10);
@@ -157,8 +158,8 @@ int make_hists(string tag, int rn, int nfile, int dodijetcut = 1, int issim = 0)
 	      trigs[1][j] += (trigvec >> trigs[0][j]) & 1;
 	    }
 	  if(!((trigvec >> 18) & 1)) continue;
-	  if(dodijetcut && (dphilead < 3*M_PI/4 || isdijet == 0)) continue;
 	  ++totalentries;
+	  if(dodijetcut && (dphilead < 3*M_PI/4 || isdijet == 0)) continue;
 	  mbdnq = 0;
 	  mbdsq = 0;
 	  mbdtq = 0;
@@ -183,6 +184,7 @@ int make_hists(string tag, int rn, int nfile, int dodijetcut = 1, int issim = 0)
 		}
 	    }
 	  if(isdijet) jet_ET_dphi->Fill(ETmax,dphilead);
+	  if(ETmax > 15 && !isnan(zvtx[0])) zhist_gr15->Fill(zvtx[0]);
 	  for(int j=0; j<mbdside; ++j)
 	    {
 	      for(int k=0; k<mbdchan; ++k)
@@ -261,6 +263,7 @@ int make_hists(string tag, int rn, int nfile, int dodijetcut = 1, int issim = 0)
   jet_phi_frcem->Scale(1./totalentries);
   jet_eta_frcem_gr15->Scale(1./totalentries);
   jet_phi_frcem_gr15->Scale(1./totalentries);
+  zhist_gr15->Scale(1./totalentries);
   
   for(int i=0; i<3; ++i) calo_hitsgrone[i]->Write();
   jet_eta_phi->Write();
@@ -289,7 +292,7 @@ int make_hists(string tag, int rn, int nfile, int dodijetcut = 1, int issim = 0)
   jet_phi_frcem->Write();
   jet_eta_frcem_gr15->Write();
   jet_phi_frcem_gr15->Write();
-
+  zhist_gr15->Write();
 
   ofstream outtrigs("trigcounts/outtrigs"+to_string(rn)+".txt");
   for(int i=0; i<ntrigtypes; ++i)
