@@ -4,10 +4,10 @@ int format_th1d(TH1D* hist, string xtitle, string ytitle)
 {
   hist->GetXaxis()->SetTitle(xtitle.c_str());
   hist->GetYaxis()->SetTitle(ytitle.c_str());
-  hist->GetXaxis()->SetLabelSize(0.05);
-  hist->GetXaxis()->SetTitleSize(0.05);
-  hist->GetYaxis()->SetLabelSize(0.05);
-  hist->GetYaxis()->SetTitleSize(0.05);
+  hist->GetXaxis()->SetLabelSize(0.03);
+  hist->GetXaxis()->SetTitleSize(0.03);
+  hist->GetYaxis()->SetLabelSize(0.03);
+  hist->GetYaxis()->SetTitleSize(0.03);
 
   hist->SetMarkerStyle(20);
   hist->SetMarkerSize(1.5);
@@ -19,30 +19,30 @@ int format_th1d(TH1D* hist, string xtitle, string ytitle)
 int draw_th1d(TH1D* hist, TCanvas* can)
 {
   can->cd();
-  can->SetRightMargin(0.15);
+  can->SetRightMargin(0.2);
   can->SetBottomMargin(0.15);
   can->SetLeftMargin(0.15);
   can->SetTopMargin(0.15);
 
   hist->Draw("PE");
-  sqrt_s_text(0.9,0.93);
-  sphenixtext(0.9,0.97);
+  sqrt_s_text(0.6,0.93);
+  sphenixtext(0.6,0.97);
   can->SaveAs(("/sphenix/user/jocl/projects/multiColStudy/output/plots/"+string(hist->GetName())+".pdf").c_str());
 
-  gPad->SetLogz();
+  gPad->SetLogy();
   hist->Draw("PE");
-  sqrt_s_text(0.9,0.93);
-  sphenixtext(0.9,0.97);
+  sqrt_s_text(0.6,0.93);
+  sphenixtext(0.6,0.97);
   can->SaveAs(("/sphenix/user/jocl/projects/multiColStudy/output/plots/"+string(hist->GetName())+"_log.pdf").c_str());
-  
+  gPad->SetLogy(0);
   return 0;
 }
 
 int draw_ratio_th1d(TH1D** hists, string histbasename, int* rn, TCanvas* can)
 {
   int nxbin = hists[0]->GetNbinsX();
-  float xmax = hists[0]->GetXaxis()->GetXmax();
-  float xmin = hists[0]->GetXaxis()->GetXmin();
+  double xmax = hists[0]->GetXaxis()->GetXmax();
+  double xmin = hists[0]->GetXaxis()->GetXmin();
   TH1D* ratio = new TH1D((histbasename+"_"+to_string(rn[0])+"_to_"+to_string(rn[1])).c_str(),"",nxbin,xmin,xmax);
 
   ratio->Divide(hists[0],hists[1]);
@@ -73,12 +73,12 @@ int format_th2d(TH2D* hist, string xtitle, string ytitle, string ztitle)
   hist->GetXaxis()->SetTitle(xtitle.c_str());
   hist->GetYaxis()->SetTitle(ytitle.c_str());
   hist->GetZaxis()->SetTitle(ztitle.c_str());
-  hist->GetXaxis()->SetLabelSize(0.05);
-  hist->GetXaxis()->SetTitleSize(0.05);
-  hist->GetYaxis()->SetLabelSize(0.05);
-  hist->GetYaxis()->SetTitleSize(0.05);
-  hist->GetZaxis()->SetLabelSize(0.05);
-  hist->GetZaxis()->SetTitleSize(0.05);
+  hist->GetXaxis()->SetLabelSize(0.03);
+  hist->GetXaxis()->SetTitleSize(0.03);
+  hist->GetYaxis()->SetLabelSize(0.03);
+  hist->GetYaxis()->SetTitleSize(0.03);
+  hist->GetZaxis()->SetLabelSize(0.03);
+  hist->GetZaxis()->SetTitleSize(0.03);
 
   return 0;
 }
@@ -86,22 +86,22 @@ int format_th2d(TH2D* hist, string xtitle, string ytitle, string ztitle)
 int draw_th2d(TH2D* hist, TCanvas* can)
 {
   can->cd();
-  can->SetRightMargin(0.15);
+  can->SetRightMargin(0.2);
   can->SetBottomMargin(0.15);
   can->SetLeftMargin(0.15);
   can->SetTopMargin(0.15);
 
   hist->Draw("COLZ");
-  sqrt_s_text(0.9,0.93);
-  sphenixtext(0.9,0.97);
+  sqrt_s_text(0.6,0.93);
+  sphenixtext(0.6,0.97);
   can->SaveAs(("/sphenix/user/jocl/projects/multiColStudy/output/plots/"+string(hist->GetName())+".pdf").c_str());
 
   gPad->SetLogz();
   hist->Draw("COLZ");
-  sqrt_s_text(0.9,0.93);
-  sphenixtext(0.9,0.97);
+  sqrt_s_text(0.6,0.93);
+  sphenixtext(0.6,0.97);
   can->SaveAs(("/sphenix/user/jocl/projects/multiColStudy/output/plots/"+string(hist->GetName())+"_log.pdf").c_str());
-  
+  gPad->SetLogz(0);
   return 0;
 }
 
@@ -109,14 +109,13 @@ int draw_ratio_th2d(TH2D** hists, string histbasename, int* rn, TCanvas* can)
 {
   int nxbin = hists[0]->GetNbinsX();
   int nybin = hists[0]->GetNbinsY();
-  float xmax = hists[0]->GetXaxis()->GetXmax();
-  float ymax = hists[0]->GetYaxis()->GetXmax();
-  float xmin = hists[0]->GetXaxis()->GetXmin();
-  float ymin = hists[0]->GetYaxis()->GetXmin();
+  double xmax = hists[0]->GetXaxis()->GetXmax();
+  double ymax = hists[0]->GetYaxis()->GetXmax();
+  double xmin = hists[0]->GetXaxis()->GetXmin();
+  double ymin = hists[0]->GetYaxis()->GetXmin();
   TH2D* ratio = new TH2D((histbasename+"_"+to_string(rn[0])+"_to_"+to_string(rn[1])).c_str(),"",nxbin,xmin,xmax,nybin,ymin,ymax);
 
   ratio->Divide(hists[0],hists[1]);
-
   format_th2d(ratio, hists[0]->GetXaxis()->GetTitle(), hists[0]->GetYaxis()->GetTitle(), ("Ratio of "+to_string(rn[0])+" to "+to_string(rn[1])).c_str());
   
   draw_th2d(ratio, can);
@@ -162,15 +161,15 @@ int plot(string histfilename0, string histfilename1, int rn0, int rn1)
   histfile[1] = TFile::Open(histfilename1.c_str());
   int rn[2] = {rn0, rn1};
 
-  const int nhist = 18;
+  const int nhist = 22;
 
   TCanvas* can = new TCanvas("","",1000,1000);
   
-  string histnames[nhist] = {"jet_eta_phi","jet_eta_phi_gr15","tow_eta_phi","tow_eta_phi_gr5","tow_deteta_phi","tow_deteta_phi_gr5","jet_E_eta","tow_E_eta","tow_E_deteta","jet_E_phi","tow_E_phi","jet_ET_eta","tow_ET_eta","tow_ET_deteta","jet_ET_phi","tow_ET_phi","jet_E_frcem","jet_ET_dphi"};
+  string histnames[nhist] = {"jet_eta_phi","jet_eta_phi_gr15","tow_eta_phi","tow_eta_phi_gr5","tow_deteta_phi","tow_deteta_phi_gr5","jet_E_eta","tow_E_eta","tow_E_deteta","jet_E_phi","tow_E_phi","jet_ET_eta","tow_ET_eta","tow_ET_deteta","jet_ET_phi","tow_ET_phi","jet_E_frcem","jet_ET_dphi","jet_eta_frcem","jet_eta_frcem_gr15","jet_phi_frcem","jet_phi_frcem_gr15"};
 
-  string xtitles[nhist] = {"Jet #eta","Jet #eta","Tower #eta","Tower #eta","Tower Detector #eta","Tower Detector #eta","jet E [GeV]","Tower E [GeV]","Tower E [GeV]","Jet E [GeV]","Tower E [GeV]","Jet E_{T} [GeV]","Tower E_{T} [GeV]","Tower E_{T} [GeV]","Jet E_{T} [GeV]","Tower E_{T} [GeV]","Jet E [GeV]","Jet E_{T} [GeV]"};
+  string xtitles[nhist] = {"Jet #eta","Jet #eta","Tower #eta","Tower #eta","Tower Detector #eta","Tower Detector #eta","jet E [GeV]","Tower E [GeV]","Tower E [GeV]","Jet E [GeV]","Tower E [GeV]","Jet E_{T} [GeV]","Tower E_{T} [GeV]","Tower E_{T} [GeV]","Jet E_{T} [GeV]","Tower E_{T} [GeV]","Jet E [GeV]","Jet E_{T} [GeV]","Jet #eta","Jet #eta","Jet #phi","Jet #phi"};
 
-  string ytitles[nhist] = {"Jet #phi","Jet #phi","Tower #phi","Tower #phi","Tower #phi","Tower #phi","Jet #eta","Tower #eta","Tower Detector #eta","Jet #phi","Tower #phi","Jet #eta","Tower #eta","Tower Detector #eta","Jet #phi","Tower #phi","E_{jet}^{EM}/E_{jet}","#Delta#phi"};
+  string ytitles[nhist] = {"Jet #phi","Jet #phi","Tower #phi","Tower #phi","Tower #phi","Tower #phi","Jet #eta","Tower #eta","Tower Detector #eta","Jet #phi","Tower #phi","Jet #eta","Tower #eta","Tower Detector #eta","Jet #phi","Tower #phi","E_{jet}^{EM}/E_{jet}","#Delta#phi","E_{jet}^{EM}/E_{jet}","E_{jet}^{EM}/E_{jet}","E_{jet}^{EM}/E_{jet}","E_{jet}^{EM}/E_{jet}"};
 
   for(int i=0; i<nhist; ++i)
     {

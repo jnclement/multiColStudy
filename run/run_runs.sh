@@ -5,7 +5,7 @@ if [ $# -lt 2 ]; then
     exit 1
 fi
 
-nmax=7000
+nmax=10000
 evt=$2
 filecounter=0
 if [ $evt -gt 100000 ]; then
@@ -15,8 +15,8 @@ echo $evt
 for rn in `ls  lists/dst_calofitting_run2pp*.list | awk -F'.' '{print $1}' | awk -F'/' '{print $2}' | awk -F'-' '{print $2}'`; do
     rn=$(expr $rn + 0)
     nfile=`wc -l lists/dst_calofitting_run2pp-000${rn}.list | awk '{print $1}'`
-    njob=$(( $nfile + 9 ))
-    njob=$(( $njob / 10 ))
+    njob=$(( $nfile + 1 ))
+    njob=$(( $njob / 2 ))
     filecounter=$(( $filecounter + $njob ))
     if [ $filecounter -gt $nmax ]; then
 	break

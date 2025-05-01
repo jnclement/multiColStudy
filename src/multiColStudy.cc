@@ -215,8 +215,8 @@ int multiColStudy::process_event(PHCompositeNode *topNode)
   if(!jets) jets = findNode::getClass<JetContainerv1>(topNode, "AntiKt_unsubtracted_r04");
   JetContainer* truthjets = findNode::getClass<JetContainerv1>(topNode,"AntiKt_Truth_r04");
   MbdPmtContainer * mbdtow = findNode::getClass<MbdPmtContainer>(topNode,"MbdPmtContainer");
-  if(!mbdtow) MbdPmtContainer * mbdtow = findNode::getClass<MbdPmtContainerV1>(topNode,"MbdPmtContainer");
-  if(!mbdtow) MbdPmtContainer * mbdtow = findNode::getClass<MbdPmtSimContainerV1>(topNode,"MbdPmtContainer");
+  if(!mbdtow) mbdtow = findNode::getClass<MbdPmtContainerV1>(topNode,"MbdPmtContainer");
+  if(!mbdtow) mbdtow = findNode::getClass<MbdPmtSimContainerV1>(topNode,"MbdPmtContainer");
   if(_debug > 2) cout << towers[0] << " " << towers[1] << " " << towers[2] << endl;
   
   RawTowerGeomContainer *geom[3];
@@ -320,6 +320,7 @@ int multiColStudy::process_event(PHCompositeNode *topNode)
 		      subJetPhi = maxJetPhi;
 		    }
 		  maxJetE = _jet_et[_njet];
+		  maxJetPhi = _jet_phi[_njet];
 		}
 	
 	      if(_debug > 3) cout << "getting comp vec" << endl;

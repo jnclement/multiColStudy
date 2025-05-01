@@ -66,20 +66,20 @@ bool check_bad_jet_eta(float jet_eta, float zertex, float jet_radius) {
 int make_hists(string tag, int rn, int nfile, int dodijetcut = 1, int issim = 0)
 {
   //define histograms
-  TH2D* jet_eta_phi = new TH2D(("jet_eta_phi_"+to_string(rn)).c_str(),"",44,-2.2,2.2,64,-M_PI,M_PI);
-  TH2D* jet_eta_phi_gr15 = new TH2D(("jet_eta_phi_gr15_"+to_string(rn)).c_str(),"",44,-2.2,2.2,64,-M_PI,M_PI);
-  TH2D* tow_eta_phi = new TH2D(("tow_eta_phi_"+to_string(rn)).c_str(),"",44,-2.2,2.2,64,-M_PI,M_PI);
-  TH2D* tow_eta_phi_gr5 = new TH2D(("tow_eta_phi_gr5_"+to_string(rn)).c_str(),"",44,-2.2,2.2,64,-M_PI,M_PI);
-  TH2D* tow_deteta_phi = new TH2D(("tow_deteta_phi_"+to_string(rn)).c_str(),"",22,-1.1,1.1,64,-M_PI,M_PI);
-  TH2D* tow_deteta_phi_gr5 = new TH2D(("tow_deteta_phi_gr5_"+to_string(rn)).c_str(),"",22,-1.1,1.1,64,-M_PI,M_PI);
-  TH2D* jet_E_eta = new TH2D(("jet_E_eta_"+to_string(rn)).c_str(),"",100,0,100,44,-2.2,2.2);
-  TH2D* tow_E_eta = new TH2D(("tow_E_eta_"+to_string(rn)).c_str(),"",100,0,100,44,-2.2,2.2);
-  TH2D* tow_E_deteta = new TH2D(("tow_E_deteta_"+to_string(rn)).c_str(),"",100,0,100,22,-1.1,1.1);
+  TH2D* jet_eta_phi = new TH2D(("jet_eta_phi_"+to_string(rn)).c_str(),"",30,-1.5,1.5,64,-M_PI,M_PI);
+  TH2D* jet_eta_phi_gr15 = new TH2D(("jet_eta_phi_gr15_"+to_string(rn)).c_str(),"",30,-1.5,1.5,64,-M_PI,M_PI);
+  TH2D* tow_eta_phi = new TH2D(("tow_eta_phi_"+to_string(rn)).c_str(),"",30,-1.5,1.5,64,-M_PI,M_PI);
+  TH2D* tow_eta_phi_gr5 = new TH2D(("tow_eta_phi_gr5_"+to_string(rn)).c_str(),"",30,-1.5,1.5,64,-M_PI,M_PI);
+  TH2D* tow_deteta_phi = new TH2D(("tow_deteta_phi_"+to_string(rn)).c_str(),"",24,-1.1,1.1,64,-M_PI,M_PI);
+  TH2D* tow_deteta_phi_gr5 = new TH2D(("tow_deteta_phi_gr5_"+to_string(rn)).c_str(),"",24,-1.1,1.1,64,-M_PI,M_PI);
+  TH2D* jet_E_eta = new TH2D(("jet_E_eta_"+to_string(rn)).c_str(),"",100,0,100,30,-1.5,1.5);
+  TH2D* tow_E_eta = new TH2D(("tow_E_eta_"+to_string(rn)).c_str(),"",100,0,100,30,-1.5,1.5);
+  TH2D* tow_E_deteta = new TH2D(("tow_E_deteta_"+to_string(rn)).c_str(),"",100,0,100,24,-1.1,1.1);
   TH2D* jet_E_phi = new TH2D(("jet_E_phi_"+to_string(rn)).c_str(),"",100,0,100,64,-M_PI,M_PI);
   TH2D* tow_E_phi = new TH2D(("tow_E_phi_"+to_string(rn)).c_str(),"",100,0,100,64,-M_PI,M_PI);
-  TH2D* jet_ET_eta = new TH2D(("jet_ET_eta_"+to_string(rn)).c_str(),"",100,0,100,44,-2.2,2.2);
-  TH2D* tow_ET_eta = new TH2D(("tow_ET_eta_"+to_string(rn)).c_str(),"",100,0,100,44,-2.2,2.2);
-  TH2D* tow_ET_deteta = new TH2D(("tow_ET_deteta_"+to_string(rn)).c_str(),"",100,0,100,22,-1.1,1.1);
+  TH2D* jet_ET_eta = new TH2D(("jet_ET_eta_"+to_string(rn)).c_str(),"",100,0,100,30,-1.5,1.5);
+  TH2D* tow_ET_eta = new TH2D(("tow_ET_eta_"+to_string(rn)).c_str(),"",100,0,100,30,-1.5,1.5);
+  TH2D* tow_ET_deteta = new TH2D(("tow_ET_deteta_"+to_string(rn)).c_str(),"",100,0,100,24,-1.1,1.1);
   TH2D* jet_ET_phi = new TH2D(("jet_ET_phi_"+to_string(rn)).c_str(),"",100,0,100,64,-M_PI,M_PI);
   TH2D* tow_ET_phi = new TH2D(("tow_ET_phi_"+to_string(rn)).c_str(),"",100,0,100,64,-M_PI,M_PI);
   TH1D* zhist = new TH1D(("zhist_"+to_string(rn)).c_str(),"",400,-200,200);
@@ -87,11 +87,16 @@ int make_hists(string tag, int rn, int nfile, int dodijetcut = 1, int issim = 0)
   TH1D* mbds = new TH1D(("mbds_"+to_string(rn)).c_str(),"",100,0,10);
   TH1D* mbdt = new TH1D(("mbdt_"+to_string(rn)).c_str(),"",100,0,10);
   TH2D* jet_E_frcem = new TH2D(("jet_E_frcem_"+to_string(rn)).c_str(),"",100,0,100,120,-0.1,1.1);
-  TH2D* jet_ET_dphi = new TH2D(("jet_ET_dphi_"+to_string(rn)).c_str(),"",100,0,100,64,0,2*M_PI);
+  TH2D* jet_ET_dphi = new TH2D(("jet_ET_dphi_"+to_string(rn)).c_str(),"",100,0,100,32,0,M_PI);
   TH1D* calo_hitsgrone[3];
+  TH2D* jet_eta_frcem = new TH2D(("jet_eta_frcem_"+to_string(rn)).c_str(),"",30,-1.5,1.5,120,-0.1,1.1);
+  TH2D* jet_eta_frcem_gr15 = new TH2D(("jet_eta_frcem_gr15_"+to_string(rn)).c_str(),"",30,-1.5,1.5,120,-0.1,1.1);
+  TH2D* jet_phi_frcem = new TH2D(("jet_phi_frcem_"+to_string(rn)).c_str(),"",44,-M_PI,M_PI,120,-0.1,1.1);
+  TH2D* jet_phi_frcem_gr15 = new TH2D(("jet_phi_frcem_gr15_"+to_string(rn)).c_str(),"",44,-M_PI,M_PI,120,-0.1,1.1);
+
   for(int i=0; i<3; ++i)
     {
-      calo_hitsgrone[i] = new TH1D(("calo_hitsgrone_"+to_string(i)+"_"+to_string(rn)).c_str(),"",1537,-0.5,1536.5);
+      calo_hitsgrone[i] = new TH1D(("calo_hitsgrone_"+to_string(i)+"_"+to_string(rn)).c_str(),"",50,-0.5,49.5);
     }
 
   const int ntrigtypes = 4;
@@ -168,9 +173,16 @@ int make_hists(string tag, int rn, int nfile, int dodijetcut = 1, int issim = 0)
 	      jet_ET_eta->Fill(ET,jet_eta[j]);
 	      jet_ET_phi->Fill(ET,jet_phi[j]);
 	      jet_E_frcem->Fill(jet_e[j],frcem[j]);
-	      if(ET > 15) jet_eta_phi_gr15->Fill(jet_eta[j],jet_phi[j]);
+	      jet_eta_frcem->Fill(jet_eta[j],frcem[j]);
+	      jet_phi_frcem->Fill(jet_phi[j],frcem[j]);
+	      if(ET > 15)
+		{
+		  jet_eta_frcem_gr15->Fill(jet_eta[j],frcem[j]);
+		  jet_phi_frcem_gr15->Fill(jet_phi[j],frcem[j]);
+		  jet_eta_phi_gr15->Fill(jet_eta[j],jet_phi[j]);
+		}
 	    }
-	  jet_ET_dphi->Fill(ETmax,dphilead);
+	  if(isdijet) jet_ET_dphi->Fill(ETmax,dphilead);
 	  for(int j=0; j<mbdside; ++j)
 	    {
 	      for(int k=0; k<mbdchan; ++k)
@@ -245,7 +257,11 @@ int make_hists(string tag, int rn, int nfile, int dodijetcut = 1, int issim = 0)
   mbdt->Scale(1./totalentries);
   jet_E_frcem->Scale(1./totalentries);
   jet_ET_dphi->Scale(1./totalentries);
-
+  jet_eta_frcem->Scale(1./totalentries);
+  jet_phi_frcem->Scale(1./totalentries);
+  jet_eta_frcem_gr15->Scale(1./totalentries);
+  jet_phi_frcem_gr15->Scale(1./totalentries);
+  
   for(int i=0; i<3; ++i) calo_hitsgrone[i]->Write();
   jet_eta_phi->Write();
   jet_eta_phi_gr15->Write();
@@ -269,6 +285,10 @@ int make_hists(string tag, int rn, int nfile, int dodijetcut = 1, int issim = 0)
   mbdt->Write();
   jet_E_frcem->Write();
   jet_ET_dphi->Write();
+  jet_eta_frcem->Write();
+  jet_phi_frcem->Write();
+  jet_eta_frcem_gr15->Write();
+  jet_phi_frcem_gr15->Write();
 
 
   ofstream outtrigs("outtrigs"+to_string(rn)+".txt");
