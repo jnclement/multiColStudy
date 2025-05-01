@@ -12,7 +12,7 @@ class multiColStudy : public SubsysReco
 {
  public:
 
-  multiColStudy(const std::string &filename, const std::string &name = "multiColStudy", const int debug = 0);
+  multiColStudy(const std::string &filename, const std::string &name = "multiColStudy", const int debug = 0, int issim = 1);
 
   virtual ~multiColStudy();
   
@@ -37,12 +37,16 @@ class multiColStudy : public SubsysReco
 
   std::string _name;
   int _debug;
+  int _issim;
   std::string _filename;
   
   static const int _maxzvtx = 3;
   static const int _maxjet = 10;
-  static const int _ncalotype = 3;
   static const int _mbdside = 2;
+  static const int _etow = 1536;
+  static const int _htow = 1536;
+  static const int _gronefield = 5;
+  static const int _ncalotype = 3;
   TFile* _f;
   TTree* _tree;
   int _njet;
@@ -55,6 +59,8 @@ class multiColStudy : public SubsysReco
   double _dphilead;
   int _isdijet;
 
+  double _towgrone[_etow+2*_htow][_gronefield];
+
   int _tnjet;
   double _tjet_e[_maxjet];
   double _tjet_et[_maxjet];
@@ -64,13 +70,15 @@ class multiColStudy : public SubsysReco
   int _tisdijet;
 
   int _nzvtx;
+  int _tnzvtx;
   double _rzvtx[_maxzvtx];
   double _tzvtx[_maxzvtx];
 
   double _mbdq[_mbdside][64];
 
-  int _hitsgrone[_ncalotype];
-  
+  int _hitsgrone;
+
+  long long unsigned int _trigvec;
   GlobalVertex::VTXTYPE _vtxtype = GlobalVertex::MBD;
 };
 

@@ -98,9 +98,10 @@ bool check_bad_jet_eta(float jet_eta, float zertex, float jet_radius) {
 }
 
 //____________________________________________________________________________..
-multiColStudy::multiColStudy(const std::string &filename, const std::string &name, const int debug):
+multiColStudy::multiColStudy(const std::string &filename, const std::string &name, const int debug, const int issim):
   SubsysReco(name)
 {
+  _issim = issim;
   _name = name;
   _debug = debug;
   _filename = filename;
@@ -124,20 +125,23 @@ int multiColStudy::Init(PHCompositeNode *topNode)
   _tree->Branch("jet_et",_jet_et,"jet_et[njet]/D");
   _tree->Branch("jet_eta",_jet_eta,"jet_eta[njet]/D");
   _tree->Branch("jet_phi",_jet_phi,"jet_phi[njet]/D");
-
-
-  _tree->Branch("tnjet",&_tnjet,"tnjet/I");
-  _tree->Branch("tjet_e",_tjet_e,"tjet_e[tnjet]/D");
-  _tree->Branch("tjet_et",_tjet_et,"tjet_et[tnjet]/D");
-  _tree->Branch("tjet_eta",_tjet_eta,"tjet_eta[tnjet]/D");
-  _tree->Branch("tjet_phi",_tjet_phi,"tjet_phi[tnjet]/D");
-  _tree->Branch("tdphilead",&_tdphilead,"tdphilead/D");
-  _tree->Branch("tisdijet",&_tisdijet,"tisdijet/I");
-
+  if(!_issim) _tree->Branch("trigvec",&_trigvec,"trigvec/l");
+  if(_issim)
+    {
+      _tree->Branch("tnjet",&_tnjet,"tnjet/I");
+      _tree->Branch("tjet_e",_tjet_e,"tjet_e[tnjet]/D");
+      _tree->Branch("tjet_et",_tjet_et,"tjet_et[tnjet]/D");
+      _tree->Branch("tjet_eta",_tjet_eta,"tjet_eta[tnjet]/D");
+      _tree->Branch("tjet_phi",_tjet_phi,"tjet_phi[tnjet]/D");
+      _tree->Branch("tdphilead",&_tdphilead,"tdphilead/D");
+      _tree->Branch("tisdijet",&_tisdijet,"tisdijet/I");
+    }
   _tree->Branch("nzvtx",&_nzvtx,"nzvtx/I");
-  _tree->Branch("rzvtx",_rzvtx,"rzvtx[3]/D");
-  _tree->Branch("tzvtx",_tzvtx,"tzvtx[3]/D");
-  _tree->Branch("hitsgrone",_hitsgrone,"hitsgrone[3]/I");
+  if(_issim) _tree->Branch("tnzvtx",&_tnzvtx,"tnzvtx/I");
+  _tree->Branch("rzvtx",_rzvtx,"rzvtx[nzvtx]/D");
+  if(_issim) _tree->Branch("tzvtx",_tzvtx,"tzvtx[tnzvtx]/D");
+  _tree->Branch("hitsgrone",&_hitsgrone,"hitsgrone/I");
+  _tree->Branch("towgrone",_towgrone,"towgrone[hitsgrone][5]/D");
   _tree->Branch("mbdq",_mbdq,"mbdq[2][64]/D");
   _tree->Branch("frcem",_frcem,"frcem[njet]/D");
   _tree->Branch("frcoh",_frcoh,"frcoh[njet]/D");
@@ -171,6 +175,16 @@ int multiColStudy::process_event(PHCompositeNode *topNode)
 
   float zvtx = NAN;
 
+  if(!_issim)
+    {
+      Gl1Packetv2* gl1 = findNode::getClass<Gl1Packetv2>(topNode, "GL1Packet");
+      if(!gl1)
+	{
+	  cout << "No trigger info!" << endl;
+	  return Fun4AllReturnCodes::ABORTRUN;
+	}
+      _trigvec = gl1->getScaledVector();
+    }
   _nzvtx = 0;
   if(mbdvtxmap)
     {
@@ -185,18 +199,18 @@ int multiColStudy::process_event(PHCompositeNode *topNode)
 	    }
         }
     }
-
+  zvtx = _rzvtx[0];  
   if(std::isnan(zvtx))
     {
       if(_debug > 1) cout << "no good zvtx!" << endl;
       return Fun4AllReturnCodes::ABORTEVENT;
     }
-  zvtx = _rzvtx[0];
+
 
   TowerInfoContainer *towers[3];
-  towers[0] = findNode::getClass<TowerInfoContainer>(topNode, "TOWERINFO_CALIB_CEMC_RETOWER");
-  towers[1] = findNode::getClass<TowerInfoContainer>(topNode, "TOWERINFO_CALIB_HCALIN");
-  towers[2] = findNode::getClass<TowerInfoContainer>(topNode, "TOWERINFO_CALIB_HCALOUT");
+  towers[0] = findNode::getClass<TowerInfoContainerv4>(topNode, "TOWERINFO_CALIB_CEMC_RETOWER");
+  towers[1] = findNode::getClass<TowerInfoContainerv4>(topNode, "TOWERINFO_CALIB_HCALIN");
+  towers[2] = findNode::getClass<TowerInfoContainerv4>(topNode, "TOWERINFO_CALIB_HCALOUT");
   JetContainer *jets = findNode::getClass<JetContainerv1>(topNode, "AntiKt_Tower_HIRecoSeedsRaw_r04");//"AntiKt_unsubtracted_r04");
   if(!jets) jets = findNode::getClass<JetContainerv1>(topNode, "AntiKt_unsubtracted_r04");
   JetContainer* truthjets = findNode::getClass<JetContainerv1>(topNode,"AntiKt_Truth_r04");
@@ -204,12 +218,12 @@ int multiColStudy::process_event(PHCompositeNode *topNode)
   if(!mbdtow) MbdPmtContainer * mbdtow = findNode::getClass<MbdPmtContainerV1>(topNode,"MbdPmtContainer");
   if(!mbdtow) MbdPmtContainer * mbdtow = findNode::getClass<MbdPmtSimContainerV1>(topNode,"MbdPmtContainer");
   if(_debug > 2) cout << towers[0] << " " << towers[1] << " " << towers[2] << endl;
-  /*
+  
   RawTowerGeomContainer *geom[3];
-  geom[0] = findNode::getClass<RawTowerGeomContainer>(topNode, "TOWERGEOM_CEMC");
-  geom[1] = findNode::getClass<RawTowerGeomContainer>(topNode, "TOWERGEOM_HCALIN");
-  geom[2] = findNode::getClass<RawTowerGeomContainer>(topNode, "TOWERGEOM_HCALOUT");
-  */
+  geom[0] = findNode::getClass<RawTowerGeomContainer_Cylinderv1>(topNode, "TOWERGEOM_CEMC");
+  geom[1] = findNode::getClass<RawTowerGeomContainer_Cylinderv1>(topNode, "TOWERGEOM_HCALIN");
+  geom[2] = findNode::getClass<RawTowerGeomContainer_Cylinderv1>(topNode, "TOWERGEOM_HCALOUT");
+  
   //TowerInfoContainer* emcrt = findNode::getClass<TowerInfoContainer>(topNode, "TOWERINFO_CALIB_CEMC_RETOWER");
   int sectormb=128;
   if(mbdtow)
@@ -224,28 +238,42 @@ int multiColStudy::process_event(PHCompositeNode *topNode)
     {
       cout << "No MBD info!" << endl;
     }
-  
+  _hitsgrone = 0;
   int nchan = 1536;
   for(int h=0; h<_ncalotype; ++h)
     {
       if(towers[h])
 	{
+	  if(_debug > 1) cout << "got towers " << h << endl;
 	  for(int i=0; i<nchan; ++i)
 	    {
 	      TowerInfo* tower = towers[h]->get_tower_at_channel(i);
 	      if(!tower->get_isGood()) continue;
-	      //int key = towers[h]->encode_key(i);
-	      //const RawTowerDefs::keytype geomkey = RawTowerDefs::encode_towerid(h<2?RawTowerDefs::CalorimeterId::HCALIN:RawTowerDefs::CalorimeterId::HCALOut, towers[h]->getTowerEtaBin(key), towers[h]->getTowerPhiBin(key));
-	      //RawTowerGeom *tower_geom = geom[h<2?1:2]->get_tower_geometry(geomkey);
-	      //float radius = h<1?93.5:tower_geom->get_center_radius();
-	      //float ihEta = tower_geom->get_eta();
-	      //float emZ = radius/(tan(2*atan(exp(-ihEta))));
-	      //float newz = h<1?(emZ - _rzvtx[0]):(tower_geom->get_center_z() - _rzvtx[0]);
-	      //float newTheta = atan2(radius,newz);
-	      //float towerEta = -log(tan(0.5*newTheta));
+	      int key = towers[h]->encode_key(i);
+	      const RawTowerDefs::keytype geomkey = RawTowerDefs::encode_towerid(h<2?RawTowerDefs::CalorimeterId::HCALIN:RawTowerDefs::CalorimeterId::HCALOUT, towers[h]->getTowerEtaBin(key), towers[h]->getTowerPhiBin(key));
+	      RawTowerGeom *tower_geom = geom[h<2?1:2]->get_tower_geometry(geomkey);
+	      float radius = h<1?93.5:tower_geom->get_center_radius();
+	      float ihEta = tower_geom->get_eta();
+	      float emZ = radius/(tan(2*atan(exp(-ihEta))));
+	      float newz = h<1?(emZ - _rzvtx[0]):(tower_geom->get_center_z() - _rzvtx[0]);
+	      float newTheta = atan2(radius,newz);
+	      float towerEta = -log(tan(0.5*newTheta));
 	      float towerE = tower->get_energy();///cosh(towerEta);
-	      if(towerE > 1) ++_hitsgrone[h];
+	      if(towerE > 1)
+		{
+		  if(_debug > 2) cout << "hit greater than 1" << endl;
+		  _towgrone[_hitsgrone][0] = towerE;
+		  _towgrone[_hitsgrone][1] = towerEta;
+		  _towgrone[_hitsgrone][2] = tower_geom->get_phi();
+		  _towgrone[_hitsgrone][3] = tower_geom->get_eta();
+		  _towgrone[_hitsgrone][4] = h;
+		  ++_hitsgrone;
+		} 
 	    }
+	}
+      else if(_debug > 1)
+	{
+	  cout << "no towers " << h << endl;
 	}
     }
   
@@ -268,7 +296,7 @@ int multiColStudy::process_event(PHCompositeNode *topNode)
 	      float testJetE = jet->get_e();
 	      float testJetPhi = jet->get_phi();
 	      if(_debug > 5) cout << "jet E/eta: " << testJetE  << " " << jet->get_eta() << endl;
-	      if(testJetE < 4) continue;
+	      if(testJetE < 7) continue;
 	      if(_debug > 3) cout << "got a candidate jet" << endl;
 	      _jet_eta[_njet] = jet->get_eta();
 	      if(check_bad_jet_eta(_jet_eta[_njet],_rzvtx[0],0.4)) continue;
@@ -345,10 +373,12 @@ int multiColStudy::process_event(PHCompositeNode *topNode)
 	      continue;
 	    }
 	}
+      /*
       if(!_njet)
 	{
 	  return Fun4AllReturnCodes::ABORTEVENT;
 	}
+      */
       _dphilead = abs(maxJetPhi-subJetPhi);
       if(_dphilead > M_PI) _dphilead = 2*M_PI - _dphilead;
       if(subJetE > 4) _isdijet = 1;
@@ -360,7 +390,7 @@ int multiColStudy::process_event(PHCompositeNode *topNode)
       return Fun4AllReturnCodes::ABORTEVENT;
     }
 
-
+  _tnjet = 0;
   if(truthjets)
     {
       for(int i=0; i<truthjets->size(); ++i)
@@ -398,11 +428,11 @@ int multiColStudy::process_event(PHCompositeNode *topNode)
       if(subJetE > 4) _tisdijet = 1;
       else _tisdijet = 0;      
     }
-  if(maxJetE > 4)
-    {
-      if(_debug > 0) cout << "filling jet tree" << endl;
-      _tree->Fill();
-    }
+  //if(maxJetE > 4)
+  //{
+  if(_debug > 0) cout << "filling jet tree" << endl;
+  _tree->Fill();
+  //}
   
   if(_debug > 3) cout << "end event" << endl;
   return Fun4AllReturnCodes::EVENT_OK;
