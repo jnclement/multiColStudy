@@ -11,3 +11,5 @@ src/depcomp
 src/install-sh
 src/ltmain.sh
 src/missing
+macros/trigcounts
+run/*.sub

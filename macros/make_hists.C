@@ -230,7 +230,7 @@ int make_hists(string tag, int rn, int nfile, int dodijetcut = 1, int issim = 0)
       datfile->Close();
     }
 
-  TFile* outf = TFile::Open(("/sphenix/user/jocl/projects/multiColStudy/output/hists/hists_"+tag+"_"+to_string(rn)+".root").c_str(),"RECREATE");
+  TFile* outf = TFile::Open(("/sphenix/user/jocl/projects/multiColStudy/output/hists/hists_"+tag+"_"+(dodijetcut?"dc":"nc")+"_"+to_string(rn)+".root").c_str(),"RECREATE");
   outf->cd();
 
 
@@ -291,7 +291,7 @@ int make_hists(string tag, int rn, int nfile, int dodijetcut = 1, int issim = 0)
   jet_phi_frcem_gr15->Write();
 
 
-  ofstream outtrigs("outtrigs"+to_string(rn)+".txt");
+  ofstream outtrigs("trigcounts/outtrigs"+to_string(rn)+".txt");
   for(int i=0; i<ntrigtypes; ++i)
     {
       outtrigs << trigs[0][i] << " " << trigs[1][i] << endl;
