@@ -160,14 +160,25 @@ int make_hists(string tag, int rn, int nfile, int dodijetcut = 1, int issim = 0)
 	  if(!((trigvec >> 18) & 1)) continue;
 	  ++totalentries;
 	  if(dodijetcut && (dphilead < 3*M_PI/4 || isdijet == 0)) continue;
+	  double ETmax = 0;
+	  double ETsub = 0;
+	  for(j=0; j<njet; ++j)
+	    {
+	      double ET = jet_e[j]/cosh(jet_eta[j]);
+	      if(ET > ETmax)
+		{
+		  ETsub = ETmax;
+		  ETmax = ET;
+		}
+	      else if(ET > ETsub) ETsub = ET;
+	    }
+	  if(dodijetcut && (isdijet == 0 || ETsub/ETmax < 0.3)) continue;
 	  mbdnq = 0;
 	  mbdsq = 0;
 	  mbdtq = 0;
-	  double ETmax = 0;
 	  for(int j=0; j<njet; ++j)
 	    {
 	      double ET = jet_e[j]/cosh(jet_eta[j]);
-	      if(ET > ETmax) ETmax = ET;
 	      jet_eta_phi->Fill(jet_eta[j],jet_phi[j]);
 	      jet_E_eta->Fill(jet_e[j],jet_eta[j]);
 	      jet_E_phi->Fill(jet_e[j],jet_phi[j]);
