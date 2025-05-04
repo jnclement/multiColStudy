@@ -215,7 +215,7 @@ int get_and_draw_th2d(string histbasename, string* region, TFile* histfile, stri
   for(int i=0; i<nhistplot; ++i)
     {
       hists[i] = (TH2D*)histfile->Get((histbasename+"_"+region[i]).c_str());
-      if(std::string(hists[i]->GetName()).find("frcem") != std::string::npos) hists[i]->Rebin2D(3,3);
+      if(std::string(hists[i]->GetName()).find("frcem") != std::string::npos) hists[i]->Rebin2D(5,5);
       format_th2d(hists[i], xtitle, ytitle, ztitle);
       //draw_th2d(hists[i], can,dijetcut);
       projx[i] = hists[i]->ProjectionX();

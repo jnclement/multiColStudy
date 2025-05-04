@@ -145,7 +145,7 @@ void dijet_cut_text(float xp = 0.7, float yp = 0.8, bool isRightAlign=0, double 
 
 void et_cut_text(float minet, float xp = 0.7, float yp = 0.8, bool isRightAlign=0, double textsize = 0.04)
 {
-  drawText(("E_{T}^{jet} > "+([minet]{ std::ostringstream oss; oss << std::fixed << std::setprecision(1) << minet; return oss.str(); }())).c_str(),xp,yp,isRightAlign,kBlack,textsize);
+  drawText(("E_{T}^{jet} > "+([minet]{ std::ostringstream oss; oss << std::fixed << std::setprecision(1) << minet; return oss.str(); }())+" GeV").c_str(),xp,yp,isRightAlign,kBlack,textsize);
 }
 
 void sqrt_s_text(float xp = 0.7, float yp = 0.8, bool isRightAlign=0, double textsize = 0.04)
