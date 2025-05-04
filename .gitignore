@@ -13,3 +13,4 @@ src/ltmain.sh
 src/missing
 macros/trigcounts
 run/*.sub
+macros/make_*_wrap.sh
