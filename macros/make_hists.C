@@ -63,41 +63,48 @@ bool check_bad_jet_eta(float jet_eta, float zertex, float jet_radius) {
   return jet_eta < minlimit || jet_eta > maxlimit;
 }
 
-int make_hists(string tag, int rn, int nfile, int dodijetcut = 1, int issim = 0)
+int make_hists(string tag, vector<int> rns, vector<int> nfiles, int dodijetcut = 1, int issim = 0)
 {
   //define histograms
-  TH2D* jet_eta_phi = new TH2D(("jet_eta_phi_"+to_string(rn)).c_str(),"",30,-1.5,1.5,64,-M_PI,M_PI);
-  TH2D* jet_eta_phi_gr15 = new TH2D(("jet_eta_phi_gr15_"+to_string(rn)).c_str(),"",30,-1.5,1.5,64,-M_PI,M_PI);
-  TH2D* tow_eta_phi = new TH2D(("tow_eta_phi_"+to_string(rn)).c_str(),"",30,-1.5,1.5,64,-M_PI,M_PI);
-  TH2D* tow_eta_phi_gr5 = new TH2D(("tow_eta_phi_gr5_"+to_string(rn)).c_str(),"",30,-1.5,1.5,64,-M_PI,M_PI);
-  TH2D* tow_deteta_phi = new TH2D(("tow_deteta_phi_"+to_string(rn)).c_str(),"",24,-1.1,1.1,64,-M_PI,M_PI);
-  TH2D* tow_deteta_phi_gr5 = new TH2D(("tow_deteta_phi_gr5_"+to_string(rn)).c_str(),"",24,-1.1,1.1,64,-M_PI,M_PI);
-  TH2D* jet_E_eta = new TH2D(("jet_E_eta_"+to_string(rn)).c_str(),"",100,0,100,30,-1.5,1.5);
-  TH2D* tow_E_eta = new TH2D(("tow_E_eta_"+to_string(rn)).c_str(),"",100,0,100,30,-1.5,1.5);
-  TH2D* tow_E_deteta = new TH2D(("tow_E_deteta_"+to_string(rn)).c_str(),"",100,0,100,24,-1.1,1.1);
-  TH2D* jet_E_phi = new TH2D(("jet_E_phi_"+to_string(rn)).c_str(),"",100,0,100,64,-M_PI,M_PI);
-  TH2D* tow_E_phi = new TH2D(("tow_E_phi_"+to_string(rn)).c_str(),"",100,0,100,64,-M_PI,M_PI);
-  TH2D* jet_ET_eta = new TH2D(("jet_ET_eta_"+to_string(rn)).c_str(),"",100,0,100,30,-1.5,1.5);
-  TH2D* tow_ET_eta = new TH2D(("tow_ET_eta_"+to_string(rn)).c_str(),"",100,0,100,30,-1.5,1.5);
-  TH2D* tow_ET_deteta = new TH2D(("tow_ET_deteta_"+to_string(rn)).c_str(),"",100,0,100,24,-1.1,1.1);
-  TH2D* jet_ET_phi = new TH2D(("jet_ET_phi_"+to_string(rn)).c_str(),"",100,0,100,64,-M_PI,M_PI);
-  TH2D* tow_ET_phi = new TH2D(("tow_ET_phi_"+to_string(rn)).c_str(),"",100,0,100,64,-M_PI,M_PI);
-  TH1D* zhist = new TH1D(("zhist_"+to_string(rn)).c_str(),"",400,-200,200);
-  TH1D* zhist_gr15 = new TH1D(("zhist_gr15_"+to_string(rn)).c_str(),"",400,-200,200);
-  TH1D* mbdn = new TH1D(("mbdn_"+to_string(rn)).c_str(),"",100,0,10);
-  TH1D* mbds = new TH1D(("mbds_"+to_string(rn)).c_str(),"",100,0,10);
-  TH1D* mbdt = new TH1D(("mbdt_"+to_string(rn)).c_str(),"",100,0,10);
-  TH2D* jet_E_frcem = new TH2D(("jet_E_frcem_"+to_string(rn)).c_str(),"",100,0,100,120,-0.1,1.1);
-  TH2D* jet_ET_dphi = new TH2D(("jet_ET_dphi_"+to_string(rn)).c_str(),"",100,0,100,32,0,M_PI);
+  string region = "";
+  if(rns[0] < 49216) region = "RegionA";
+  else if(rns[0] < 49238) region = "RegionB";
+  else if(rns[0] < 49256) region = "RegionC";
+  else region = "RegionD";
+  TH2D* jet_eta_phi = new TH2D(("jet_eta_phi_"+region).c_str(),"",30,-1.5,1.5,64,-M_PI,M_PI);
+  TH2D* jet_eta_phi_gr15 = new TH2D(("jet_eta_phi_gr15_"+region).c_str(),"",30,-1.5,1.5,64,-M_PI,M_PI);
+  TH2D* tow_eta_phi = new TH2D(("tow_eta_phi_"+region).c_str(),"",30,-1.5,1.5,64,-M_PI,M_PI);
+  TH2D* tow_eta_phi_gr5 = new TH2D(("tow_eta_phi_gr5_"+region).c_str(),"",30,-1.5,1.5,64,-M_PI,M_PI);
+  TH2D* tow_deteta_phi = new TH2D(("tow_deteta_phi_"+region).c_str(),"",24,-1.1,1.1,64,-M_PI,M_PI);
+  TH2D* tow_deteta_phi_gr5 = new TH2D(("tow_deteta_phi_gr5_"+region).c_str(),"",24,-1.1,1.1,64,-M_PI,M_PI);
+  TH2D* jet_E_eta = new TH2D(("jet_E_eta_"+region).c_str(),"",100,0,100,30,-1.5,1.5);
+  TH2D* tow_E_eta = new TH2D(("tow_E_eta_"+region).c_str(),"",100,0,100,30,-1.5,1.5);
+  TH2D* tow_E_deteta = new TH2D(("tow_E_deteta_"+region).c_str(),"",100,0,100,24,-1.1,1.1);
+  TH2D* jet_E_phi = new TH2D(("jet_E_phi_"+region).c_str(),"",100,0,100,64,-M_PI,M_PI);
+  TH2D* tow_E_phi = new TH2D(("tow_E_phi_"+region).c_str(),"",100,0,100,64,-M_PI,M_PI);
+  TH2D* jet_ET_eta = new TH2D(("jet_ET_eta_"+region).c_str(),"",100,0,100,30,-1.5,1.5);
+  TH2D* tow_ET_eta = new TH2D(("tow_ET_eta_"+region).c_str(),"",100,0,100,30,-1.5,1.5);
+  TH2D* tow_ET_deteta = new TH2D(("tow_ET_deteta_"+region).c_str(),"",100,0,100,24,-1.1,1.1);
+  TH2D* jet_ET_phi = new TH2D(("jet_ET_phi_"+region).c_str(),"",100,0,100,64,-M_PI,M_PI);
+  TH2D* tow_ET_phi = new TH2D(("tow_ET_phi_"+region).c_str(),"",100,0,100,64,-M_PI,M_PI);
+  TH1D* zhist = new TH1D(("zhist_"+region).c_str(),"",400,-200,200);
+  TH1D* zhist_gr15 = new TH1D(("zhist_gr15_"+region).c_str(),"",400,-200,200);
+  TH1D* mbdn = new TH1D(("mbdn_"+region).c_str(),"",100,0,10);
+  TH1D* mbds = new TH1D(("mbds_"+region).c_str(),"",100,0,10);
+  TH1D* mbdt = new TH1D(("mbdt_"+region).c_str(),"",100,0,10);
+  TH2D* jet_E_frcem = new TH2D(("jet_E_frcem_"+region).c_str(),"",100,0,100,120,-0.1,1.1);
+  TH2D* frcem_frcoh = new TH2D(("frcem_frcoh_"+region).c_str(),"",120,-0.1,1.1,120,-0.1,1.1);
+  TH2D* frcem_frcoh_gr15 = new TH2D(("frcem_frcoh_gr15_"+region).c_str(),"",120,-0.1,1.1,120,-0.1,1.1);
+  TH2D* jet_ET_dphi = new TH2D(("jet_ET_dphi_"+region).c_str(),"",100,0,100,32,0,M_PI);
   TH1D* calo_hitsgrone[3];
-  TH2D* jet_eta_frcem = new TH2D(("jet_eta_frcem_"+to_string(rn)).c_str(),"",30,-1.5,1.5,120,-0.1,1.1);
-  TH2D* jet_eta_frcem_gr15 = new TH2D(("jet_eta_frcem_gr15_"+to_string(rn)).c_str(),"",30,-1.5,1.5,120,-0.1,1.1);
-  TH2D* jet_phi_frcem = new TH2D(("jet_phi_frcem_"+to_string(rn)).c_str(),"",44,-M_PI,M_PI,120,-0.1,1.1);
-  TH2D* jet_phi_frcem_gr15 = new TH2D(("jet_phi_frcem_gr15_"+to_string(rn)).c_str(),"",44,-M_PI,M_PI,120,-0.1,1.1);
-
+  TH2D* jet_eta_frcem = new TH2D(("jet_eta_frcem_"+region).c_str(),"",30,-1.5,1.5,120,-0.1,1.1);
+  TH2D* jet_eta_frcem_gr15 = new TH2D(("jet_eta_frcem_gr15_"+region).c_str(),"",30,-1.5,1.5,120,-0.1,1.1);
+  TH2D* jet_phi_frcem = new TH2D(("jet_phi_frcem_"+region).c_str(),"",44,-M_PI,M_PI,120,-0.1,1.1);
+  TH2D* jet_phi_frcem_gr15 = new TH2D(("jet_phi_frcem_gr15_"+region).c_str(),"",44,-M_PI,M_PI,120,-0.1,1.1);
+  TH1D* zhist_nocut = new TH1D(("zhist_nocut_"+region).c_str(),"",400,-200,200);
   for(int i=0; i<3; ++i)
     {
-      calo_hitsgrone[i] = new TH1D(("calo_hitsgrone_"+to_string(i)+"_"+to_string(rn)).c_str(),"",50,-0.5,49.5);
+      calo_hitsgrone[i] = new TH1D(("calo_hitsgrone_"+to_string(i)+"_"+region).c_str(),"",50,-0.5,49.5);
     }
 
   const int ntrigtypes = 4;
@@ -115,6 +122,9 @@ int make_hists(string tag, int rn, int nfile, int dodijetcut = 1, int issim = 0)
   const int mbdside = 2;
   //start processing
   long long unsigned int totalentries = 0;
+  for(int g = 0; g<rns.size(); ++g){
+    int rn = rns.at(g);
+    int nfile = nfiles.at(g);
   for(int h=0; h<nfile; ++h)
     {
       string filename = "/sphenix/tg/tg01/jets/jocl/multiCol/"+to_string(rn)+"/events_"+tag+"_"+to_string(rn)+"_"+to_string(h)+"_0.root";
@@ -130,6 +140,7 @@ int make_hists(string tag, int rn, int nfile, int dodijetcut = 1, int issim = 0)
       double towgrone[maxtow][ntowfield];
       double mbdq[mbdside][mbdchan];
       double frcem[nmaxjet];
+      double frcoh[nmaxjet];
       long long unsigned int trigvec;
       //define non-branch variables
       double mbdnq, mbdsq, mbdtq;
@@ -148,6 +159,7 @@ int make_hists(string tag, int rn, int nfile, int dodijetcut = 1, int issim = 0)
       //for above: 0 = E, 1 = eta, 2 = phi, 3 = detector level eta, 4 = calo
       dattree->SetBranchAddress("mbdq",mbdq);
       dattree->SetBranchAddress("frcem",frcem);
+      dattree->SetBranchAddress("frcoh",frcoh);
       dattree->SetBranchAddress("dphilead",&dphilead);
       
       for(int i=0; i<dattree->GetEntries(); ++i)
@@ -162,7 +174,7 @@ int make_hists(string tag, int rn, int nfile, int dodijetcut = 1, int issim = 0)
 	  if(dodijetcut && (dphilead < 3*M_PI/4 || isdijet == 0)) continue;
 	  double ETmax = 0;
 	  double ETsub = 0;
-	  for(j=0; j<njet; ++j)
+	  for(int j=0; j<njet; ++j)
 	    {
 	      double ET = jet_e[j]/cosh(jet_eta[j]);
 	      if(ET > ETmax)
@@ -172,7 +184,10 @@ int make_hists(string tag, int rn, int nfile, int dodijetcut = 1, int issim = 0)
 		}
 	      else if(ET > ETsub) ETsub = ET;
 	    }
+
 	  if(dodijetcut && (isdijet == 0 || ETsub/ETmax < 0.3)) continue;
+	  if(!std::isnan(zvtx[0])) zhist_nocut->Fill(zvtx[0]);
+	  if(ETmax < 15) continue;
 	  mbdnq = 0;
 	  mbdsq = 0;
 	  mbdtq = 0;
@@ -185,17 +200,25 @@ int make_hists(string tag, int rn, int nfile, int dodijetcut = 1, int issim = 0)
 	      jet_ET_eta->Fill(ET,jet_eta[j]);
 	      jet_ET_phi->Fill(ET,jet_phi[j]);
 	      jet_E_frcem->Fill(jet_e[j],frcem[j]);
+	      frcem_frcoh->Fill(frcem[j],frcoh[j]);
 	      jet_eta_frcem->Fill(jet_eta[j],frcem[j]);
 	      jet_phi_frcem->Fill(jet_phi[j],frcem[j]);
-	      if(ET > 15)
+	      if(ET > 20)
 		{
+		  frcem_frcoh_gr15->Fill(frcem[j],frcoh[j]);
 		  jet_eta_frcem_gr15->Fill(jet_eta[j],frcem[j]);
 		  jet_phi_frcem_gr15->Fill(jet_phi[j],frcem[j]);
 		  jet_eta_phi_gr15->Fill(jet_eta[j],jet_phi[j]);
 		}
 	    }
 	  if(isdijet) jet_ET_dphi->Fill(ETmax,dphilead);
-	  if(ETmax > 15 && !isnan(zvtx[0])) zhist_gr15->Fill(zvtx[0]);
+	  if(ETmax > 20)
+	    {
+	      if(!std::isnan(zvtx[0]))
+		{
+		  zhist_gr15->Fill(zvtx[0]);
+		}
+	    }
 	  for(int j=0; j<mbdside; ++j)
 	    {
 	      for(int k=0; k<mbdchan; ++k)
@@ -238,12 +261,15 @@ int make_hists(string tag, int rn, int nfile, int dodijetcut = 1, int issim = 0)
 	    {
 	      calo_hitsgrone[j]->Fill(calohits[j]);
 	    }
-	  if(!std::isnan(zvtx[0])) zhist->Fill(zvtx[0]);
+	  if(!std::isnan(zvtx[0]))
+	    {
+	      zhist->Fill(zvtx[0]);
+	    }
 	}
       datfile->Close();
     }
-
-  TFile* outf = TFile::Open(("/sphenix/user/jocl/projects/multiColStudy/output/hists/hists_"+tag+"_"+(dodijetcut?"dc":"nc")+"_"+to_string(rn)+".root").c_str(),"RECREATE");
+  }
+  TFile* outf = TFile::Open(("/sphenix/user/jocl/projects/multiColStudy/output/hists/hists_"+tag+"_"+(dodijetcut?"dc":"nc")+"_"+region+".root").c_str(),"RECREATE");
   outf->cd();
 
 
@@ -265,6 +291,7 @@ int make_hists(string tag, int rn, int nfile, int dodijetcut = 1, int issim = 0)
   jet_ET_phi->Scale(1./totalentries);
   tow_ET_phi->Scale(1./totalentries);
   zhist->Scale(1./totalentries);
+  zhist_nocut->Scale(1./totalentries);
   mbdn->Scale(1./totalentries);
   mbds->Scale(1./totalentries);
   mbdt->Scale(1./totalentries);
@@ -275,6 +302,8 @@ int make_hists(string tag, int rn, int nfile, int dodijetcut = 1, int issim = 0)
   jet_eta_frcem_gr15->Scale(1./totalentries);
   jet_phi_frcem_gr15->Scale(1./totalentries);
   zhist_gr15->Scale(1./totalentries);
+  frcem_frcoh->Scale(1./totalentries);
+  frcem_frcoh_gr15->Scale(1./totalentries);
   
   for(int i=0; i<3; ++i) calo_hitsgrone[i]->Write();
   jet_eta_phi->Write();
@@ -294,6 +323,7 @@ int make_hists(string tag, int rn, int nfile, int dodijetcut = 1, int issim = 0)
   jet_ET_phi->Write();
   tow_ET_phi->Write();
   zhist->Write();
+  zhist_nocut->Write();
   mbdn->Write();
   mbds->Write();
   mbdt->Write();
@@ -304,8 +334,10 @@ int make_hists(string tag, int rn, int nfile, int dodijetcut = 1, int issim = 0)
   jet_eta_frcem_gr15->Write();
   jet_phi_frcem_gr15->Write();
   zhist_gr15->Write();
+  frcem_frcoh->Write();
+  frcem_frcoh_gr15->Write();
 
-  ofstream outtrigs("trigcounts/outtrigs"+to_string(rn)+".txt");
+  ofstream outtrigs("trigcounts/outtrigs"+region+".txt");
   for(int i=0; i<ntrigtypes; ++i)
     {
       outtrigs << trigs[0][i] << " " << trigs[1][i] << endl;

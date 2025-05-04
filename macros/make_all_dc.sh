@@ -1,6 +1,9 @@
 #!/bin/bash
 
-root -l -b -q 'make_hists.C("20250401",49136,641,1)'
-root -l -b -q 'make_hists.C("20250401",49229,652,1)'
-root -l -b -q 'make_hists.C("20250401",49248,599,1)'
-root -l -b -q 'make_hists.C("20250401",49265,625,1)'
+
+RNS=($@)
+declare -a NFILE
+for (( i=0; i<$#; i++ )); do
+    NFILE[i]=`wc -l < ../run/lists/dst_calofitting_run2pp-000${RNS[i]}.list`
+done
+root -l -b -q 'make_hists.C("20250503",{'`(IFS=','; echo "${RNS[*]}")`'},{'`(IFS=','; echo "${NFILE[*]}")`'},1)'
