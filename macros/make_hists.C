@@ -102,6 +102,11 @@ int make_hists(string tag, vector<int> rns, vector<int> nfiles, int dodijetcut =
   TH2D* jet_phi_frcem = new TH2D(("jet_phi_frcem_"+region).c_str(),"",44,-M_PI,M_PI,120,-0.1,1.1);
   TH2D* jet_phi_frcem_gr15 = new TH2D(("jet_phi_frcem_gr15_"+region).c_str(),"",44,-M_PI,M_PI,120,-0.1,1.1);
   TH1D* zhist_nocut = new TH1D(("zhist_nocut_"+region).c_str(),"",400,-200,200);
+  TH2D* jet_t_frcem = new TH2D(("jet_t_frcem_"+region).c_str(),"",60,-6-0.5,6-0.5,120,-0.1,1.1);
+  TH2D* jet_t_frcem_gr15 = new TH2D(("jet_t_frcem_gr15_"+region).c_str(),"",60,-6-0.5,6-0.5,120,-0.1,1.1);
+  TH2D* emat_ohat = new TH2D(("emat_ohat_"+region).c_str(),"",60,-6-0.5,6-0.5,60,-6-0.5,6);
+  TH2D* emat_calo_emfrac = new TH2D(("emat_calo_emfrac_"+region).c_str(),"",60,-6-0.5,6-0.5,120,-0.1,1.1);
+
   for(int i=0; i<3; ++i)
     {
       calo_hitsgrone[i] = new TH1D(("calo_hitsgrone_"+to_string(i)+"_"+region).c_str(),"",50,-0.5,49.5);
@@ -142,9 +147,11 @@ int make_hists(string tag, vector<int> rns, vector<int> nfiles, int dodijetcut =
       double mbdq[mbdside][mbdchan];
       double frcem[nmaxjet];
       double frcoh[nmaxjet];
+      double jet_at[nmaxjet];
       long long unsigned int trigvec;
       //define non-branch variables
       double mbdnq, mbdsq, mbdtq;
+      double ohat, emat, calo_emfrac;//, calo_ohfrac, calo_e;
       //get TTree
       TTree* dattree = (TTree*)datfile->Get("tree");
       //set up branches
@@ -162,6 +169,11 @@ int make_hists(string tag, vector<int> rns, vector<int> nfiles, int dodijetcut =
       dattree->SetBranchAddress("frcem",frcem);
       dattree->SetBranchAddress("frcoh",frcoh);
       dattree->SetBranchAddress("dphilead",&dphilead);
+      dattree->SetBranchAddress("jet_at",jet_at);
+      dattree->SetBranchAddress("emat",&emat);
+      dattree->SetBranchAddress("ohat",&ohat);
+      dattree->SetBranchAddress("calo_emfrac",&calo_emfrac);
+			     
       
       for(int i=0; i<dattree->GetEntries(); ++i)
 	{
@@ -192,10 +204,13 @@ int make_hists(string tag, vector<int> rns, vector<int> nfiles, int dodijetcut =
 	  mbdnq = 0;
 	  mbdsq = 0;
 	  mbdtq = 0;
+	  emat_ohat->Fill(emat,ohat);
+	  emat_calo_emfrac->Fill(emat,calo_emfrac);
 	  for(int j=0; j<njet; ++j)
 	    {
 	      double ET = jet_e[j]/cosh(jet_eta[j]);
 	      if(ET < 15) continue;
+	      jet_t_frcem->Fill(jet_at[j],frcem[j]);
 	      jet_eta_phi->Fill(jet_eta[j],jet_phi[j]);
 	      jet_E_eta->Fill(jet_e[j],jet_eta[j]);
 	      jet_E_phi->Fill(jet_e[j],jet_phi[j]);
@@ -207,6 +222,7 @@ int make_hists(string tag, vector<int> rns, vector<int> nfiles, int dodijetcut =
 	      jet_phi_frcem->Fill(jet_phi[j],frcem[j]);
 	      if(ET > 20)
 		{
+		  jet_t_frcem_gr15->Fill(jet_at[j],frcem[j]);
 		  frcem_frcoh_gr15->Fill(frcem[j],frcoh[j]);
 		  jet_eta_frcem_gr15->Fill(jet_eta[j],frcem[j]);
 		  jet_phi_frcem_gr15->Fill(jet_phi[j],frcem[j]);
@@ -226,12 +242,10 @@ int make_hists(string tag, vector<int> rns, vector<int> nfiles, int dodijetcut =
 	      for(int k=0; k<mbdchan; ++k)
 		{
 		  mbdtq += mbdq[j][k];
-		  if(j==0) mbdnq += mbdq[j][k];
-		  else mbdsq += mbdq[j][k];
+		  if(j==0) mbdn->Fill(mbdq[j][k]);
+		  else mbds->Fill(mbdq[j][k]);
 		}
 	    }
-	  mbdn->Fill(mbdnq);
-	  mbds->Fill(mbdsq);
 	  mbdt->Fill(mbdtq);
 	  int calohits[3] = {0};
 	  for(int j=0; j<hitsgrone; ++j)
@@ -306,6 +320,10 @@ int make_hists(string tag, vector<int> rns, vector<int> nfiles, int dodijetcut =
   zhist_gr15->Scale(1./totalentries);
   frcem_frcoh->Scale(1./totalentries);
   frcem_frcoh_gr15->Scale(1./totalentries);
+  jet_t_frcem->Scale(1./totalentries);
+  jet_t_frcem_gr15->Scale(1./totalentries);
+  emat_ohat->Scale(1./totalentries);
+  emat_calo_emfrac->Scale(1./totalentries);
   
   for(int i=0; i<3; ++i) calo_hitsgrone[i]->Write();
   jet_eta_phi->Write();
@@ -338,6 +356,10 @@ int make_hists(string tag, vector<int> rns, vector<int> nfiles, int dodijetcut =
   zhist_gr15->Write();
   frcem_frcoh->Write();
   frcem_frcoh_gr15->Write();
+  jet_t_frcem->Write();
+  jet_t_frcem_gr15->Write();
+  emat_ohat->Write();
+  emat_calo_emfrac->Write();
 
   ofstream outtrigs("trigcounts/outtrigs"+region+".txt");
   for(int i=0; i<ntrigtypes; ++i)

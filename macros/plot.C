@@ -282,11 +282,12 @@ int get_and_draw_th2d(string histbasename, string* region, TFile* histfile, stri
     {
       hists[i] = (TH2D*)histfile->Get((histbasename+"_"+region[i]).c_str());
       if(std::string(hists[i]->GetName()).find("frcem") != std::string::npos) hists[i]->Rebin2D(5,5);
+      if(std::string(hists[i]->GetName()).find("calo") != std::string::npos) hists[i]->Rebin2D(5,5);
       format_th2d(hists[i], xtitle, ytitle, ztitle);
       //draw_th2d(hists[i], can,dijetcut);
       projx[i] = hists[i]->ProjectionX();
       projy[i] = hists[i]->ProjectionY();
-
+      if(std::string(hists[i]->GetName()).find("frcem") != std::string::npos) cout << "frcem integral " << hists[i]->GetName() << ": " << projx[i]->Integral() << endl;
       format_th1d(projx[i],hists[i]->GetXaxis()->GetTitle(),hists[i]->GetZaxis()->GetTitle(),i);
       format_th1d(projy[i],hists[i]->GetYaxis()->GetTitle(),hists[i]->GetZaxis()->GetTitle(),i);
 
@@ -311,15 +312,15 @@ int plot()
   TFile* histfile;
   histfile = TFile::Open("../output/hists/hadded.root");
   int dijetcut = 1;
-  const int nhist = 24;
+  const int nhist = 28;
 
   TCanvas* can = new TCanvas("can","",1000,1000);
   TCanvas* ratcan = new TCanvas("ratcan","",1000,1500);
-  string histnames[nhist] = {"jet_eta_phi","jet_eta_phi_gr15","tow_eta_phi","tow_eta_phi_gr5","tow_deteta_phi","tow_deteta_phi_gr5","jet_E_eta","tow_E_eta","tow_E_deteta","jet_E_phi","tow_E_phi","jet_ET_eta","tow_ET_eta","tow_ET_deteta","jet_ET_phi","tow_ET_phi","jet_E_frcem","jet_ET_dphi","jet_eta_frcem","jet_eta_frcem_gr15","jet_phi_frcem","jet_phi_frcem_gr15","frcem_frcoh","frcem_frcoh_gr15"};
+  string histnames[nhist] = {"jet_eta_phi","jet_eta_phi_gr15","tow_eta_phi","tow_eta_phi_gr5","tow_deteta_phi","tow_deteta_phi_gr5","jet_E_eta","tow_E_eta","tow_E_deteta","jet_E_phi","tow_E_phi","jet_ET_eta","tow_ET_eta","tow_ET_deteta","jet_ET_phi","tow_ET_phi","jet_E_frcem","jet_ET_dphi","jet_eta_frcem","jet_eta_frcem_gr15","jet_phi_frcem","jet_phi_frcem_gr15","frcem_frcoh","frcem_frcoh_gr15","jet_t_frcem","jet_t_frcem_gr15","emat_ohat","emat_calo_emfrac"};
 
-  string xtitles[nhist] = {"Jet #eta","Jet #eta","Tower #eta","Tower #eta","Tower Detector #eta","Tower Detector #eta","jet E [GeV]","Tower E [GeV]","Tower E [GeV]","Jet E [GeV]","Tower E [GeV]","Jet E_{T} [GeV]","Tower E_{T} [GeV]","Tower E_{T} [GeV]","Jet E_{T} [GeV]","Tower E_{T} [GeV]","Jet E [GeV]","Jet E_{T} [GeV]","Jet #eta","Jet #eta","Jet #phi","Jet #phi","E_{jet}^{EM}/E_{jet}","E_{jet}^{EM}/E_{jet}"};
+  string xtitles[nhist] = {"Jet #eta","Jet #eta","Tower #eta","Tower #eta","Tower Detector #eta","Tower Detector #eta","jet E [GeV]","Tower E [GeV]","Tower E [GeV]","Jet E [GeV]","Tower E [GeV]","Jet E_{T} [GeV]","Tower E_{T} [GeV]","Tower E_{T} [GeV]","Jet E_{T} [GeV]","Tower E_{T} [GeV]","Jet E [GeV]","Jet E_{T} [GeV]","Jet #eta","Jet #eta","Jet #phi","Jet #phi","E_{jet}^{EM}/E_{jet}","E_{jet}^{EM}/E_{jet}","Energy Weighted Peak Sample of Jet","Energy Weighted Peak Sample of Jet","Energy Weighted Peak Sample of EMCal","Energy Weighted Peak Sample of EMCal"};
 
-  string ytitles[nhist] = {"Jet #phi","Jet #phi","Tower #phi","Tower #phi","Tower #phi","Tower #phi","Jet #eta","Tower #eta","Tower Detector #eta","Jet #phi","Tower #phi","Jet #eta","Tower #eta","Tower Detector #eta","Jet #phi","Tower #phi","E_{jet}^{EM}/E_{jet}","#Delta#phi","E_{jet}^{EM}/E_{jet}","E_{jet}^{EM}/E_{jet}","E_{jet}^{EM}/E_{jet}","E_{jet}^{EM}/E_{jet}","E_{jet}^{OH}/E_{jet}","E_{jet}^{OH}/E_{jet}"};
+  string ytitles[nhist] = {"Jet #phi","Jet #phi","Tower #phi","Tower #phi","Tower #phi","Tower #phi","Jet #eta","Tower #eta","Tower Detector #eta","Jet #phi","Tower #phi","Jet #eta","Tower #eta","Tower Detector #eta","Jet #phi","Tower #phi","E_{jet}^{EM}/E_{jet}","#Delta#phi","E_{jet}^{EM}/E_{jet}","E_{jet}^{EM}/E_{jet}","E_{jet}^{EM}/E_{jet}","E_{jet}^{EM}/E_{jet}","E_{jet}^{OH}/E_{jet}","E_{jet}^{OH}/E_{jet}","E_{jet}^{EM}/E_{jet}","E_{jet}^{EM}/E_{jet}","Energy Weighted Peak Sample of EMCal","E_{calo}^{EM}/E_{calo}"};
 
   for(int i=0; i<nhist; ++i)
     {

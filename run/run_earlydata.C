@@ -7,7 +7,7 @@
 #include <caloreco/CaloTowerStatus.h>
 #include <jetbackground/FastJetAlgoSub.h>
 #include <jetbase/FastJetAlgo.h>
-#include <jetbackground/RetowerCEMC.h>
+//#include <jetbackground/RetowerCEMC.h>
 #include <jetbackground/BeamBackgroundFilterAndQA.h>
 #include <fstream>
 #include <phool/recoConsts.h>
@@ -131,12 +131,13 @@ int run_earlydata(string tag = "", int nproc = 0, int debug = 0, int nevt = 0, s
 
   //TriggerRunInfoReco* tana = new TriggerRunInfoReco("tana");
   //se->registerSubsystem(tana);
+  /*
   RetowerCEMC *rcemc = new RetowerCEMC();
   rcemc->set_towerinfo(true);
   rcemc->Verbosity(verbosity);
   se->registerSubsystem(rcemc);
   cout << "set up retower emcal" << endl;
-  
+  */
   JetReco *truthjetreco = new JetReco();
   
   TruthJetInput *tji = new TruthJetInput(Jet::PARTICLE);
@@ -149,7 +150,7 @@ int run_earlydata(string tag = "", int nproc = 0, int debug = 0, int nevt = 0, s
     
   
   JetReco *towerjetreco = new JetReco();
-  TowerJetInput* emtji = new TowerJetInput(Jet::CEMC_TOWERINFO_RETOWER,"TOWERINFO_CALIB");
+  TowerJetInput* emtji = new TowerJetInput(Jet::CEMC_TOWERINFO,"TOWERINFO_CALIB");
   TowerJetInput* ohtji = new TowerJetInput(Jet::HCALIN_TOWERINFO,"TOWERINFO_CALIB");
   TowerJetInput* ihtji = new TowerJetInput(Jet::HCALOUT_TOWERINFO,"TOWERINFO_CALIB");
   //towerjetreco->add_input(new TowerJetInput(Jet::CEMC_TOWER));
