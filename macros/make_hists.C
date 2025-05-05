@@ -131,6 +131,7 @@ int make_hists(string tag, vector<int> rns, vector<int> nfiles, int dodijetcut =
       cout << "Processing file " << filename << endl;
       TFile* datfile = TFile::Open(filename.c_str());
       //define branch variables
+      if(!datfile) continue;
       int njet, hitsgrone, isdijet;
       double dphilead;
       double jet_e[nmaxjet];
