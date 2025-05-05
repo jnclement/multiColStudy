@@ -123,6 +123,7 @@ int multiColStudy::Init(PHCompositeNode *topNode)
   _tree->Branch("njet",&_njet,"njet/I");
   _tree->Branch("jet_e",_jet_e,"jet_e[njet]/D");
   _tree->Branch("jet_et",_jet_et,"jet_et[njet]/D");
+  _tree->Branch("jet_at",_jet_at,"jet_at[njet]/D");
   _tree->Branch("jet_eta",_jet_eta,"jet_eta[njet]/D");
   _tree->Branch("jet_phi",_jet_phi,"jet_phi[njet]/D");
   if(!_issim) _tree->Branch("trigvec",&_trigvec,"trigvec/l");
@@ -147,6 +148,11 @@ int multiColStudy::Init(PHCompositeNode *topNode)
   _tree->Branch("frcoh",_frcoh,"frcoh[njet]/D");
   _tree->Branch("dphilead",&_dphilead,"dphilead/D");
   _tree->Branch("isdijet",&_isdijet,"isdijet/I");
+  _tree->Branch("ohat",&_ohat,"ohat/D");
+  _tree->Branch("emat",&_emat,"emat/D");
+  _tree->Branch("calo_emfrac",&_calo_emfrac,"calo_emfrac/D");
+  _tree->Branch("calo_ohfrac",&_calo_ohfrac,"calo_ohfrac/D");
+  _tree->Branch("calo_e",&_calo_e,"calo_e/D");
   return Fun4AllReturnCodes::EVENT_OK;
 }
 
@@ -240,6 +246,11 @@ int multiColStudy::process_event(PHCompositeNode *topNode)
       cout << "No MBD info!" << endl;
     }
   int nchan = 1536;
+  _ohat = 0;
+  _emat = 0;
+  _calo_emfrac = 0;
+  _calo_ohfrac = 0;
+  _calo_e = 0;
   for(int h=0; h<_ncalotype; ++h)
     {
       if(towers[h])
@@ -259,6 +270,18 @@ int multiColStudy::process_event(PHCompositeNode *topNode)
 	      float newTheta = atan2(radius,newz);
 	      float towerEta = -log(tan(0.5*newTheta));
 	      float towerE = tower->get_energy();///cosh(towerEta);
+	      float tower_t = tower->get_time_float();
+	      if(h==0)
+		{
+		  _emat += towerE * tower_t;
+		  _calo_emfrac += towerE;
+		}
+	      else if(h==2)
+		{
+		  _ohat += towerE * tower_t;
+		  _calo_ohfrac += towerE;
+		}
+	      _calo_e += towerE;
 	      if(towerE > 1)
 		{
 		  if(_debug > 2) cout << "hit greater than 1" << endl;
@@ -276,6 +299,14 @@ int multiColStudy::process_event(PHCompositeNode *topNode)
 	  cout << "no towers " << h << endl;
 	}
     }
+
+  if(_calo_e != 0)
+    {
+      _ohat /= _calo_e;
+      _emat /= _calo_e;
+      _calo_emfrac /= _calo_e;
+      _calo_ohfrac /= _calo_e;
+    }
   
   float maxJetE = 0;
   float maxJetPhi = 0;
@@ -292,6 +323,7 @@ int multiColStudy::process_event(PHCompositeNode *topNode)
           Jet *jet = jets->get_jet(i);
           if(jet)
             {
+	      _jet_at[_njet] = 0;
 	      if(_debug > 5) cout << "getting jet E/eta" << endl;
 	      float testJetE = jet->get_e();
 	      float testJetPhi = jet->get_phi();
@@ -348,6 +380,7 @@ int multiColStudy::process_event(PHCompositeNode *topNode)
 		    }
 		  tower = towers[towerType]->get_tower_at_channel(channel);
 		  float towerE = tower->get_energy();
+		  _jet_at[_njet] += towerE * tower->get_time_float();
 		  //int key = towers[towerType]->encode_key(channel);
 		  //const RawTowerDefs::keytype geomkey = RawTowerDefs::encode_towerid(RawTowerDefs::CalorimeterId::HCALIN, towers[towerType]->getTowerEtaBin(key), towers[towerType]->getTowerPhiBin(key));
 		  if(_debug > 6) cout << "encoding tower geom" << endl;
@@ -363,6 +396,7 @@ int multiColStudy::process_event(PHCompositeNode *topNode)
 		}
 	      _frcoh[_njet] /= _jet_e[_njet];
 	      _frcem[_njet] /= _jet_e[_njet];
+	      _jet_at[_njet] /= _jet_e[_njet];
 	      ++_njet;
 	      if(_njet > 9) break;
 	    }

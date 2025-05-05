@@ -54,6 +54,7 @@ class multiColStudy : public SubsysReco
   double _jet_et[_maxjet];
   double _jet_eta[_maxjet];
   double _jet_phi[_maxjet];
+  double _jet_at[_maxjet];
   double _frcem[_maxjet];
   double _frcoh[_maxjet];
   double _dphilead;
@@ -61,6 +62,12 @@ class multiColStudy : public SubsysReco
 
   double _towgrone[_etow+2*_htow][_gronefield];
 
+  double _ohat;
+  double _emat;
+  double _calo_emfrac;
+  double _calo_ohfrac;
+  double _calo_e;
+  
   int _tnjet;
   double _tjet_e[_maxjet];
   double _tjet_et[_maxjet];
