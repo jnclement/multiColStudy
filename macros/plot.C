@@ -10,12 +10,36 @@ int format_th1d(TH1D* hist, string xtitle, string ytitle, int n = 1)
   hist->GetYaxis()->SetLabelSize(0.03);
   hist->GetYaxis()->SetTitleSize(0.03);
 
-  hist->SetMarkerStyle(20);
+
   hist->SetMarkerSize(1.5);
-  if(n==0) hist->SetMarkerColor(kBlack);
-  else if(n==1) hist->SetMarkerColor(kCyan+3);
-  else if(n==2) hist->SetMarkerColor(kMagenta+3);
-  else hist->SetMarkerColor(kYellow+3);
+  if(n==0)
+    {
+      hist->SetMarkerColor(kBlack);
+      hist->SetLineColor(kBlack);
+      hist->SetLineWidth(2);
+      hist->SetMarkerStyle(20);
+    }
+  else if(n==1)
+    {
+      hist->SetMarkerColor(kCyan+2);
+      hist->SetLineColor(kCyan+2);
+      hist->SetLineWidth(2);
+      hist->SetMarkerStyle(21);
+    }
+  else if(n==2)
+    {
+      hist->SetMarkerColor(kMagenta+2);
+      hist->SetLineColor(kMagenta+2);
+      hist->SetLineWidth(2);
+      hist->SetMarkerStyle(53);
+    }
+  else
+    {
+      hist->SetMarkerColor(kYellow+2);
+      hist->SetLineColor(kYellow+2);
+      hist->SetLineWidth(2);
+      hist->SetMarkerStyle(54);
+    }
 
   return 0;
 }
@@ -42,9 +66,9 @@ int draw_overlay_with_ratio_th1d(TH1D** hists, string histbasename, TCanvas* can
       if(hists[i]->GetMaximum() > ymax) ymax = hists[i]->GetMaximum();
       leg->AddEntry(hists[i],region[i].c_str(),"p");
       ratio[i] = new TH1D((histbasename+"_"+region[0]+"_ratio_"+region[i]).c_str(),"",hists[0]->GetNbinsX(),hists[0]->GetXaxis()->GetXmin(),hists[0]->GetXaxis()->GetXmax());
-      ratio[i]->Divide(hists[0],hists[i]);
+      if(i>0) ratio[i]->Divide(hists[0],hists[i]);
       ratio[i]->GetYaxis()->SetRangeUser(0,2);
-      format_th1d(ratio[i],hists[i]->GetXaxis()->GetTitle(),"Ratio",i);
+      format_th1d(ratio[i],hists[i]->GetXaxis()->GetTitle(),"Ratio of Region A to Region B,C,D",i);
       ratio[i]->GetXaxis()->SetTitleSize(ratio[i]->GetXaxis()->GetTitleSize()/0.5);
       ratio[i]->GetYaxis()->SetTitleSize(ratio[i]->GetYaxis()->GetTitleSize()/0.5);
       ratio[i]->GetXaxis()->SetLabelSize(ratio[i]->GetXaxis()->GetLabelSize()/0.5);
@@ -72,9 +96,51 @@ int draw_overlay_with_ratio_th1d(TH1D** hists, string histbasename, TCanvas* can
   antikt_text(0.4,0.3,0.92);
   float minet = 15;
   if(std::string(hists[0]->GetName()).find("gr15") != std::string::npos) minet = 20;
-  et_cut_text(minet,0.05,0.96);
+  et_cut_text(minet,0.015,0.96);
   dijet_cut_text(0.3,0.96);
-  can->SaveAs(("/sphenix/user/jocl/projects/multiColStudy/output/plots/"+string(hists[0]->GetName())+"_overlay_"+(dijetcut?"dc":"nc")+".png").c_str());
+  TLine* oneline = new TLine(hists[0]->GetXaxis()->GetXmin(),1,hists[0]->GetXaxis()->GetXmax(),1);
+  can->cd(2);
+  oneline->Draw();
+  can->SaveAs(("/sphenix/user/jocl/projects/multiColStudy/output/plots/"+string(hists[0]->GetName())+"_overlay_"+(dijetcut?"dc":"nc")+".pdf").c_str());
+
+  ymax = 0;
+  for(int i=0; i<nhistplot; ++i)
+    {
+      hists[i]->Scale(1./hists[i]->Integral());
+      hists[i]->GetYaxis()->SetTitle("Counts / N_{bit18}^{scaled} (Normalized to #Sigma(bins)=1)");
+      if(hists[i]->GetMaximum() > ymax) ymax = hists[i]->GetMaximum();
+    }
+  
+  hists[0]->GetYaxis()->SetRangeUser(0,1.5*ymax);
+  for(int i=0; i<nhistplot; ++i)
+    {
+      can->cd(1);
+      hists[i]->GetXaxis()->SetLabelSize(0);
+      hists[i]->GetXaxis()->SetTitleSize(0);
+      hists[i]->GetYaxis()->SetRangeUser(0,1.5*ymax);
+      if(i>0) ratio[i]->Divide(hists[0],hists[i]);
+      hists[i]->Draw(i==0?"PE":"SAME PE");
+      can->cd(2);
+      ratio[i]->GetYaxis()->SetRangeUser(0,2);
+      if(i>0) ratio[i]->Draw(i==1?"PE":"SAME PE");
+    }
+
+  can->cd(1);
+  leg->SetBorderSize(0);
+  leg->SetFillStyle(0);
+  leg->Draw();
+  sphenixtext(0.65,0.96);
+  sqrt_s_text(0.65,0.92);
+  antikt_text(0.4,0.3,0.92);
+  et_cut_text(minet,0.015,0.96);
+  dijet_cut_text(0.3,0.96);
+  can->cd(2);
+  oneline->Draw();
+
+  can->SaveAs(("/sphenix/user/jocl/projects/multiColStudy/output/plots/"+string(hists[0]->GetName())+"_overlay_"+(dijetcut?"dc":"nc")+"_normed.pdf").c_str());
+
+
+  
   delete leg;
   for(int i=0; i<nhistplot; ++i)
     {
@@ -97,18 +163,18 @@ int draw_th1d(TH1D* hist, TCanvas* can, int dijetcut)
   sphenixtext(0.65,0.96);
   sqrt_s_text(0.65,0.92);
   antikt_text(0.4,0.3,0.92);
-  et_cut_text(minet,0.05,0.96);
+  et_cut_text(minet,0.015,0.96);
   dijet_cut_text(0.3,0.96);
-  can->SaveAs(("/sphenix/user/jocl/projects/multiColStudy/output/plots/"+string(hist->GetName())+"_"+(dijetcut?"dc":"nc")+".png").c_str());
+  can->SaveAs(("/sphenix/user/jocl/projects/multiColStudy/output/plots/"+string(hist->GetName())+"_"+(dijetcut?"dc":"nc")+".pdf").c_str());
 
   gPad->SetLogy();
   hist->Draw("PE");
   sphenixtext(0.65,0.96);
   sqrt_s_text(0.65,0.92);
   antikt_text(0.4,0.3,0.92);
-  et_cut_text(minet,0.05,0.96);
+  et_cut_text(minet,0.015,0.96);
   dijet_cut_text(0.3,0.96);
-  can->SaveAs(("/sphenix/user/jocl/projects/multiColStudy/output/plots/"+string(hist->GetName())+"_"+(dijetcut?"dc":"nc")+"_log.png").c_str());
+  can->SaveAs(("/sphenix/user/jocl/projects/multiColStudy/output/plots/"+string(hist->GetName())+"_"+(dijetcut?"dc":"nc")+"_log.pdf").c_str());
   gPad->SetLogy(0);
   return 0;
 }
@@ -173,18 +239,18 @@ int draw_th2d(TH2D* hist, TCanvas* can, int dijetcut)
   antikt_text(0.4,0.3,0.92);
   float minet = 15;
   if(std::string(hist->GetName()).find("gr15") != std::string::npos) minet = 20;
-  et_cut_text(minet,0.05,0.96);
+  et_cut_text(minet,0.015,0.96);
   dijet_cut_text(0.3,0.96);
-  can->SaveAs(("/sphenix/user/jocl/projects/multiColStudy/output/plots/"+string(hist->GetName())+"_"+(dijetcut?"dc":"nc")+".png").c_str());
+  can->SaveAs(("/sphenix/user/jocl/projects/multiColStudy/output/plots/"+string(hist->GetName())+"_"+(dijetcut?"dc":"nc")+".pdf").c_str());
 
   gPad->SetLogz();
   hist->Draw("COLZ");
   sphenixtext(0.65,0.96);
   sqrt_s_text(0.65,0.92);
   antikt_text(0.4,0.3,0.92);
-  et_cut_text(minet,0.05,0.96);
+  et_cut_text(minet,0.015,0.96);
   dijet_cut_text(0.3,0.96);
-  can->SaveAs(("/sphenix/user/jocl/projects/multiColStudy/output/plots/"+string(hist->GetName())+"_"+(dijetcut?"dc":"nc")+"_log.png").c_str());
+  can->SaveAs(("/sphenix/user/jocl/projects/multiColStudy/output/plots/"+string(hist->GetName())+"_"+(dijetcut?"dc":"nc")+"_log.pdf").c_str());
   gPad->SetLogz(0);
   return 0;
 }

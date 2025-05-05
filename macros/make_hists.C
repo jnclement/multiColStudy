@@ -194,6 +194,7 @@ int make_hists(string tag, vector<int> rns, vector<int> nfiles, int dodijetcut =
 	  for(int j=0; j<njet; ++j)
 	    {
 	      double ET = jet_e[j]/cosh(jet_eta[j]);
+	      if(ET < 15) continue;
 	      jet_eta_phi->Fill(jet_eta[j],jet_phi[j]);
 	      jet_E_eta->Fill(jet_e[j],jet_eta[j]);
 	      jet_E_phi->Fill(jet_e[j],jet_phi[j]);
