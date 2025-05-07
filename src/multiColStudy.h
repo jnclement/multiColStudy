@@ -43,7 +43,7 @@ class multiColStudy : public SubsysReco
   static const int _maxzvtx = 3;
   static const int _maxjet = 10;
   static const int _mbdside = 2;
-  static const int _etow = 1536;
+  static const int _etow = 24576;
   static const int _htow = 1536;
   static const int _gronefield = 5;
   static const int _ncalotype = 3;

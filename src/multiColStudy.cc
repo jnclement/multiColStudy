@@ -220,6 +220,14 @@ int multiColStudy::process_event(PHCompositeNode *topNode)
   towers[0] = findNode::getClass<TowerInfoContainerv4>(topNode, "TOWERINFO_CALIB_CEMC");
   towers[1] = findNode::getClass<TowerInfoContainerv4>(topNode, "TOWERINFO_CALIB_HCALIN");
   towers[2] = findNode::getClass<TowerInfoContainerv4>(topNode, "TOWERINFO_CALIB_HCALOUT");
+
+  TowerInfoContainer *rawtowers[3];
+  rawtowers[0] = findNode::getClass<TowerInfoContainerv4>(topNode, "TOWERS_CEMC");
+  rawtowers[1] = findNode::getClass<TowerInfoContainerv4>(topNode, "TOWERS_HCALIN");
+  rawtowers[2] = findNode::getClass<TowerInfoContainerv4>(topNode, "TOWERS_HCALOUT");
+  
+
+  
   JetContainer *jets = findNode::getClass<JetContainerv1>(topNode, "AntiKt_Tower_HIRecoSeedsRaw_r04");//"AntiKt_unsubtracted_r04");
   if(!jets) jets = findNode::getClass<JetContainerv1>(topNode, "AntiKt_unsubtracted_r04");
   JetContainer* truthjets = findNode::getClass<JetContainerv1>(topNode,"AntiKt_Truth_r04");
@@ -251,6 +259,7 @@ int multiColStudy::process_event(PHCompositeNode *topNode)
   _calo_emfrac = 0;
   _calo_ohfrac = 0;
   _calo_e = 0;
+  
   for(int h=0; h<_ncalotype; ++h)
     {
       if(towers[h])
@@ -259,18 +268,22 @@ int multiColStudy::process_event(PHCompositeNode *topNode)
 	  for(int i=0; i<nchan; ++i)
 	    {
 	      TowerInfo* tower = towers[h]->get_tower_at_channel(i);
+	      TowerInfo* rawtower = rawtowers[h]->get_tower_at_channel(i);
 	      if(!tower->get_isGood()) continue;
 	      int key = towers[h]->encode_key(i);
-	      const RawTowerDefs::keytype geomkey = RawTowerDefs::encode_towerid(h<2?RawTowerDefs::CalorimeterId::HCALIN:RawTowerDefs::CalorimeterId::HCALOUT, towers[h]->getTowerEtaBin(key), towers[h]->getTowerPhiBin(key));
-	      RawTowerGeom *tower_geom = geom[h<2?1:2]->get_tower_geometry(geomkey);
-	      float radius = h<1?93.5:tower_geom->get_center_radius();
-	      float ihEta = tower_geom->get_eta();
-	      float emZ = radius/(tan(2*atan(exp(-ihEta))));
-	      float newz = h<1?(emZ - _rzvtx[0]):(tower_geom->get_center_z() - _rzvtx[0]);
+	      RawTowerDefs::keytype geomkey; // = RawTowerDefs::encode_towerid(h<2?RawTowerDefs::CalorimeterId::HCALIN:RawTowerDefs::CalorimeterId::HCALOUT, towers[h]->getTowerEtaBin(key), towers[h]->getTowerPhiBin(key));
+	      if(h==0) geomkey = encode_towerid(RawTowerDefs::CalorimeterId::CEMC,towers[h]->getTowerEtaBin(key),towers[h]->getTowerPhiBin(key));
+	      if(h==1) geomkey = encode_towerid(RawTowerDefs::CalorimeterId::HCALIN,towers[h]->getTowerEtaBin(key),towers[h]->getTowerPhiBin(key));
+	      if(h==2) geomkey = encode_towerid(RawTowerDefs::CalorimeterId::HCALOUT,towers[h]->getTowerEtaBin(key),towers[h]->getTowerPhiBin(key));
+	      RawTowerGeom *tower_geom = geom[h]->get_tower_geometry(geomkey);
+	      float radius = tower_geom->get_center_radius();//h<1?93.5:
+	      //float ihEta = tower_geom->get_eta();
+	      //float emZ = radius/(tan(2*atan(exp(-ihEta))));
+	      float newz = (tower_geom->get_center_z() - _rzvtx[0]);//h<1?(emZ - _rzvtx[0]):;
 	      float newTheta = atan2(radius,newz);
 	      float towerEta = -log(tan(0.5*newTheta));
 	      float towerE = tower->get_energy();///cosh(towerEta);
-	      float tower_t = tower->get_time_float();
+	      float tower_t = rawtower->get_time_float();
 
 	      if(towerE > 1)
 		{
@@ -383,18 +396,19 @@ int multiColStudy::process_event(PHCompositeNode *topNode)
 		      continue;
 		    }
 		  tower = towers[towerType]->get_tower_at_channel(channel);
+		  TowerInfo* rawtower = rawtowers[towerType]->get_tower_at_channel(channel); 
 		  float towerE = tower->get_energy();
 		  if(towerE > 1)
 		    {
-		      _jet_at[_njet] += tower->get_time_float();
+		      _jet_at[_njet] += rawtower->get_time_float();
 		      if(towerType == 0)
 			{
-			  _jet_at_em[_njet] += tower->get_time_float();
+			  _jet_at_em[_njet] += rawtower->get_time_float();
 			  ++ntem;
 			}
 		      else if(towerType == 2)
 			{
-			  _jet_at_oh[_njet] += tower->get_time_float();
+			  _jet_at_oh[_njet] += rawtower->get_time_float();
 			  ++ntoh;
 			}
 		      ++nt;
@@ -445,7 +459,7 @@ int multiColStudy::process_event(PHCompositeNode *topNode)
   _tnjet = 0;
   if(truthjets)
     {
-      for(int i=0; i<truthjets->size(); ++i)
+      for(long unsigned int i=0; i<truthjets->size(); ++i)
 	{
 	  Jet* jet = truthjets->get_jet(i);
 	  if(_debug > 5) cout << "getting jet E/eta" << endl;

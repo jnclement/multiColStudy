@@ -66,9 +66,14 @@ int draw_overlay_with_ratio_th1d(TH1D** hists, string histbasename, TCanvas* can
       if(hists[i]->GetMaximum() > ymax) ymax = hists[i]->GetMaximum();
       leg->AddEntry(hists[i],region[i].c_str(),"p");
       ratio[i] = new TH1D((histbasename+"_"+region[0]+"_ratio_"+region[i]).c_str(),"",hists[0]->GetNbinsX(),hists[0]->GetXaxis()->GetXmin(),hists[0]->GetXaxis()->GetXmax());
-      if(i>0) ratio[i]->Divide(hists[0],hists[i]);
+      if(std::string(hists[i]->GetName()).find("mbdt") != std::string::npos)
+	{
+	  ymax = 0.2;
+	  hists[i]->Rebin(5);
+	}
+      if(i>0) ratio[i]->Divide(hists[i],hists[0]);
       ratio[i]->GetYaxis()->SetRangeUser(0,2);
-      format_th1d(ratio[i],hists[i]->GetXaxis()->GetTitle(),"Ratio of Region A to Region B,C,D",i);
+      format_th1d(ratio[i],hists[i]->GetXaxis()->GetTitle(),"Ratio of Region B,C,D to Region A",i);
       ratio[i]->GetXaxis()->SetTitleSize(ratio[i]->GetXaxis()->GetTitleSize()/0.5);
       ratio[i]->GetYaxis()->SetTitleSize(ratio[i]->GetYaxis()->GetTitleSize()/0.5);
       ratio[i]->GetXaxis()->SetLabelSize(ratio[i]->GetXaxis()->GetLabelSize()/0.5);
@@ -79,6 +84,8 @@ int draw_overlay_with_ratio_th1d(TH1D** hists, string histbasename, TCanvas* can
   for(int i=0; i<nhistplot; ++i)
     {
       can->cd(1);
+      if(std::string(hists[i]->GetName()).find("mbd") != std::string::npos) ymax = hists[i]->GetBinContent(11)*1.5;
+
       hists[i]->GetXaxis()->SetLabelSize(0);
       hists[i]->GetXaxis()->SetTitleSize(0);
       hists[i]->GetYaxis()->SetRangeUser(0,1.5*ymax);
@@ -95,22 +102,26 @@ int draw_overlay_with_ratio_th1d(TH1D** hists, string histbasename, TCanvas* can
   sqrt_s_text(0.65,0.92);
   antikt_text(0.4,0.3,0.92);
   float minet = 15;
-  if(std::string(hists[0]->GetName()).find("gr15") != std::string::npos) minet = 20;
+  if(std::string(hists[0]->GetName()).find("gr20") != std::string::npos) minet = 20;
   et_cut_text(minet,0.015,0.96);
   dijet_cut_text(0.3,0.96);
   TLine* oneline = new TLine(hists[0]->GetXaxis()->GetXmin(),1,hists[0]->GetXaxis()->GetXmax(),1);
   can->cd(2);
   oneline->Draw();
   can->SaveAs(("/sphenix/user/jocl/projects/multiColStudy/output/plots/"+string(hists[0]->GetName())+"_overlay_"+(dijetcut?"dc":"nc")+".pdf").c_str());
-
   ymax = 0;
   for(int i=0; i<nhistplot; ++i)
     {
       hists[i]->Scale(1./hists[i]->Integral());
       hists[i]->GetYaxis()->SetTitle("Counts / N_{bit18}^{scaled} (Normalized to #Sigma(bins)=1)");
       if(hists[i]->GetMaximum() > ymax) ymax = hists[i]->GetMaximum();
+      if(std::string(hists[i]->GetName()).find("mbd") != std::string::npos) ymax = hists[i]->GetBinContent(11)*1.5;
+      if(std::string(hists[i]->GetName()).find("mbdt") != std::string::npos)
+	{
+	  ymax = 0.2;
+	}
     }
-  
+
   hists[0]->GetYaxis()->SetRangeUser(0,1.5*ymax);
   for(int i=0; i<nhistplot; ++i)
     {
@@ -118,7 +129,11 @@ int draw_overlay_with_ratio_th1d(TH1D** hists, string histbasename, TCanvas* can
       hists[i]->GetXaxis()->SetLabelSize(0);
       hists[i]->GetXaxis()->SetTitleSize(0);
       hists[i]->GetYaxis()->SetRangeUser(0,1.5*ymax);
-      if(i>0) ratio[i]->Divide(hists[0],hists[i]);
+      if(std::string(hists[i]->GetName()).find("mbdt") != std::string::npos)
+	{
+	  ymax = 0.2;
+	}
+      if(i>0) ratio[i]->Divide(hists[i],hists[0]);
       hists[i]->Draw(i==0?"PE":"SAME PE");
       can->cd(2);
       ratio[i]->GetYaxis()->SetRangeUser(0,2);
@@ -139,7 +154,7 @@ int draw_overlay_with_ratio_th1d(TH1D** hists, string histbasename, TCanvas* can
 
   can->SaveAs(("/sphenix/user/jocl/projects/multiColStudy/output/plots/"+string(hists[0]->GetName())+"_overlay_"+(dijetcut?"dc":"nc")+"_normed.pdf").c_str());
 
-
+  gPad->SetLogy(0);
   
   delete leg;
   for(int i=0; i<nhistplot; ++i)
@@ -158,7 +173,7 @@ int draw_th1d(TH1D* hist, TCanvas* can, int dijetcut)
   can->SetTopMargin(0.15);
 
   float minet = 15;
-  if(std::string(hist->GetName()).find("gr15") != std::string::npos) minet = 20;
+  if(std::string(hist->GetName()).find("gr20") != std::string::npos) minet = 20;
   hist->Draw("PE");
   sphenixtext(0.65,0.96);
   sqrt_s_text(0.65,0.92);
@@ -186,9 +201,9 @@ int draw_ratio_th1d(TH1D** hists, string histbasename, string* region, TCanvas* 
   double xmin = hists[0]->GetXaxis()->GetXmin();
   TH1D* ratio = new TH1D((histbasename+"_"+region[0]+"_to_"+region[1]).c_str(),"",nxbin,xmin,xmax);
 
-  ratio->Divide(hists[0],hists[1]);
+  ratio->Divide(hists[1],hists[0]);
 
-  format_th1d(ratio, hists[0]->GetXaxis()->GetTitle(), ("Ratio of "+region[0]+" to "+region[1]).c_str());
+  format_th1d(ratio, hists[0]->GetXaxis()->GetTitle(), ("Ratio of "+region[1]+" to "+region[0]).c_str());
   ratio->GetYaxis()->SetRangeUser(0,2);
   draw_th1d(ratio, can, dijetcut);
   delete ratio;
@@ -238,7 +253,7 @@ int draw_th2d(TH2D* hist, TCanvas* can, int dijetcut)
   sqrt_s_text(0.65,0.92);
   antikt_text(0.4,0.3,0.92);
   float minet = 15;
-  if(std::string(hist->GetName()).find("gr15") != std::string::npos) minet = 20;
+  if(std::string(hist->GetName()).find("gr20") != std::string::npos) minet = 20;
   et_cut_text(minet,0.015,0.96);
   dijet_cut_text(0.3,0.96);
   can->SaveAs(("/sphenix/user/jocl/projects/multiColStudy/output/plots/"+string(hist->GetName())+"_"+(dijetcut?"dc":"nc")+".pdf").c_str());
@@ -265,8 +280,8 @@ int draw_ratio_th2d(TH2D** hists, string histbasename, string* region, TCanvas* 
   double ymin = hists[0]->GetYaxis()->GetXmin();
   TH2D* ratio = new TH2D((histbasename+"_"+region[0]+"_to_"+region[1]).c_str(),"",nxbin,xmin,xmax,nybin,ymin,ymax);
 
-  ratio->Divide(hists[0],hists[1]);
-  format_th2d(ratio, hists[0]->GetXaxis()->GetTitle(), hists[0]->GetYaxis()->GetTitle(), ("Ratio of "+region[0]+" to "+region[1]).c_str());
+  ratio->Divide(hists[1],hists[0]);
+  format_th2d(ratio, hists[0]->GetXaxis()->GetTitle(), hists[0]->GetYaxis()->GetTitle(), ("Ratio of "+region[1]+" to "+region[0]).c_str());
   ratio->GetZaxis()->SetRangeUser(0,2);
   draw_th2d(ratio, can, dijetcut);
   delete ratio;
@@ -281,7 +296,7 @@ int get_and_draw_th2d(string histbasename, string* region, TFile* histfile, stri
   for(int i=0; i<nhistplot; ++i)
     {
       hists[i] = (TH2D*)histfile->Get((histbasename+"_"+region[i]).c_str());
-      if(std::string(hists[i]->GetName()).find("frcem") != std::string::npos) hists[i]->Rebin2D(5,5);
+      //if(std::string(hists[i]->GetName()).find("frcem") != std::string::npos) hists[i]->Rebin2D(5,5);
       if(std::string(hists[i]->GetName()).find("calo") != std::string::npos) hists[i]->Rebin2D(5,5);
       format_th2d(hists[i], xtitle, ytitle, ztitle);
       //draw_th2d(hists[i], can,dijetcut);
@@ -312,15 +327,15 @@ int plot()
   TFile* histfile;
   histfile = TFile::Open("../output/hists/hadded.root");
   int dijetcut = 1;
-  const int nhist = 28;
+  const int nhist = 34;
 
   TCanvas* can = new TCanvas("can","",1000,1000);
   TCanvas* ratcan = new TCanvas("ratcan","",1000,1500);
-  string histnames[nhist] = {"jet_eta_phi","jet_eta_phi_gr15","tow_eta_phi","tow_eta_phi_gr5","tow_deteta_phi","tow_deteta_phi_gr5","jet_E_eta","tow_E_eta","tow_E_deteta","jet_E_phi","tow_E_phi","jet_ET_eta","tow_ET_eta","tow_ET_deteta","jet_ET_phi","tow_ET_phi","jet_E_frcem","jet_ET_dphi","jet_eta_frcem","jet_eta_frcem_gr15","jet_phi_frcem","jet_phi_frcem_gr15","frcem_frcoh","frcem_frcoh_gr15","jet_t_frcem","jet_t_frcem_gr15","emat_ohat","emat_calo_emfrac"};
+  string histnames[nhist] = {"jet_eta_phi","jet_eta_phi_gr20","tow_eta_phi","tow_eta_phi_gr5","tow_deteta_phi","tow_deteta_phi_gr5","jet_E_eta","tow_E_eta","tow_E_deteta","jet_E_phi","tow_E_phi","jet_ET_eta","tow_ET_eta","tow_ET_deteta","jet_ET_phi","tow_ET_phi","jet_E_frcem","jet_ET_dphi","jet_eta_frcem","jet_eta_frcem_gr20","jet_phi_frcem","jet_phi_frcem_gr20","frcem_frcoh","frcem_frcoh_gr20","jet_t_frcem","jet_t_frcem_gr20","emat_ohat","emat_calo_emfrac","jet_at_em_at_oh","jet_at_em_at_oh_gr20","jet_at_em_frcem","jet_at_em_frcem_gr20","jet_at_oh_frcem","jet_at_oh_frcem_gr20"};
 
-  string xtitles[nhist] = {"Jet #eta","Jet #eta","Tower #eta","Tower #eta","Tower Detector #eta","Tower Detector #eta","jet E [GeV]","Tower E [GeV]","Tower E [GeV]","Jet E [GeV]","Tower E [GeV]","Jet E_{T} [GeV]","Tower E_{T} [GeV]","Tower E_{T} [GeV]","Jet E_{T} [GeV]","Tower E_{T} [GeV]","Jet E [GeV]","Jet E_{T} [GeV]","Jet #eta","Jet #eta","Jet #phi","Jet #phi","E_{jet}^{EM}/E_{jet}","E_{jet}^{EM}/E_{jet}","Energy Weighted Peak Sample of Jet","Energy Weighted Peak Sample of Jet","Energy Weighted Peak Sample of EMCal","Energy Weighted Peak Sample of EMCal"};
+  string xtitles[nhist] = {"Jet #eta","Jet #eta","Tower #eta","Tower #eta","Tower Detector #eta","Tower Detector #eta","jet E [GeV]","Tower E [GeV]","Tower E [GeV]","Jet E [GeV]","Tower E [GeV]","Jet E_{T} [GeV]","Tower E_{T} [GeV]","Tower E_{T} [GeV]","Jet E_{T} [GeV]","Tower E_{T} [GeV]","Jet E [GeV]","Jet E_{T} [GeV]","Jet #eta","Jet #eta","Jet #phi","Jet #phi","E_{jet}^{EM}/E_{jet}","E_{jet}^{EM}/E_{jet}","Mean E_{T}^{tower}>1 Peak Sample of Jet","Mean E_{T}^{tower}>1 Peak Sample of Jet","Mean E_{T}^{tower}>1 Peak Sample of EMCal","Mean E_{T}^{tower}>1 Peak Sample of EMCal","Mean EMCal E_{T}^{tower}>1 Peak Sample of Jet","Mean EMCal E_{T}^{tower}>1 Peak Sample of Jet","Mean EMCal E_{T}^{tower}>1 Peak Sample of Jet","Mean EMCal E_{T}^{tower}>1 Peak Sample of Jet","Mean OHCal E_{T}^{tower}>1 Peak Sample of Jet","Mean OHCal E_{T}^{tower}>1 Peak Sample of Jet"};
 
-  string ytitles[nhist] = {"Jet #phi","Jet #phi","Tower #phi","Tower #phi","Tower #phi","Tower #phi","Jet #eta","Tower #eta","Tower Detector #eta","Jet #phi","Tower #phi","Jet #eta","Tower #eta","Tower Detector #eta","Jet #phi","Tower #phi","E_{jet}^{EM}/E_{jet}","#Delta#phi","E_{jet}^{EM}/E_{jet}","E_{jet}^{EM}/E_{jet}","E_{jet}^{EM}/E_{jet}","E_{jet}^{EM}/E_{jet}","E_{jet}^{OH}/E_{jet}","E_{jet}^{OH}/E_{jet}","E_{jet}^{EM}/E_{jet}","E_{jet}^{EM}/E_{jet}","Energy Weighted Peak Sample of EMCal","E_{calo}^{EM}/E_{calo}"};
+  string ytitles[nhist] = {"Jet #phi","Jet #phi","Tower #phi","Tower #phi","Tower #phi","Tower #phi","Jet #eta","Tower #eta","Tower Detector #eta","Jet #phi","Tower #phi","Jet #eta","Tower #eta","Tower Detector #eta","Jet #phi","Tower #phi","E_{jet}^{EM}/E_{jet}","#Delta#phi","E_{jet}^{EM}/E_{jet}","E_{jet}^{EM}/E_{jet}","E_{jet}^{EM}/E_{jet}","E_{jet}^{EM}/E_{jet}","E_{jet}^{OH}/E_{jet}","E_{jet}^{OH}/E_{jet}","E_{jet}^{EM}/E_{jet}","E_{jet}^{EM}/E_{jet}","Mean E_{T}^{tower}>1 Peak Sample of EMCal","E_{calo}^{EM}/E_{calo}","Mean E_{T}^{tower}>1 OHCal Peak Sample of Jet","Mean OHCal E_{T}^{tower}>1 Peak Sample of Jet","E_{jet}^{EM}/E_{jet}","E_{jet}^{EM}/E_{jet}","E_{jet}^{EM}/E_{jet}","E_{jet}^{EM}/E_{jet}"};
 
   for(int i=0; i<nhist; ++i)
     {
@@ -328,7 +343,7 @@ int plot()
     }
 
   const int nth1d = 9;
-  string th1dnames[nth1d] = {"zhist","mbdn","mbds","mbdt","calo_hitsgrone_0","calo_hitsgrone_1","calo_hitsgrone_2","zhist_gr15","zhist_nocut"};
+  string th1dnames[nth1d] = {"zhist","mbdn","mbds","mbdt","calo_hitsgrone_0","calo_hitsgrone_1","calo_hitsgrone_2","zhist_gr20","zhist_nocut"};
   string th1dxtitl[nth1d] = {"z_{vtx} [cm]","MBD Charge [Arb.]","MBD Charge [Arb.]","MBD Charge [Arb.]","Number of Towers with E > 1 GeV","Number of Towers with E > 1 GeV","Number of Towers with E > 1 GeV","z_{vtx} [cm]","z_{vtx} [cm]"};
 
   for(int i=0; i<nth1d; ++i)
