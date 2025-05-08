@@ -97,6 +97,7 @@ int make_hists(string tag, vector<int> rns, vector<int> nfiles, int dodijetcut =
   TH2D* frcem_frcoh_gr20 = new TH2D(("frcem_frcoh_gr20_"+region).c_str(),"",24,-0.1,1.1,24,-0.1,1.1);
   TH2D* jet_ET_dphi = new TH2D(("jet_ET_dphi_"+region).c_str(),"",100,0,100,32,0,M_PI);
   TH1D* calo_hitsgrone[3];
+  TH2D* calo_tgrone_eta[3];
   TH2D* jet_eta_frcem = new TH2D(("jet_eta_frcem_"+region).c_str(),"",30,-1.5,1.5,24,-0.1,1.1);
   TH2D* jet_eta_frcem_gr20 = new TH2D(("jet_eta_frcem_gr20_"+region).c_str(),"",30,-1.5,1.5,24,-0.1,1.1);
   TH2D* jet_phi_frcem = new TH2D(("jet_phi_frcem_"+region).c_str(),"",44,-M_PI,M_PI,24,-0.1,1.1);
@@ -105,6 +106,8 @@ int make_hists(string tag, vector<int> rns, vector<int> nfiles, int dodijetcut =
   TH2D* jet_t_frcem = new TH2D(("jet_t_frcem_"+region).c_str(),"",60,-6-0.5,6-0.5,24,-0.1,1.1);
   TH2D* jet_t_frcem_gr20 = new TH2D(("jet_t_frcem_gr20_"+region).c_str(),"",60,-6-0.5,6-0.5,24,-0.1,1.1);
   TH2D* emat_ohat = new TH2D(("emat_ohat_"+region).c_str(),"",60,-6-0.5,6-0.5,60,-6-0.5,6);
+  TH1D* h_emat = new TH1D(("h_emat_"+region).c_str(),"",60,-6-0.5,6-0.5);
+  TH1D* h_ohat = new TH1D(("h_ohat_"+region).c_str(),"",60,-6-0.5,6-0.5);
   TH2D* emat_calo_emfrac = new TH2D(("emat_calo_emfrac_"+region).c_str(),"",60,-6-0.5,6-0.5,24,-0.1,1.1);
   TH2D* jet_at_em_at_oh = new TH2D(("jet_at_em_at_oh_"+region).c_str(),"",60,-6-0.5,6-0.5,60,-6-0.5,6-0.5);
   TH2D* jet_at_em_at_oh_gr20 = new TH2D(("jet_at_em_at_oh_gr20_"+region).c_str(),"",60,-6-0.5,6-0.5,60,-6-0.5,6-0.5);
@@ -115,6 +118,7 @@ int make_hists(string tag, vector<int> rns, vector<int> nfiles, int dodijetcut =
   for(int i=0; i<3; ++i)
     {
       calo_hitsgrone[i] = new TH1D(("calo_hitsgrone_"+to_string(i)+"_"+region).c_str(),"",50,-0.5,49.5);
+      calo_tgrone_eta[i] = new TH2D(("calo_tgrone_eta_"+to_string(i)+"_"+region).c_str(),"",60,-6,6,22,-1.1,1.1);
     }
 
   const int ntrigtypes = 4;
@@ -127,7 +131,7 @@ int make_hists(string tag, vector<int> rns, vector<int> nfiles, int dodijetcut =
   const int nmaxjet = 10;
   const int nzvtx = 3;
   const int maxtow = 24576+1536*2;
-  const int ntowfield = 5;
+  const int ntowfield = 6;
   const int mbdchan = 64;
   const int mbdside = 2;
   //start processing
@@ -160,8 +164,10 @@ int make_hists(string tag, vector<int> rns, vector<int> nfiles, int dodijetcut =
       //define non-branch variables
       double mbdnq, mbdsq, mbdtq;
       double calo_emfrac;//, calo_ohfrac, calo_e;
-      double emat[maxtow];
-      double ohat[maxtow];
+      double emat[nmaxjet][64];
+      double ohat[nmaxjet][64];
+      int ncgroe[nmaxjet];
+      int ncgroo[nmaxjet];
       //get TTree
       TTree* dattree = (TTree*)datfile->Get("tree");
       //set up branches
@@ -185,7 +191,9 @@ int make_hists(string tag, vector<int> rns, vector<int> nfiles, int dodijetcut =
       dattree->SetBranchAddress("calo_emfrac",&calo_emfrac);
       dattree->SetBranchAddress("jet_at_em",jet_at_em);
       dattree->SetBranchAddress("jet_at_oh",jet_at_oh);
-			     
+      dattree->SetBranchAddress("ncgroe",ncgroe);
+      dattree->SetBranchAddress("ncgroo",ncgroo);
+      
       
       for(int i=0; i<dattree->GetEntries(); ++i)
 	{
@@ -235,6 +243,14 @@ int make_hists(string tag, vector<int> rns, vector<int> nfiles, int dodijetcut =
 	      frcem_frcoh->Fill(frcem[j],frcoh[j]);
 	      jet_eta_frcem->Fill(jet_eta[j],frcem[j]);
 	      jet_phi_frcem->Fill(jet_phi[j],frcem[j]);
+	      for(int k = 0; k<ncgroe[j]; ++k)
+		{
+		  h_emat->Fill(emat[j][k]);
+		}
+	      for(int k=0; k<ncgroo[j]; ++k)
+		{
+		  h_ohat->Fill(ohat[j][k]);
+		}
 	      if(ET > 20)
 		{
 		  jet_at_em_frcem_gr20->Fill(jet_at_em[j],frcem[j]);
@@ -276,9 +292,13 @@ int make_hists(string tag, vector<int> rns, vector<int> nfiles, int dodijetcut =
 		  else if(towgrone[j][4] > -0.5) hitcalo = 0;
 		}
 	      if(hitcalo != -1) ++calohits[hitcalo];
-	      emat_ohat->Fill(emat[j],ohat[j]);
+	      else continue;
+	      
 	      double ET = towgrone[j][0]/cosh(towgrone[j][1]);
 	      tow_eta_phi->Fill(towgrone[j][1],towgrone[j][2]);
+
+	      calo_tgrone_eta[hitcalo]->Fill(towgrone[j][5],towgrone[j][3]);
+	      
 	      tow_deteta_phi->Fill(towgrone[j][3],towgrone[j][2]);
 	      tow_E_eta->Fill(towgrone[j][0],towgrone[j][1]);
 	      tow_E_deteta->Fill(towgrone[j][0],towgrone[j][3]);
@@ -308,7 +328,11 @@ int make_hists(string tag, vector<int> rns, vector<int> nfiles, int dodijetcut =
   outf->cd();
 
 
-  for(int i=0; i<3; ++i) calo_hitsgrone[i]->Scale(1./totalentries);
+  for(int i=0; i<3; ++i)
+    {
+      calo_hitsgrone[i]->Scale(1./totalentries);
+      calo_tgrone_eta[i]->Scale(1./totalentries);
+    }
   jet_eta_phi->Scale(1./totalentries);
   jet_eta_phi_gr20->Scale(1./totalentries);
   tow_eta_phi->Scale(1./totalentries);
@@ -342,6 +366,8 @@ int make_hists(string tag, vector<int> rns, vector<int> nfiles, int dodijetcut =
   jet_t_frcem->Scale(1./totalentries);
   jet_t_frcem_gr20->Scale(1./totalentries);
   emat_ohat->Scale(1./totalentries);
+  h_emat->Scale(1./totalentries);
+  h_ohat->Scale(1./totalentries);
   emat_calo_emfrac->Scale(1./totalentries);
   jet_at_em_at_oh->Scale(1./totalentries);
   jet_at_em_at_oh_gr20->Scale(1./totalentries);
@@ -349,7 +375,13 @@ int make_hists(string tag, vector<int> rns, vector<int> nfiles, int dodijetcut =
   jet_at_oh_frcem->Scale(1./totalentries);
   jet_at_em_frcem_gr20->Scale(1./totalentries);
   jet_at_oh_frcem_gr20->Scale(1./totalentries);
-  for(int i=0; i<3; ++i) calo_hitsgrone[i]->Write();
+  for(int i=0; i<3; ++i)
+    {
+      calo_hitsgrone[i]->Write();
+      calo_tgrone_eta[i]->Write();
+    }
+  h_emat->Write();
+  h_ohat->Write();
   jet_eta_phi->Write();
   jet_eta_phi_gr20->Write();
   tow_eta_phi->Write();
@@ -390,6 +422,7 @@ int make_hists(string tag, vector<int> rns, vector<int> nfiles, int dodijetcut =
   jet_at_em_at_oh_gr20->Write();
   jet_at_em_frcem_gr20->Write();
   jet_at_oh_frcem_gr20->Write();
+  
 
   ofstream outtrigs("trigcounts/outtrigs"+region+".txt");
   for(int i=0; i<ntrigtypes; ++i)

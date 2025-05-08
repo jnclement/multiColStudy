@@ -45,8 +45,9 @@ class multiColStudy : public SubsysReco
   static const int _mbdside = 2;
   static const int _etow = 24576;
   static const int _htow = 1536;
-  static const int _gronefield = 5;
+  static const int _gronefield = 6;
   static const int _ncalotype = 3;
+  static const int _maxjetcomp = 64;
   TFile* _f;
   TTree* _tree;
   int _njet;
@@ -59,13 +60,15 @@ class multiColStudy : public SubsysReco
   double _jet_at_oh[_maxjet];
   double _frcem[_maxjet];
   double _frcoh[_maxjet];
+  int _ncgroe[_maxjet];
+  int _ncgroo[_maxjet];
   double _dphilead;
   int _isdijet;
 
   double _towgrone[_etow+2*_htow][_gronefield];
 
-  double _ohat[_etow+2*_htow];
-  double _emat[_etow+2*_htow];
+  double _ohat[_maxjet][_etow+2*_htow];
+  double _emat[_maxjet][_etow+2*_htow];
   double _calo_emfrac;
   double _calo_ohfrac;
   double _calo_e;

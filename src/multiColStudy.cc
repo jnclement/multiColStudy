@@ -128,6 +128,8 @@ int multiColStudy::Init(PHCompositeNode *topNode)
   _tree->Branch("jet_at_oh",_jet_at_oh,"jet_at_oh[njet]/D");
   _tree->Branch("jet_eta",_jet_eta,"jet_eta[njet]/D");
   _tree->Branch("jet_phi",_jet_phi,"jet_phi[njet]/D");
+  _tree->Branch("ncgroe",_ncgroe,"ncgroe[njet]/I");
+  _tree->Branch("ncgroo",_ncgroo,"ncgroo[njet]/I");
   if(!_issim) _tree->Branch("trigvec",&_trigvec,"trigvec/l");
   if(_issim)
     {
@@ -144,14 +146,14 @@ int multiColStudy::Init(PHCompositeNode *topNode)
   _tree->Branch("rzvtx",_rzvtx,"rzvtx[nzvtx]/D");
   if(_issim) _tree->Branch("tzvtx",_tzvtx,"tzvtx[tnzvtx]/D");
   _tree->Branch("hitsgrone",&_hitsgrone,"hitsgrone/I");
-  _tree->Branch("towgrone",_towgrone,"towgrone[hitsgrone][5]/D");
+  _tree->Branch("towgrone",_towgrone,"towgrone[hitsgrone][6]/D");
   _tree->Branch("mbdq",_mbdq,"mbdq[2][64]/D");
   _tree->Branch("frcem",_frcem,"frcem[njet]/D");
   _tree->Branch("frcoh",_frcoh,"frcoh[njet]/D");
   _tree->Branch("dphilead",&_dphilead,"dphilead/D");
   _tree->Branch("isdijet",&_isdijet,"isdijet/I");
-  _tree->Branch("ohat",_ohat,"ohat[hitsgrone]/D");
-  _tree->Branch("emat",_emat,"emat[hitsgrone]/D");
+  _tree->Branch("ohat",_ohat,"ohat[njet][64]/D");
+  _tree->Branch("emat",_emat,"emat[njet][64]/D");
   _tree->Branch("calo_emfrac",&_calo_emfrac,"calo_emfrac/D");
   _tree->Branch("calo_ohfrac",&_calo_ohfrac,"calo_ohfrac/D");
   _tree->Branch("calo_e",&_calo_e,"calo_e/D");
@@ -293,15 +295,13 @@ int multiColStudy::process_event(PHCompositeNode *topNode)
 		  _towgrone[_hitsgrone][2] = tower_geom->get_phi();
 		  _towgrone[_hitsgrone][3] = tower_geom->get_eta();
 		  _towgrone[_hitsgrone][4] = h;
-
+		  _towgrone[_hitsgrone][5] = tower_t;
 		  if(h==0)
 		    {
-		      _emat[_hitsgrone] = tower_t;
 		      _calo_emfrac += towerE;
 		    }
 		  else if(h==2)
 		    {
-		      _ohat[_hitsgrone] += tower_t;
 		      _calo_ohfrac += towerE;
 		    }
 		  _calo_e += towerE;
@@ -325,8 +325,11 @@ int multiColStudy::process_event(PHCompositeNode *topNode)
   float maxJetPhi = 0;
   float subJetE = 0;
   float subJetPhi = 0;
-
-
+  for(int i=0; i<_maxjet; ++i)
+    {
+      _ncgroe[i] = 0;
+      _ncgroo[i] = 0;
+    }
   if(jets)
     {
       int tocheck = jets->size();
@@ -384,11 +387,14 @@ int multiColStudy::process_event(PHCompositeNode *topNode)
 		    }
 		  else if(comp.first == 7 || comp.first == 27)
 		    {
+		      
 		      towerType = 2;
+		     
 		    }
 		  else if(comp.first == 13 || comp.first == 25 || comp.first == 28)
 		    {
 		      towerType = 0;
+		      
 		    }
 		  else
 		    {
@@ -396,7 +402,24 @@ int multiColStudy::process_event(PHCompositeNode *topNode)
 		      continue;
 		    }
 		  tower = towers[towerType]->get_tower_at_channel(channel);
-		  TowerInfo* rawtower = rawtowers[towerType]->get_tower_at_channel(channel); 
+		  TowerInfo* rawtower = rawtowers[towerType]->get_tower_at_channel(channel);
+		  float tower_t = rawtower->get_time_float();
+		  if(towerType == 2)
+		    {
+		      if(_ncgroo[_njet] < _maxjetcomp)
+			{
+			  _ohat[_njet][_ncgroo[_njet]] = tower_t;
+			  ++_ncgroo[_njet];
+			}
+		    }
+		  if(towerType == 0)
+		    {
+		      if(_ncgroe[_njet] < _maxjetcomp)
+			{
+			  _emat[_njet][_ncgroe[_njet]] = tower_t;
+			  ++_ncgroe[_njet];
+			}
+		    }
 		  float towerE = tower->get_energy();
 		  if(towerE > 1)
 		    {

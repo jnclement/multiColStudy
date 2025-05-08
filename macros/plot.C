@@ -108,7 +108,7 @@ int draw_overlay_with_ratio_th1d(TH1D** hists, string histbasename, TCanvas* can
   TLine* oneline = new TLine(hists[0]->GetXaxis()->GetXmin(),1,hists[0]->GetXaxis()->GetXmax(),1);
   can->cd(2);
   oneline->Draw();
-  can->SaveAs(("/sphenix/user/jocl/projects/multiColStudy/output/plots/"+string(hists[0]->GetName())+"_overlay_"+(dijetcut?"dc":"nc")+".pdf").c_str());
+  can->SaveAs(("/sphenix/user/jocl/projects/multiColStudy/output/plots/"+string(hists[0]->GetName())+"_overlay_"+(dijetcut?"dc":"nc")+".png").c_str());
   ymax = 0;
   for(int i=0; i<nhistplot; ++i)
     {
@@ -152,7 +152,7 @@ int draw_overlay_with_ratio_th1d(TH1D** hists, string histbasename, TCanvas* can
   can->cd(2);
   oneline->Draw();
 
-  can->SaveAs(("/sphenix/user/jocl/projects/multiColStudy/output/plots/"+string(hists[0]->GetName())+"_overlay_"+(dijetcut?"dc":"nc")+"_normed.pdf").c_str());
+  can->SaveAs(("/sphenix/user/jocl/projects/multiColStudy/output/plots/"+string(hists[0]->GetName())+"_overlay_"+(dijetcut?"dc":"nc")+"_normed.png").c_str());
 
   gPad->SetLogy(0);
   
@@ -180,7 +180,7 @@ int draw_th1d(TH1D* hist, TCanvas* can, int dijetcut)
   antikt_text(0.4,0.3,0.92);
   et_cut_text(minet,0.015,0.96);
   dijet_cut_text(0.3,0.96);
-  can->SaveAs(("/sphenix/user/jocl/projects/multiColStudy/output/plots/"+string(hist->GetName())+"_"+(dijetcut?"dc":"nc")+".pdf").c_str());
+  can->SaveAs(("/sphenix/user/jocl/projects/multiColStudy/output/plots/"+string(hist->GetName())+"_"+(dijetcut?"dc":"nc")+".png").c_str());
 
   gPad->SetLogy();
   hist->Draw("PE");
@@ -189,7 +189,7 @@ int draw_th1d(TH1D* hist, TCanvas* can, int dijetcut)
   antikt_text(0.4,0.3,0.92);
   et_cut_text(minet,0.015,0.96);
   dijet_cut_text(0.3,0.96);
-  can->SaveAs(("/sphenix/user/jocl/projects/multiColStudy/output/plots/"+string(hist->GetName())+"_"+(dijetcut?"dc":"nc")+"_log.pdf").c_str());
+  can->SaveAs(("/sphenix/user/jocl/projects/multiColStudy/output/plots/"+string(hist->GetName())+"_"+(dijetcut?"dc":"nc")+"_log.png").c_str());
   gPad->SetLogy(0);
   return 0;
 }
@@ -256,7 +256,7 @@ int draw_th2d(TH2D* hist, TCanvas* can, int dijetcut)
   if(std::string(hist->GetName()).find("gr20") != std::string::npos) minet = 20;
   et_cut_text(minet,0.015,0.96);
   dijet_cut_text(0.3,0.96);
-  can->SaveAs(("/sphenix/user/jocl/projects/multiColStudy/output/plots/"+string(hist->GetName())+"_"+(dijetcut?"dc":"nc")+".pdf").c_str());
+  can->SaveAs(("/sphenix/user/jocl/projects/multiColStudy/output/plots/"+string(hist->GetName())+"_"+(dijetcut?"dc":"nc")+".png").c_str());
 
   gPad->SetLogz();
   hist->Draw("COLZ");
@@ -265,7 +265,7 @@ int draw_th2d(TH2D* hist, TCanvas* can, int dijetcut)
   antikt_text(0.4,0.3,0.92);
   et_cut_text(minet,0.015,0.96);
   dijet_cut_text(0.3,0.96);
-  can->SaveAs(("/sphenix/user/jocl/projects/multiColStudy/output/plots/"+string(hist->GetName())+"_"+(dijetcut?"dc":"nc")+"_log.pdf").c_str());
+  can->SaveAs(("/sphenix/user/jocl/projects/multiColStudy/output/plots/"+string(hist->GetName())+"_"+(dijetcut?"dc":"nc")+"_log.png").c_str());
   gPad->SetLogz(0);
   return 0;
 }
@@ -297,9 +297,9 @@ int get_and_draw_th2d(string histbasename, string* region, TFile* histfile, stri
     {
       hists[i] = (TH2D*)histfile->Get((histbasename+"_"+region[i]).c_str());
       //if(std::string(hists[i]->GetName()).find("frcem") != std::string::npos) hists[i]->Rebin2D(5,5);
-      if(std::string(hists[i]->GetName()).find("calo") != std::string::npos) hists[i]->Rebin2D(5,5);
+      //if(std::string(hists[i]->GetName()).find("calo") != std::string::npos) hists[i]->Rebin2D(5,5);
       format_th2d(hists[i], xtitle, ytitle, ztitle);
-      //draw_th2d(hists[i], can,dijetcut);
+      if(std::string(hists[i]->GetName()).find("tgrone") != std::string::npos) draw_th2d(hists[i], can,dijetcut);
       projx[i] = hists[i]->ProjectionX();
       projy[i] = hists[i]->ProjectionY();
       if(std::string(hists[i]->GetName()).find("frcem") != std::string::npos) cout << "frcem integral " << hists[i]->GetName() << ": " << projx[i]->Integral() << endl;
@@ -315,6 +315,13 @@ int get_and_draw_th2d(string histbasename, string* region, TFile* histfile, stri
   //draw_ratio_th2d(hists, histbasename, region, can, dijetcut);
   draw_overlay_with_ratio_th1d(projx, histbasename+"_projx",ratcan,dijetcut);
   draw_overlay_with_ratio_th1d(projy, histbasename+"_projy",ratcan,dijetcut);
+  if(std::string(hists[0]->GetName()).find("jet_at_em_at_oh") != std::string::npos)
+    {
+      for(int i=0; i<nhistplot; ++i)
+	{
+	  cout << "jet at EM OH means: " << projx[i]->GetMean() << " " << projy[i]->GetMean() << endl;
+	}
+    }
   return 0;
 }
 
@@ -327,24 +334,24 @@ int plot()
   TFile* histfile;
   histfile = TFile::Open("../output/hists/hadded.root");
   int dijetcut = 1;
-  const int nhist = 34;
+  const int nhist = 36;
 
   TCanvas* can = new TCanvas("can","",1000,1000);
   TCanvas* ratcan = new TCanvas("ratcan","",1000,1500);
-  string histnames[nhist] = {"jet_eta_phi","jet_eta_phi_gr20","tow_eta_phi","tow_eta_phi_gr5","tow_deteta_phi","tow_deteta_phi_gr5","jet_E_eta","tow_E_eta","tow_E_deteta","jet_E_phi","tow_E_phi","jet_ET_eta","tow_ET_eta","tow_ET_deteta","jet_ET_phi","tow_ET_phi","jet_E_frcem","jet_ET_dphi","jet_eta_frcem","jet_eta_frcem_gr20","jet_phi_frcem","jet_phi_frcem_gr20","frcem_frcoh","frcem_frcoh_gr20","jet_t_frcem","jet_t_frcem_gr20","emat_ohat","emat_calo_emfrac","jet_at_em_at_oh","jet_at_em_at_oh_gr20","jet_at_em_frcem","jet_at_em_frcem_gr20","jet_at_oh_frcem","jet_at_oh_frcem_gr20"};
+  string histnames[nhist] = {"jet_eta_phi","jet_eta_phi_gr20","tow_eta_phi","tow_eta_phi_gr5","tow_deteta_phi","tow_deteta_phi_gr5","jet_E_eta","tow_E_eta","tow_E_deteta","jet_E_phi","tow_E_phi","jet_ET_eta","tow_ET_eta","tow_ET_deteta","jet_ET_phi","tow_ET_phi","jet_E_frcem","jet_ET_dphi","jet_eta_frcem","jet_eta_frcem_gr20","jet_phi_frcem","jet_phi_frcem_gr20","frcem_frcoh","frcem_frcoh_gr20","jet_t_frcem","jet_t_frcem_gr20","emat_ohat","emat_calo_emfrac","jet_at_em_at_oh","jet_at_em_at_oh_gr20","jet_at_em_frcem","jet_at_em_frcem_gr20","jet_at_oh_frcem","jet_at_oh_frcem_gr20","calo_tgrone_eta_0","calo_tgrone_eta_2"};
 
-  string xtitles[nhist] = {"Jet #eta","Jet #eta","Tower #eta","Tower #eta","Tower Detector #eta","Tower Detector #eta","jet E [GeV]","Tower E [GeV]","Tower E [GeV]","Jet E [GeV]","Tower E [GeV]","Jet E_{T} [GeV]","Tower E_{T} [GeV]","Tower E_{T} [GeV]","Jet E_{T} [GeV]","Tower E_{T} [GeV]","Jet E [GeV]","Jet E_{T} [GeV]","Jet #eta","Jet #eta","Jet #phi","Jet #phi","E_{jet}^{EM}/E_{jet}","E_{jet}^{EM}/E_{jet}","Mean E_{T}^{tower}>1 Peak Sample of Jet","Mean E_{T}^{tower}>1 Peak Sample of Jet","Mean E_{T}^{tower}>1 Peak Sample of EMCal","Mean E_{T}^{tower}>1 Peak Sample of EMCal","Mean EMCal E_{T}^{tower}>1 Peak Sample of Jet","Mean EMCal E_{T}^{tower}>1 Peak Sample of Jet","Mean EMCal E_{T}^{tower}>1 Peak Sample of Jet","Mean EMCal E_{T}^{tower}>1 Peak Sample of Jet","Mean OHCal E_{T}^{tower}>1 Peak Sample of Jet","Mean OHCal E_{T}^{tower}>1 Peak Sample of Jet"};
+  string xtitles[nhist] = {"Jet #eta","Jet #eta","Tower #eta","Tower #eta","Tower Detector #eta","Tower Detector #eta","jet E [GeV]","Tower E [GeV]","Tower E [GeV]","Jet E [GeV]","Tower E [GeV]","Jet E_{T} [GeV]","Tower E_{T} [GeV]","Tower E_{T} [GeV]","Jet E_{T} [GeV]","Tower E_{T} [GeV]","Jet E [GeV]","Jet E_{T} [GeV]","Jet #eta","Jet #eta","Jet #phi","Jet #phi","E_{jet}^{EM}/E_{jet}","E_{jet}^{EM}/E_{jet}","Mean E_{T}^{tower}>1 GeV Peak Sample of Jet","Mean E_{T}^{tower}>1 GeV Peak Sample of Jet","Mean E_{T}^{tower}>1 GeV Peak Sample of EMCal","Mean EMCal Time for E_{T}^{tower}>1 GeV","Mean EMCal E_{T}^{tower}>1 GeV Peak Sample of Jet","Mean EMCal E_{T}^{tower}>1 GeV Peak Sample of Jet","Mean EMCal E_{T}^{tower}>1 GeV Peak Sample of Jet","Mean EMCal E_{T}^{tower}>1 GeV Peak Sample of Jet","Mean OHCal E_{T}^{tower}>1 GeV Peak Sample of Jet","Mean OHCal E_{T}^{tower}>1 GeV Peak Sample of Jet","EMCal Peak Time for E_{T}^{tower}>1 GeV","OHCal Peak Time for E_{T}^{tower} > 1 GeV"};
 
-  string ytitles[nhist] = {"Jet #phi","Jet #phi","Tower #phi","Tower #phi","Tower #phi","Tower #phi","Jet #eta","Tower #eta","Tower Detector #eta","Jet #phi","Tower #phi","Jet #eta","Tower #eta","Tower Detector #eta","Jet #phi","Tower #phi","E_{jet}^{EM}/E_{jet}","#Delta#phi","E_{jet}^{EM}/E_{jet}","E_{jet}^{EM}/E_{jet}","E_{jet}^{EM}/E_{jet}","E_{jet}^{EM}/E_{jet}","E_{jet}^{OH}/E_{jet}","E_{jet}^{OH}/E_{jet}","E_{jet}^{EM}/E_{jet}","E_{jet}^{EM}/E_{jet}","Mean E_{T}^{tower}>1 Peak Sample of EMCal","E_{calo}^{EM}/E_{calo}","Mean E_{T}^{tower}>1 OHCal Peak Sample of Jet","Mean OHCal E_{T}^{tower}>1 Peak Sample of Jet","E_{jet}^{EM}/E_{jet}","E_{jet}^{EM}/E_{jet}","E_{jet}^{EM}/E_{jet}","E_{jet}^{EM}/E_{jet}"};
+  string ytitles[nhist] = {"Jet #phi","Jet #phi","Tower #phi","Tower #phi","Tower #phi","Tower #phi","Jet #eta","Tower #eta","Tower Detector #eta","Jet #phi","Tower #phi","Jet #eta","Tower #eta","Tower Detector #eta","Jet #phi","Tower #phi","E_{jet}^{EM}/E_{jet}","#Delta#phi","E_{jet}^{EM}/E_{jet}","E_{jet}^{EM}/E_{jet}","E_{jet}^{EM}/E_{jet}","E_{jet}^{EM}/E_{jet}","E_{jet}^{OH}/E_{jet}","E_{jet}^{OH}/E_{jet}","E_{jet}^{EM}/E_{jet}","E_{jet}^{EM}/E_{jet}","EMCal Peak Time for E{T}^{tower}>1 GeV","E_{calo}^{EM}/E_{calo}","Mean E_{T}^{tower}>1 GeV OHCal Peak Sample of Jet","Mean OHCal E_{T}^{tower}>1 GeV Peak Sample of Jet","E_{jet}^{EM}/E_{jet}","E_{jet}^{EM}/E_{jet}","E_{jet}^{EM}/E_{jet}","E_{jet}^{EM}/E_{jet}","#eta","#eta"};
 
   for(int i=0; i<nhist; ++i)
     {
       get_and_draw_th2d(histnames[i],region,histfile,xtitles[i],ytitles[i],"Counts / N_{bit18}^{scaled}",can,ratcan,dijetcut);
     }
 
-  const int nth1d = 9;
-  string th1dnames[nth1d] = {"zhist","mbdn","mbds","mbdt","calo_hitsgrone_0","calo_hitsgrone_1","calo_hitsgrone_2","zhist_gr20","zhist_nocut"};
-  string th1dxtitl[nth1d] = {"z_{vtx} [cm]","MBD Charge [Arb.]","MBD Charge [Arb.]","MBD Charge [Arb.]","Number of Towers with E > 1 GeV","Number of Towers with E > 1 GeV","Number of Towers with E > 1 GeV","z_{vtx} [cm]","z_{vtx} [cm]"};
+  const int nth1d = 11;
+  string th1dnames[nth1d] = {"zhist","mbdn","mbds","mbdt","calo_hitsgrone_0","calo_hitsgrone_1","calo_hitsgrone_2","zhist_gr20","zhist_nocut","h_emat","h_ohat"};
+  string th1dxtitl[nth1d] = {"z_{vtx} [cm]","MBD Charge [Arb.]","MBD Charge [Arb.]","MBD Charge [Arb.]","Number of Towers with E > 1 GeV","Number of Towers with E > 1 GeV","Number of Towers with E > 1 GeV","z_{vtx} [cm]","z_{vtx} [cm]","Peak Sample Time of EMCal Jet Constituents with E_{T}>1 GeV","Peak Sample Time of OHCal Jet Constituents with E_{T}>1 GeV"};
 
   for(int i=0; i<nth1d; ++i)
     {
