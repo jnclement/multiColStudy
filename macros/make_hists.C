@@ -117,7 +117,7 @@ int make_hists(string tag, vector<int> rns, vector<int> nfiles, int dodijetcut =
   TH2D* jet_at_oh_frcem_gr20 = new TH2D(("jet_at_oh_frcem_gr20_"+region).c_str(),"",60,-6-0.5,6-0.5,24,-0.1,1.1);
   for(int i=0; i<3; ++i)
     {
-      calo_hitsgrone[i] = new TH1D(("calo_hitsgrone_"+to_string(i)+"_"+region).c_str(),"",50,-0.5,49.5);
+      calo_hitsgrone[i] = new TH1D(("calo_hitsgrone_"+to_string(i)+"_"+region).c_str(),"",20,-0.5,19.5);
       calo_tgrone_eta[i] = new TH2D(("calo_tgrone_eta_"+to_string(i)+"_"+region).c_str(),"",60,-6,6,22,-1.1,1.1);
     }
 
@@ -285,7 +285,7 @@ int make_hists(string tag, vector<int> rns, vector<int> nfiles, int dodijetcut =
 	  for(int j=0; j<hitsgrone; ++j)
 	    {
 	      int hitcalo = -1;
-	      if(towgrone[j][4] < 2)
+	      if(towgrone[j][4] < 2.5)
 		{
 		  if(towgrone[j][4] > 1.5) hitcalo = 2;
 		  else if(towgrone[j][4] > 0.5) hitcalo = 1;

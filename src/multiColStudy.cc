@@ -404,25 +404,26 @@ int multiColStudy::process_event(PHCompositeNode *topNode)
 		  tower = towers[towerType]->get_tower_at_channel(channel);
 		  TowerInfo* rawtower = rawtowers[towerType]->get_tower_at_channel(channel);
 		  float tower_t = rawtower->get_time_float();
-		  if(towerType == 2)
-		    {
-		      if(_ncgroo[_njet] < _maxjetcomp)
-			{
-			  _ohat[_njet][_ncgroo[_njet]] = tower_t;
-			  ++_ncgroo[_njet];
-			}
-		    }
-		  if(towerType == 0)
-		    {
-		      if(_ncgroe[_njet] < _maxjetcomp)
-			{
-			  _emat[_njet][_ncgroe[_njet]] = tower_t;
-			  ++_ncgroe[_njet];
-			}
-		    }
+
 		  float towerE = tower->get_energy();
 		  if(towerE > 1)
 		    {
+		      if(towerType == 2)
+			{
+			  if(_ncgroo[_njet] < _maxjetcomp)
+			    {
+			      _ohat[_njet][_ncgroo[_njet]] = tower_t;
+			      ++_ncgroo[_njet];
+			    }
+			}
+		      if(towerType == 0)
+			{
+			  if(_ncgroe[_njet] < _maxjetcomp)
+			    {
+			      _emat[_njet][_ncgroe[_njet]] = tower_t;
+			      ++_ncgroe[_njet];
+			    }
+			}
 		      _jet_at[_njet] += rawtower->get_time_float();
 		      if(towerType == 0)
 			{
