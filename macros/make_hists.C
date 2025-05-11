@@ -91,25 +91,27 @@ int make_hists(string tag, vector<int> rns, vector<int> nfiles, int triggerbit =
   TH2D* tow_eta_phi_gr5 = new TH2D(("tow_eta_phi_gr5_"+region).c_str(),"",30,-1.5,1.5,64,-M_PI,M_PI);
   TH2D* tow_deteta_phi = new TH2D(("tow_deteta_phi_"+region).c_str(),"",24,-1.1,1.1,64,-M_PI,M_PI);
   TH2D* tow_deteta_phi_gr5 = new TH2D(("tow_deteta_phi_gr5_"+region).c_str(),"",24,-1.1,1.1,64,-M_PI,M_PI);
-  TH2D* jet_E_eta = new TH2D(("jet_E_eta_"+region).c_str(),"",100,0,100,30,-1.5,1.5);
-  TH2D* tow_E_eta = new TH2D(("tow_E_eta_"+region).c_str(),"",100,0,100,30,-1.5,1.5);
-  TH2D* tow_E_deteta = new TH2D(("tow_E_deteta_"+region).c_str(),"",100,0,100,24,-1.1,1.1);
-  TH2D* jet_E_phi = new TH2D(("jet_E_phi_"+region).c_str(),"",100,0,100,64,-M_PI,M_PI);
-  TH2D* tow_E_phi = new TH2D(("tow_E_phi_"+region).c_str(),"",100,0,100,64,-M_PI,M_PI);
-  TH2D* jet_ET_eta = new TH2D(("jet_ET_eta_"+region).c_str(),"",100,0,100,30,-1.5,1.5);
-  TH2D* tow_ET_eta = new TH2D(("tow_ET_eta_"+region).c_str(),"",100,0,100,30,-1.5,1.5);
-  TH2D* tow_ET_deteta = new TH2D(("tow_ET_deteta_"+region).c_str(),"",100,0,100,24,-1.1,1.1);
-  TH2D* jet_ET_phi = new TH2D(("jet_ET_phi_"+region).c_str(),"",100,0,100,64,-M_PI,M_PI);
-  TH2D* tow_ET_phi = new TH2D(("tow_ET_phi_"+region).c_str(),"",100,0,100,64,-M_PI,M_PI);
+  TH2D* jet_E_eta = new TH2D(("jet_E_eta_"+region).c_str(),"",60,0,60,30,-1.5,1.5);
+  TH2D* tow_E_eta = new TH2D(("tow_E_eta_"+region).c_str(),"",30,0,15,30,-1.5,1.5);
+  TH2D* tow_E_deteta_em = new TH2D(("tow_E_deteta_em_"+region).c_str(),"",30,0,15,30,-1.5,1.5);
+  TH2D* tow_E_deteta_oh = new TH2D(("tow_E_deteta_oh_"+region).c_str(),"",30,0,15,30,-1.5,1.5);
+  TH2D* tow_E_deteta = new TH2D(("tow_E_deteta_"+region).c_str(),"",30,0,15,24,-1.1,1.1);
+  TH2D* jet_E_phi = new TH2D(("jet_E_phi_"+region).c_str(),"",60,0,60,64,-M_PI,M_PI);
+  TH2D* tow_E_phi = new TH2D(("tow_E_phi_"+region).c_str(),"",30,0,15,64,-M_PI,M_PI);
+  TH2D* jet_ET_eta = new TH2D(("jet_ET_eta_"+region).c_str(),"",60,0,60,30,-1.5,1.5);
+  TH2D* tow_ET_eta = new TH2D(("tow_ET_eta_"+region).c_str(),"",30,0,15,30,-1.5,1.5);
+  TH2D* tow_ET_deteta = new TH2D(("tow_ET_deteta_"+region).c_str(),"",30,0,15,24,-1.1,1.1);
+  TH2D* jet_ET_phi = new TH2D(("jet_ET_phi_"+region).c_str(),"",60,0,60,64,-M_PI,M_PI);
+  TH2D* tow_ET_phi = new TH2D(("tow_ET_phi_"+region).c_str(),"",30,0,15,64,-M_PI,M_PI);
   TH1D* zhist = new TH1D(("zhist_"+region).c_str(),"",400,-200,200);
   TH1D* zhist_gr20 = new TH1D(("zhist_gr20_"+region).c_str(),"",400,-200,200);
   TH1D* mbdn = new TH1D(("mbdn_"+region).c_str(),"",100,0,10);
   TH1D* mbds = new TH1D(("mbds_"+region).c_str(),"",100,0,10);
   TH1D* mbdt = new TH1D(("mbdt_"+region).c_str(),"",100,0,10);
-  TH2D* jet_E_frcem = new TH2D(("jet_E_frcem_"+region).c_str(),"",100,0,100,24,-0.1,1.1);
+  TH2D* jet_E_frcem = new TH2D(("jet_E_frcem_"+region).c_str(),"",60,0,60,24,-0.1,1.1);
   TH2D* frcem_frcoh = new TH2D(("frcem_frcoh_"+region).c_str(),"",24,-0.1,1.1,24,-0.1,1.1);
   TH2D* frcem_frcoh_gr20 = new TH2D(("frcem_frcoh_gr20_"+region).c_str(),"",24,-0.1,1.1,24,-0.1,1.1);
-  TH2D* jet_ET_dphi = new TH2D(("jet_ET_dphi_"+region).c_str(),"",100,0,100,32,0,M_PI);
+  TH2D* jet_ET_dphi = new TH2D(("jet_ET_dphi_"+region).c_str(),"",60,0,60,32,0,M_PI);
   TH1D* calo_hitsgrone[3];
   TH2D* calo_tgrone_eta[3];
   TH2D* jet_eta_frcem = new TH2D(("jet_eta_frcem_"+region).c_str(),"",30,-1.5,1.5,24,-0.1,1.1);
@@ -161,6 +163,16 @@ int make_hists(string tag, vector<int> rns, vector<int> nfiles, int triggerbit =
   int nzvtxanyjc = 0;
   //start processing
   long long unsigned int totalentries = 0;
+  if(triggerbit==18)
+    {
+      dodijetcut = 1;
+      jetcut = 1;
+    }
+  else if(triggerbit == 10)
+    {
+      dodijetcut = 0;
+      jetcut = 0;
+    }
   for(int g = 0; g<rns.size(); ++g)
     {
       int rn = rns.at(g);
@@ -364,6 +376,8 @@ int make_hists(string tag, vector<int> rns, vector<int> nfiles, int triggerbit =
 	      tow_deteta_phi->Fill(towgrone[j][3],towgrone[j][2]);
 	      tow_E_eta->Fill(towgrone[j][0],towgrone[j][1]);
 	      tow_E_deteta->Fill(towgrone[j][0],towgrone[j][3]);
+	      if(hitcalo == 0) tow_E_deteta_em->Fill(towgrone[j][0],towgrone[j][3]);
+	      else if(hitcalo == 2) tow_E_deteta_oh->Fill(towgrone[j][0],towgrone[j][3]);
 	      tow_E_phi->Fill(towgrone[j][0],towgrone[j][2]);
 	      tow_ET_eta->Fill(ET,towgrone[j][1]);
 	      tow_ET_phi->Fill(ET,towgrone[j][2]);
@@ -404,6 +418,8 @@ int make_hists(string tag, vector<int> rns, vector<int> nfiles, int triggerbit =
   jet_E_eta->Scale(1./totalentries);
   tow_E_eta->Scale(1./totalentries);
   tow_E_deteta->Scale(1./totalentries);
+  tow_E_deteta_em->Scale(1./totalentries);
+  tow_E_deteta_oh->Scale(1./totalentries);
   jet_E_phi->Scale(1./totalentries);
   tow_E_phi->Scale(1./totalentries);
   jet_ET_eta->Scale(1./totalentries);
@@ -456,6 +472,8 @@ int make_hists(string tag, vector<int> rns, vector<int> nfiles, int triggerbit =
   jet_E_eta->Write();
   tow_E_eta->Write();
   tow_E_deteta->Write();
+  tow_E_deteta_em->Write();
+  tow_E_deteta_oh->Write();
   jet_E_phi->Write();
   tow_E_phi->Write();
   jet_ET_eta->Write();

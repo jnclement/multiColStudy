@@ -165,11 +165,15 @@ int draw_overlay_with_ratio_th1d(TH1D** hists, string histbasename, TCanvas* can
   leg->Draw();
   sphenixtext(0.65,0.96);
   sqrt_s_text(0.65,0.92);
-  antikt_text(0.4,0.3,0.92);
   float minet = 15;
+  if(bit != 10)
+    {
+  antikt_text(0.4,0.3,0.92);
+
   if(std::string(hists[0]->GetName()).find("gr20") != std::string::npos) minet = 20;
   et_cut_text(minet,0.015,0.96);
   dijet_cut_text(0.3,0.96);
+    }
   TLine* oneline = new TLine(hists[0]->GetXaxis()->GetXmin(),1,hists[0]->GetXaxis()->GetXmax(),1);
   can->cd(2);
   oneline->Draw();
@@ -190,6 +194,10 @@ int draw_overlay_with_ratio_th1d(TH1D** hists, string histbasename, TCanvas* can
   hists[0]->GetYaxis()->SetRangeUser(0,1.5*ymax);
   for(int i=0; i<nhistplot; ++i)
     {
+      dgaus[i] = fit_doublegaus(hists[i],i);
+    }
+  for(int i=0; i<nhistplot; ++i)
+    {
       can->cd(1);
       hists[i]->GetXaxis()->SetLabelSize(0);
       hists[i]->GetXaxis()->SetTitleSize(0);
@@ -199,10 +207,10 @@ int draw_overlay_with_ratio_th1d(TH1D** hists, string histbasename, TCanvas* can
 	  ymax = 0.2;
 	}
       if(i>0) ratio[i]->Divide(hists[i],hists[0]);
-      dgaus[i] = fit_doublegaus(hists[i],i);
+      
       dgaus[i]->SetLineColor(colors[i]);
       hists[i]->Draw(i==0?"PE":"SAME PE");
-      dgaus[i]->Draw();
+      dgaus[i]->Draw("SAME");
       can->cd(2);
       ratio[i]->GetYaxis()->SetRangeUser(0,2);
       if(i>0) ratio[i]->Draw(i==1?"PE":"SAME PE");
@@ -214,9 +222,12 @@ int draw_overlay_with_ratio_th1d(TH1D** hists, string histbasename, TCanvas* can
   leg->Draw();
   sphenixtext(0.65,0.96);
   sqrt_s_text(0.65,0.92);
+  if(bit != 10)
+    {
   antikt_text(0.4,0.3,0.92);
   et_cut_text(minet,0.015,0.96);
   dijet_cut_text(0.3,0.96);
+    }
   can->cd(2);
   oneline->Draw();
 
@@ -368,13 +379,16 @@ int get_and_draw_th2d(string histbasename, string* region, TFile* histfile, stri
       //if(std::string(hists[i]->GetName()).find("calo") != std::string::npos) hists[i]->Rebin2D(5,5);
       if(std::string(hists[i]->GetName()).find("tgrone_eta_2") != std::string::npos)
 	{
-	  correct_eta_timing(hists[i]);
+	  cout << "no correct" << endl;
+	  //correct_eta_timing(hists[i]);
 	}
+      /*
       else
 	{
 	  cout << histbasename << " " << hists[i]->GetName() << endl;
 	  return 0;
 	}
+      */
       format_th2d(hists[i], xtitle, ytitle, ztitle);
       //if(std::string(hists[i]->GetName()).find("tgrone") != std::string::npos)
       draw_th2d(hists[i], can,dijetcut);
@@ -413,28 +427,31 @@ int plot()
   TFile* histfile;
   histfile = TFile::Open(("../output/hists/hadded"+to_string(bit)+".root").c_str());
   int dijetcut = 1;
-  const int nhist = 36;
+  const int nhist = 38;
 
   TCanvas* can = new TCanvas("can","",1000,1000);
   TCanvas* ratcan = new TCanvas("ratcan","",1000,1500);
-  string histnames[nhist] = {"jet_eta_phi","jet_eta_phi_gr20","tow_eta_phi","tow_eta_phi_gr5","tow_deteta_phi","tow_deteta_phi_gr5","jet_E_eta","tow_E_eta","tow_E_deteta","jet_E_phi","tow_E_phi","jet_ET_eta","tow_ET_eta","tow_ET_deteta","jet_ET_phi","tow_ET_phi","jet_E_frcem","jet_ET_dphi","jet_eta_frcem","jet_eta_frcem_gr20","jet_phi_frcem","jet_phi_frcem_gr20","frcem_frcoh","frcem_frcoh_gr20","jet_t_frcem","jet_t_frcem_gr20","emat_ohat","emat_calo_emfrac","jet_at_em_at_oh","jet_at_em_at_oh_gr20","jet_at_em_frcem","jet_at_em_frcem_gr20","jet_at_oh_frcem","jet_at_oh_frcem_gr20","calo_tgrone_eta_0","calo_tgrone_eta_2"};
+  string histnames[nhist] = {"jet_eta_phi","jet_eta_phi_gr20","tow_eta_phi","tow_eta_phi_gr5","tow_deteta_phi","tow_deteta_phi_gr5","jet_E_eta","tow_E_eta","tow_E_deteta","jet_E_phi","tow_E_phi","jet_ET_eta","tow_ET_eta","tow_ET_deteta","jet_ET_phi","tow_ET_phi","jet_E_frcem","jet_ET_dphi","jet_eta_frcem","jet_eta_frcem_gr20","jet_phi_frcem","jet_phi_frcem_gr20","frcem_frcoh","frcem_frcoh_gr20","jet_t_frcem","jet_t_frcem_gr20","emat_ohat","emat_calo_emfrac","jet_at_em_at_oh","jet_at_em_at_oh_gr20","jet_at_em_frcem","jet_at_em_frcem_gr20","jet_at_oh_frcem","jet_at_oh_frcem_gr20","calo_tgrone_eta_0","calo_tgrone_eta_2","tow_E_deteta_em","tow_E_deteta_oh"};
 
-  string xtitles[nhist] = {"Jet #eta","Jet #eta","Tower #eta","Tower #eta","Tower Detector #eta","Tower Detector #eta","jet E [GeV]","Tower E [GeV]","Tower E [GeV]","Jet E [GeV]","Tower E [GeV]","Jet E_{T} [GeV]","Tower E_{T} [GeV]","Tower E_{T} [GeV]","Jet E_{T} [GeV]","Tower E_{T} [GeV]","Jet E [GeV]","Jet E_{T} [GeV]","Jet #eta","Jet #eta","Jet #phi","Jet #phi","E_{jet}^{EM}/E_{jet}","E_{jet}^{EM}/E_{jet}","Mean E_{T}^{tower}>1 GeV Peak Sample of Jet","Mean E_{T}^{tower}>1 GeV Peak Sample of Jet","Mean E_{T}^{tower}>1 GeV Peak Sample of EMCal","Mean EMCal Time for E_{T}^{tower}>1 GeV","Mean EMCal E_{T}^{tower}>1 GeV Peak Sample of Jet","Mean EMCal E_{T}^{tower}>1 GeV Peak Sample of Jet","Mean EMCal E_{T}^{tower}>1 GeV Peak Sample of Jet","Mean EMCal E_{T}^{tower}>1 GeV Peak Sample of Jet","Mean OHCal E_{T}^{tower}>1 GeV Peak Sample of Jet","Mean OHCal E_{T}^{tower}>1 GeV Peak Sample of Jet","EMCal Peak Time for E_{T}^{tower}>1 GeV","OHCal Peak Time for E_{T}^{tower} > 1 GeV"};
+  string xtitles[nhist] = {"Jet #eta","Jet #eta","Tower #eta","Tower #eta","Tower Detector #eta","Tower Detector #eta","jet E [GeV]","Tower E [GeV]","Tower E [GeV]","Jet E [GeV]","Tower E [GeV]","Jet E_{T} [GeV]","Tower E_{T} [GeV]","Tower E_{T} [GeV]","Jet E_{T} [GeV]","Tower E_{T} [GeV]","Jet E [GeV]","Jet E_{T} [GeV]","Jet #eta","Jet #eta","Jet #phi","Jet #phi","E_{jet}^{EM}/E_{jet}","E_{jet}^{EM}/E_{jet}","Mean E_{T}^{tower}>1 GeV Peak Sample of Jet","Mean E_{T}^{tower}>1 GeV Peak Sample of Jet","Mean E_{T}^{tower}>1 GeV Peak Sample of EMCal","Mean EMCal Time for E_{T}^{tower}>1 GeV","Mean EMCal E_{T}^{tower}>1 GeV Peak Sample of Jet","Mean EMCal E_{T}^{tower}>1 GeV Peak Sample of Jet","Mean EMCal E_{T}^{tower}>1 GeV Peak Sample of Jet","Mean EMCal E_{T}^{tower}>1 GeV Peak Sample of Jet","Mean OHCal E_{T}^{tower}>1 GeV Peak Sample of Jet","Mean OHCal E_{T}^{tower}>1 GeV Peak Sample of Jet","EMCal Peak Time for E_{T}^{tower}>1 GeV","OHCal Peak Time for E_{T}^{tower} > 1 GeV","EMCal Tower E [GeV]","OHCal Tower E [GeV]"};
 
-  string ytitles[nhist] = {"Jet #phi","Jet #phi","Tower #phi","Tower #phi","Tower #phi","Tower #phi","Jet #eta","Tower #eta","Tower Detector #eta","Jet #phi","Tower #phi","Jet #eta","Tower #eta","Tower Detector #eta","Jet #phi","Tower #phi","E_{jet}^{EM}/E_{jet}","#Delta#phi","E_{jet}^{EM}/E_{jet}","E_{jet}^{EM}/E_{jet}","E_{jet}^{EM}/E_{jet}","E_{jet}^{EM}/E_{jet}","E_{jet}^{OH}/E_{jet}","E_{jet}^{OH}/E_{jet}","E_{jet}^{EM}/E_{jet}","E_{jet}^{EM}/E_{jet}","EMCal Peak Time for E{T}^{tower}>1 GeV","E_{calo}^{EM}/E_{calo}","Mean E_{T}^{tower}>1 GeV OHCal Peak Sample of Jet","Mean OHCal E_{T}^{tower}>1 GeV Peak Sample of Jet","E_{jet}^{EM}/E_{jet}","E_{jet}^{EM}/E_{jet}","E_{jet}^{EM}/E_{jet}","E_{jet}^{EM}/E_{jet}","#eta","#eta"};
+  string ytitles[nhist] = {"Jet #phi","Jet #phi","Tower #phi","Tower #phi","Tower #phi","Tower #phi","Jet #eta","Tower #eta","Tower Detector #eta","Jet #phi","Tower #phi","Jet #eta","Tower #eta","Tower Detector #eta","Jet #phi","Tower #phi","E_{jet}^{EM}/E_{jet}","#Delta#phi","E_{jet}^{EM}/E_{jet}","E_{jet}^{EM}/E_{jet}","E_{jet}^{EM}/E_{jet}","E_{jet}^{EM}/E_{jet}","E_{jet}^{OH}/E_{jet}","E_{jet}^{OH}/E_{jet}","E_{jet}^{EM}/E_{jet}","E_{jet}^{EM}/E_{jet}","EMCal Peak Time for E{T}^{tower}>1 GeV","E_{calo}^{EM}/E_{calo}","Mean E_{T}^{tower}>1 GeV OHCal Peak Sample of Jet","Mean OHCal E_{T}^{tower}>1 GeV Peak Sample of Jet","E_{jet}^{EM}/E_{jet}","E_{jet}^{EM}/E_{jet}","E_{jet}^{EM}/E_{jet}","E_{jet}^{EM}/E_{jet}","#eta","#eta","#Detector Coordinate #eta","Detector Coordinate #eta"};
 
-  for(int i=0; i<nhist; ++i)
+  get_and_draw_th2d(histnames[11],region,histfile,xtitles[11],ytitles[11],"Counts / N_{"+to_string(bit)+"}^{scaled}",can,ratcan,dijetcut);
+  get_and_draw_th2d(histnames[13],region,histfile,xtitles[13],ytitles[13],"Counts / N_{"+to_string(bit)+"}^{scaled}",can,ratcan,dijetcut);
+  
+  for(int i=28; i<nhist; ++i)
     {
-      get_and_draw_th2d(histnames[i],region,histfile,xtitles[i],ytitles[i],"Counts / N_{bit18}^{scaled}",can,ratcan,dijetcut);
+      get_and_draw_th2d(histnames[i],region,histfile,xtitles[i],ytitles[i],"Counts / N_{"+to_string(bit)+"}^{scaled}",can,ratcan,dijetcut);
     }
 
   const int nth1d = 11;
   string th1dnames[nth1d] = {"zhist","mbdn","mbds","mbdt","calo_hitsgrone_0","calo_hitsgrone_1","calo_hitsgrone_2","zhist_gr20","zhist_nocut","h_emat","h_ohat"};
   string th1dxtitl[nth1d] = {"z_{vtx} [cm]","MBD Charge [Arb.]","MBD Charge [Arb.]","MBD Charge [Arb.]","Number of Towers with E > 1 GeV","Number of Towers with E > 1 GeV","Number of Towers with E > 1 GeV","z_{vtx} [cm]","z_{vtx} [cm]","Peak Sample Time of EMCal Jet Constituents with E_{T}>1 GeV","Peak Sample Time of OHCal Jet Constituents with E_{T}>1 GeV"};
 
-  for(int i=0; i<nth1d; ++i)
+  for(int i=9; i<nth1d; ++i)
     {
-      get_and_draw_th1d(th1dnames[i],region,histfile,th1dxtitl[i],"Counts / N_{bit18}^{scaled}",can,ratcan,dijetcut);
+      get_and_draw_th1d(th1dnames[i],region,histfile,th1dxtitl[i],"Counts / N_{"+to_string(bit)+"}^{scaled}",can,ratcan,dijetcut);
     }
 
   TH1D* njet_lumi = (TH1D*)histfile->Get("njet_lumi");
