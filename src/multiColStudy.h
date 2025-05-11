@@ -67,8 +67,8 @@ class multiColStudy : public SubsysReco
 
   double _towgrone[_etow+2*_htow][_gronefield];
 
-  double _ohat[_maxjet][_etow+2*_htow];
-  double _emat[_maxjet][_etow+2*_htow];
+  double _ohat[_maxjet][64];
+  double _emat[_maxjet][64];
   double _calo_emfrac;
   double _calo_ohfrac;
   double _calo_e;

@@ -421,6 +421,7 @@ int multiColStudy::process_event(PHCompositeNode *topNode)
 			  if(_ncgroe[_njet] < _maxjetcomp)
 			    {
 			      _emat[_njet][_ncgroe[_njet]] = tower_t;
+			      if(_debug > 2) cout << _emat[_njet][_ncgroe[_njet]] << " " << tower_t << endl;
 			      ++_ncgroe[_njet];
 			    }
 			}

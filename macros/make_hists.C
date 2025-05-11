@@ -63,7 +63,21 @@ bool check_bad_jet_eta(float jet_eta, float zertex, float jet_radius) {
   return jet_eta < minlimit || jet_eta > maxlimit;
 }
 
-int make_hists(string tag, vector<int> rns, vector<int> nfiles, int dodijetcut = 1, int issim = 0)
+int rnvals[42] = {49121,49125,49127,49128,49133,49136,49138,49140,49141,49143,49148,49157,49159,49165,49217,49218,49219,49224,49226,49227,49228,49229,49230,49233,49240,49241,49244,49245,49247,49248,49249,49250,49251,49254,49262,49263,49264,49265,49266,49267,49268,49270};
+
+double lumivals[42] ={0.0567942,0.0516462,0.0642938,0.0354406,0.0143268,0.0412767,0.0238550,0.0116476,0.0245767,0.0052713,0.0169815,0.0210836,0.0154796,0.0065756,0.0309800,0.0160149,0.0832480,0.0123099,0.0130056,0.0192810,0.0217280,0.0598882,0.0129254,0.0044402,0.0409331,0.0264116,0.0432918,0.0188073,0.0003522,0.0666371,0.0388263,0.0269200,0.0107077,0.0131979,0.0228682,0.0243940,0.0414531,0.0592927,0.0187420,0.0446407,0.0159728,0.0176773};
+
+
+
+
+
+
+
+
+
+
+
+int make_hists(string tag, vector<int> rns, vector<int> nfiles, int triggerbit = 18, int dodijetcut = 1, int jetcut = 1, int issim = 0)
 {
   //define histograms
   string region = "";
@@ -103,18 +117,21 @@ int make_hists(string tag, vector<int> rns, vector<int> nfiles, int dodijetcut =
   TH2D* jet_phi_frcem = new TH2D(("jet_phi_frcem_"+region).c_str(),"",44,-M_PI,M_PI,24,-0.1,1.1);
   TH2D* jet_phi_frcem_gr20 = new TH2D(("jet_phi_frcem_gr20_"+region).c_str(),"",44,-M_PI,M_PI,24,-0.1,1.1);
   TH1D* zhist_nocut = new TH1D(("zhist_nocut_"+region).c_str(),"",400,-200,200);
-  TH2D* jet_t_frcem = new TH2D(("jet_t_frcem_"+region).c_str(),"",60,-6-0.5,6-0.5,24,-0.1,1.1);
-  TH2D* jet_t_frcem_gr20 = new TH2D(("jet_t_frcem_gr20_"+region).c_str(),"",60,-6-0.5,6-0.5,24,-0.1,1.1);
-  TH2D* emat_ohat = new TH2D(("emat_ohat_"+region).c_str(),"",60,-6-0.5,6-0.5,60,-6-0.5,6);
-  TH1D* h_emat = new TH1D(("h_emat_"+region).c_str(),"",60,-6-0.5,6-0.5);
-  TH1D* h_ohat = new TH1D(("h_ohat_"+region).c_str(),"",60,-6-0.5,6-0.5);
-  TH2D* emat_calo_emfrac = new TH2D(("emat_calo_emfrac_"+region).c_str(),"",60,-6-0.5,6-0.5,24,-0.1,1.1);
-  TH2D* jet_at_em_at_oh = new TH2D(("jet_at_em_at_oh_"+region).c_str(),"",60,-6-0.5,6-0.5,60,-6-0.5,6-0.5);
-  TH2D* jet_at_em_at_oh_gr20 = new TH2D(("jet_at_em_at_oh_gr20_"+region).c_str(),"",60,-6-0.5,6-0.5,60,-6-0.5,6-0.5);
-  TH2D* jet_at_em_frcem = new TH2D(("jet_at_em_frcem_"+region).c_str(),"",60,-6-0.5,6-0.5,24,-0.1,1.1);
-  TH2D* jet_at_em_frcem_gr20 = new TH2D(("jet_at_em_frcem_gr20_"+region).c_str(),"",60,-6-0.5,6-0.5,24,-0.1,1.1);
-  TH2D* jet_at_oh_frcem = new TH2D(("jet_at_oh_frcem_"+region).c_str(),"",60,-6-0.5,6-0.5,24,-0.1,1.1);
-  TH2D* jet_at_oh_frcem_gr20 = new TH2D(("jet_at_oh_frcem_gr20_"+region).c_str(),"",60,-6-0.5,6-0.5,24,-0.1,1.1);
+  TH2D* jet_t_frcem = new TH2D(("jet_t_frcem_"+region).c_str(),"",60,-6,6,24,-0.1,1.1);
+  TH2D* jet_t_frcem_gr20 = new TH2D(("jet_t_frcem_gr20_"+region).c_str(),"",60,-6,6,24,-0.1,1.1);
+  TH2D* emat_ohat = new TH2D(("emat_ohat_"+region).c_str(),"",60,-6,6,22,-1.1,1.1);
+  TH1D* h_emat = new TH1D(("h_emat_"+region).c_str(),"",60,-6,6);
+  TH1D* h_ohat = new TH1D(("h_ohat_"+region).c_str(),"",60,-6,6);
+  TH2D* emat_calo_emfrac = new TH2D(("emat_calo_emfrac_"+region).c_str(),"",60,-6,6,24,-0.1,1.1);
+  TH2D* jet_at_em_at_oh = new TH2D(("jet_at_em_at_oh_"+region).c_str(),"",60,-6,6,60,-6,6);
+  TH2D* jet_at_em_at_oh_gr20 = new TH2D(("jet_at_em_at_oh_gr20_"+region).c_str(),"",60,-6,6,60,-6,6);
+  TH2D* jet_at_em_frcem = new TH2D(("jet_at_em_frcem_"+region).c_str(),"",60,-6,6,24,-0.1,1.1);
+  TH2D* jet_at_em_eta = new TH2D(("jet_at_em_eta_"+region).c_str(),"",60,-6,6,22,-1.1,1.1);
+  TH2D* jet_at_oh_eta = new TH2D(("jet_at_oh_eta_"+region).c_str(),"",60,-6,6,22,-1.1,1.1);
+  TH2D* jet_at_em_frcem_gr20 = new TH2D(("jet_at_em_frcem_gr20_"+region).c_str(),"",60,-6,6,24,-0.1,1.1);
+  TH2D* jet_at_oh_frcem = new TH2D(("jet_at_oh_frcem_"+region).c_str(),"",60,-6,6,24,-0.1,1.1);
+  TH2D* jet_at_oh_frcem_gr20 = new TH2D(("jet_at_oh_frcem_gr20_"+region).c_str(),"",60,-6,6,24,-0.1,1.1);
+  TH1D* njet_lumi = new TH1D("njet_lumi","",49280-49120,49120-0.5,49280-0.5);
   for(int i=0; i<3; ++i)
     {
       calo_hitsgrone[i] = new TH1D(("calo_hitsgrone_"+to_string(i)+"_"+region).c_str(),"",20,-0.5,19.5);
@@ -134,11 +151,27 @@ int make_hists(string tag, vector<int> rns, vector<int> nfiles, int dodijetcut =
   const int ntowfield = 6;
   const int mbdchan = 64;
   const int mbdside = 2;
+  int nzvtx30 = 0;
+  int nzvtxany = 0;
+  int nzvtx30ndj = 0;
+  int nzvtx30jet = 0;
+  int nzvtxanyndj = 0;
+  int nzvtxanyjet = 0;
+  int nzvtx30jc = 0;
+  int nzvtxanyjc = 0;
   //start processing
   long long unsigned int totalentries = 0;
   for(int g = 0; g<rns.size(); ++g)
     {
       int rn = rns.at(g);
+      double lumi = 0;
+      for(int i=0; i<42; ++i)
+	{
+	  if(rn == rnvals[i])
+	    {
+	      lumi = lumivals[i];
+	    }
+	}
       int nfile = nfiles.at(g);
   for(int h=0; h<nfile; ++h)
     {
@@ -202,8 +235,14 @@ int make_hists(string tag, vector<int> rns, vector<int> nfiles, int dodijetcut =
 	    {
 	      trigs[1][j] += (trigvec >> trigs[0][j]) & 1;
 	    }
-	  if(!((trigvec >> 18) & 1)) continue;
+	  if(!((trigvec >> triggerbit) & 1)) continue;
 	  ++totalentries;
+	  if(!std::isnan(zvtx[0]))
+	    {
+	      ++nzvtxanyndj;
+	      if(abs(zvtx[0]) < 30) ++nzvtx30ndj;
+	    }
+	  
 	  if(dodijetcut && (dphilead < 3*M_PI/4 || isdijet == 0)) continue;
 	  double ETmax = 0;
 	  double ETsub = 0;
@@ -219,19 +258,39 @@ int make_hists(string tag, vector<int> rns, vector<int> nfiles, int dodijetcut =
 	    }
 
 	  if(dodijetcut && (isdijet == 0 || ETsub/ETmax < 0.3)) continue;
-	  if(!std::isnan(zvtx[0])) zhist_nocut->Fill(zvtx[0]);
-	  if(ETmax < 15) continue;
+	  if(!std::isnan(zvtx[0]))
+	    {
+	      zhist_nocut->Fill(zvtx[0]);
+	      ++nzvtxany;
+	      if(abs(zvtx[0]) < 30) ++nzvtx30;
+	    }
+	  if(jetcut && ETmax < 15) continue;
 	  mbdnq = 0;
 	  mbdsq = 0;
 	  mbdtq = 0;
-	  
+ 	  if(!std::isnan(zvtx[0]))
+	    {
+	      ++nzvtxanyjc;
+	      if(abs(zvtx[0]) < 30) ++nzvtx30jc;
+	    }
 	  //emat_calo_emfrac->Fill(emat,calo_emfrac);
 	  for(int j=0; j<njet; ++j)
 	    {
 	      double ET = jet_e[j]/cosh(jet_eta[j]);
 	      if(ET < 15) continue;
+	      if(!std::isnan(zvtx[0]))
+		{
+		  ++nzvtxanyjet;
+		  if(abs(zvtx[0]) < 30)
+		    {
+		      ++nzvtx30jet;
+		      if(lumi != 0 && triggerbit == 18) njet_lumi->Fill(rn,1./lumi);
+		    }
+		}
 	      jet_at_em_at_oh->Fill(jet_at_em[j],jet_at_oh[j]);
 	      jet_at_em_frcem->Fill(jet_at_em[j],frcem[j]);
+	      jet_at_em_eta->Fill(jet_at_em[j],jet_eta[j]);
+	      jet_at_oh_eta->Fill(jet_at_oh[j],jet_eta[j]);
 	      jet_at_oh_frcem->Fill(jet_at_oh[j],frcem[j]);
 	      jet_t_frcem->Fill(jet_at[j],frcem[j]);
 	      jet_eta_phi->Fill(jet_eta[j],jet_phi[j]);
@@ -243,10 +302,13 @@ int make_hists(string tag, vector<int> rns, vector<int> nfiles, int dodijetcut =
 	      frcem_frcoh->Fill(frcem[j],frcoh[j]);
 	      jet_eta_frcem->Fill(jet_eta[j],frcem[j]);
 	      jet_phi_frcem->Fill(jet_phi[j],frcem[j]);
+	      cout << ncgroe[j] << ": ";
 	      for(int k = 0; k<ncgroe[j]; ++k)
 		{
 		  h_emat->Fill(emat[j][k]);
+		  cout << emat[j][k] << " ";
 		}
+	      cout << endl;
 	      for(int k=0; k<ncgroo[j]; ++k)
 		{
 		  h_ohat->Fill(ohat[j][k]);
@@ -324,7 +386,7 @@ int make_hists(string tag, vector<int> rns, vector<int> nfiles, int dodijetcut =
       datfile->Close();
     }
   }
-  TFile* outf = TFile::Open(("/sphenix/user/jocl/projects/multiColStudy/output/hists/hists_"+tag+"_"+(dodijetcut?"dc":"nc")+"_"+region+".root").c_str(),"RECREATE");
+  TFile* outf = TFile::Open(("/sphenix/user/jocl/projects/multiColStudy/output/hists/hists_"+tag+"_"+(dodijetcut?"dc":"nc")+"_"+region+"_"+to_string(triggerbit)+".root").c_str(),"RECREATE");
   outf->cd();
 
 
@@ -370,6 +432,8 @@ int make_hists(string tag, vector<int> rns, vector<int> nfiles, int dodijetcut =
   h_ohat->Scale(1./totalentries);
   emat_calo_emfrac->Scale(1./totalentries);
   jet_at_em_at_oh->Scale(1./totalentries);
+  jet_at_em_eta->Scale(1./totalentries);
+  jet_at_oh_eta->Scale(1./totalentries);
   jet_at_em_at_oh_gr20->Scale(1./totalentries);
   jet_at_em_frcem->Scale(1./totalentries);
   jet_at_oh_frcem->Scale(1./totalentries);
@@ -380,6 +444,7 @@ int make_hists(string tag, vector<int> rns, vector<int> nfiles, int dodijetcut =
       calo_hitsgrone[i]->Write();
       calo_tgrone_eta[i]->Write();
     }
+  njet_lumi->Write();
   h_emat->Write();
   h_ohat->Write();
   jet_eta_phi->Write();
@@ -422,6 +487,8 @@ int make_hists(string tag, vector<int> rns, vector<int> nfiles, int dodijetcut =
   jet_at_em_at_oh_gr20->Write();
   jet_at_em_frcem_gr20->Write();
   jet_at_oh_frcem_gr20->Write();
+  jet_at_em_eta->Write();
+  jet_at_oh_eta->Write();
   
 
   ofstream outtrigs("trigcounts/outtrigs"+region+".txt");
@@ -432,6 +499,13 @@ int make_hists(string tag, vector<int> rns, vector<int> nfiles, int dodijetcut =
     
   outf->Write();
   outf->Close();
-  
+  cout << "Njet zvtx < 30: " <<  nzvtx30jet << endl;
+  cout << "Njet any zvtx:  " << nzvtxanyjet << endl;
+  cout << "Nevt dj z < 30: " << nzvtx30 << endl;
+  cout << "Nevt dj any z:  " << nzvtxany << endl;
+  cout << "Nevt ndj any z: " << nzvtxanyndj << endl;
+  cout << "Nevt ndj z<30:  " << nzvtx30ndj << endl;
+  cout << "Nevt jc any z:  " << nzvtxanyjc << endl;
+  cout << "Nevt jc z < 30: " << nzvtx30jc << endl;
   return 0;
 }

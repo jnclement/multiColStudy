@@ -109,8 +109,6 @@ int run_earlydata(string tag = "", int nproc = 0, int debug = 0, int nevt = 0, s
     }
   std::cout << "status setters" << std::endl;
 
-
-
   CDBInterface::instance()->Verbosity(0);
 
   //auto mbddigi = new MbdDigitization();
@@ -169,6 +167,7 @@ int run_earlydata(string tag = "", int nproc = 0, int debug = 0, int nevt = 0, s
 
   multiColStudy* mcs = new multiColStudy(filename, "mcs", debug, issim);
   se->registerSubsystem(mcs);
+
   
   cout << "test4" << endl;
   se->Print("NODETREE");

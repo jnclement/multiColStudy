@@ -1,6 +1,70 @@
 #include <dlUtility.h>
 const int nhistplot = 4;
 string region[nhistplot] = {"RegionA", "RegionB","RegionC","RegionD"};
+int bit = 10;
+int colors[nhistplot] = {kBlack,kCyan+2,kMagenta+2,kYellow+2}; 
+double singlegaus(double* x, double* par)
+{
+  double exparg = (x[0]-par[1])/par[2];
+  double result = par[0]*exp(-exparg*exparg);
+  return result;
+}
+
+double doublegaus(double* x, double* par)
+{
+  return singlegaus(x, par)+singlegaus(x,par+3);
+}
+
+TF1* fit_doublegaus(TH1D* hist, int n)
+{
+  TF1* dgaus = new TF1((hist->GetName()+to_string(n)).c_str(),doublegaus,-2,2,6);
+  dgaus->SetParameters(0.25,0,1,0.075,-1,0.5);
+  dgaus->SetParNames("A1","M1","W1","A2","M2","W2");
+  hist->Fit(dgaus,"RI");
+  return dgaus;
+}
+
+double getMaxXatY(TH2D* hist, int ybin)
+{
+  int maxx = -1;
+  double maxval = -9999999;
+  int nxbin = hist->GetNbinsX();
+
+  for(int i = 1; i < nxbin; ++i)
+    {
+      double content = hist->GetBinContent(i, ybin);
+      if(content > maxval)
+	{
+	  maxval = content;
+	  maxx = i;
+	}
+    }
+  return hist->GetXaxis()->GetBinCenter(maxx);
+}
+
+int correct_eta_timing(TH2D* hist)
+{
+
+  int nbinx = hist->GetNbinsX();
+  int nbiny = hist->GetNbinsY();
+  float wxbin = (hist->GetXaxis()->GetXmax() - hist->GetXaxis()->GetXmin())/nbinx;
+  for(int i=1; i<nbiny+1; ++i)
+    {
+      double maxxy = getMaxXatY(hist, i);
+      int nbinoff = maxxy>0?floor(abs(maxxy/wxbin)):-floor(abs(maxxy/wxbin));
+      cout << "nbinoff: " << nbinoff << endl;
+      int from = maxxy>0?1:nbinx;
+      for(int j = from; (maxxy>0?-j:j)>(maxxy>0?-nbinx-1:0); (maxxy>0?j++:j--))
+	{
+	  cout << i << " " << j << " " << hist->GetBinContent(j,i) <<  " " << hist->GetBinContent(j+nbinoff,i) << endl;
+	  hist->SetBinContent(j,i,hist->GetBinContent(j+nbinoff,i));
+	  hist->SetBinError(j,i,hist->GetBinError(j+nbinoff,i));
+	  cout << i << " " << j << " " << hist->GetBinContent(j,i) <<  " " << hist->GetBinContent(j+nbinoff,i) << endl;
+	}
+    }
+  return 0;
+}
+
 int format_th1d(TH1D* hist, string xtitle, string ytitle, int n = 1)
 {
   hist->GetXaxis()->SetTitle(xtitle.c_str());
@@ -79,7 +143,7 @@ int draw_overlay_with_ratio_th1d(TH1D** hists, string histbasename, TCanvas* can
       ratio[i]->GetXaxis()->SetLabelSize(ratio[i]->GetXaxis()->GetLabelSize()/0.5);
       ratio[i]->GetYaxis()->SetLabelSize(ratio[i]->GetYaxis()->GetLabelSize()/0.5);
     }
-  
+  TF1* dgaus[nhistplot];
   hists[0]->GetYaxis()->SetRangeUser(0,1.5*ymax);
   for(int i=0; i<nhistplot; ++i)
     {
@@ -89,6 +153,7 @@ int draw_overlay_with_ratio_th1d(TH1D** hists, string histbasename, TCanvas* can
       hists[i]->GetXaxis()->SetLabelSize(0);
       hists[i]->GetXaxis()->SetTitleSize(0);
       hists[i]->GetYaxis()->SetRangeUser(0,1.5*ymax);
+
       hists[i]->Draw(i==0?"PE":"SAME PE");
       can->cd(2);
       if(i>0) ratio[i]->Draw(i==1?"PE":"SAME PE");
@@ -108,7 +173,7 @@ int draw_overlay_with_ratio_th1d(TH1D** hists, string histbasename, TCanvas* can
   TLine* oneline = new TLine(hists[0]->GetXaxis()->GetXmin(),1,hists[0]->GetXaxis()->GetXmax(),1);
   can->cd(2);
   oneline->Draw();
-  can->SaveAs(("/sphenix/user/jocl/projects/multiColStudy/output/plots/"+string(hists[0]->GetName())+"_overlay_"+(dijetcut?"dc":"nc")+".png").c_str());
+  can->SaveAs(("/sphenix/user/jocl/projects/multiColStudy/output/plots/"+string(hists[0]->GetName())+"_"+to_string(bit)+"_overlay_"+(dijetcut?"dc":"nc")+".png").c_str());
   ymax = 0;
   for(int i=0; i<nhistplot; ++i)
     {
@@ -134,7 +199,10 @@ int draw_overlay_with_ratio_th1d(TH1D** hists, string histbasename, TCanvas* can
 	  ymax = 0.2;
 	}
       if(i>0) ratio[i]->Divide(hists[i],hists[0]);
+      dgaus[i] = fit_doublegaus(hists[i],i);
+      dgaus[i]->SetLineColor(colors[i]);
       hists[i]->Draw(i==0?"PE":"SAME PE");
+      dgaus[i]->Draw();
       can->cd(2);
       ratio[i]->GetYaxis()->SetRangeUser(0,2);
       if(i>0) ratio[i]->Draw(i==1?"PE":"SAME PE");
@@ -152,7 +220,7 @@ int draw_overlay_with_ratio_th1d(TH1D** hists, string histbasename, TCanvas* can
   can->cd(2);
   oneline->Draw();
 
-  can->SaveAs(("/sphenix/user/jocl/projects/multiColStudy/output/plots/"+string(hists[0]->GetName())+"_overlay_"+(dijetcut?"dc":"nc")+"_normed.png").c_str());
+  can->SaveAs(("/sphenix/user/jocl/projects/multiColStudy/output/plots/"+string(hists[0]->GetName())+"_"+to_string(bit)+"_overlay_"+(dijetcut?"dc":"nc")+"_normed.png").c_str());
 
   gPad->SetLogy(0);
   
@@ -180,7 +248,7 @@ int draw_th1d(TH1D* hist, TCanvas* can, int dijetcut)
   antikt_text(0.4,0.3,0.92);
   et_cut_text(minet,0.015,0.96);
   dijet_cut_text(0.3,0.96);
-  can->SaveAs(("/sphenix/user/jocl/projects/multiColStudy/output/plots/"+string(hist->GetName())+"_"+(dijetcut?"dc":"nc")+".png").c_str());
+  can->SaveAs(("/sphenix/user/jocl/projects/multiColStudy/output/plots/"+string(hist->GetName())+"_"+to_string(bit)+"_"+(dijetcut?"dc":"nc")+".png").c_str());
 
   gPad->SetLogy();
   hist->Draw("PE");
@@ -189,7 +257,7 @@ int draw_th1d(TH1D* hist, TCanvas* can, int dijetcut)
   antikt_text(0.4,0.3,0.92);
   et_cut_text(minet,0.015,0.96);
   dijet_cut_text(0.3,0.96);
-  can->SaveAs(("/sphenix/user/jocl/projects/multiColStudy/output/plots/"+string(hist->GetName())+"_"+(dijetcut?"dc":"nc")+"_log.png").c_str());
+  can->SaveAs(("/sphenix/user/jocl/projects/multiColStudy/output/plots/"+string(hist->GetName())+"_"+to_string(bit)+"_"+(dijetcut?"dc":"nc")+"_log.png").c_str());
   gPad->SetLogy(0);
   return 0;
 }
@@ -256,7 +324,7 @@ int draw_th2d(TH2D* hist, TCanvas* can, int dijetcut)
   if(std::string(hist->GetName()).find("gr20") != std::string::npos) minet = 20;
   et_cut_text(minet,0.015,0.96);
   dijet_cut_text(0.3,0.96);
-  can->SaveAs(("/sphenix/user/jocl/projects/multiColStudy/output/plots/"+string(hist->GetName())+"_"+(dijetcut?"dc":"nc")+".png").c_str());
+  can->SaveAs(("/sphenix/user/jocl/projects/multiColStudy/output/plots/"+string(hist->GetName())+"_"+to_string(bit)+"_"+(dijetcut?"dc":"nc")+".png").c_str());
 
   gPad->SetLogz();
   hist->Draw("COLZ");
@@ -265,7 +333,7 @@ int draw_th2d(TH2D* hist, TCanvas* can, int dijetcut)
   antikt_text(0.4,0.3,0.92);
   et_cut_text(minet,0.015,0.96);
   dijet_cut_text(0.3,0.96);
-  can->SaveAs(("/sphenix/user/jocl/projects/multiColStudy/output/plots/"+string(hist->GetName())+"_"+(dijetcut?"dc":"nc")+"_log.png").c_str());
+  can->SaveAs(("/sphenix/user/jocl/projects/multiColStudy/output/plots/"+string(hist->GetName())+"_"+to_string(bit)+"_"+(dijetcut?"dc":"nc")+"_log.png").c_str());
   gPad->SetLogz(0);
   return 0;
 }
@@ -298,10 +366,21 @@ int get_and_draw_th2d(string histbasename, string* region, TFile* histfile, stri
       hists[i] = (TH2D*)histfile->Get((histbasename+"_"+region[i]).c_str());
       //if(std::string(hists[i]->GetName()).find("frcem") != std::string::npos) hists[i]->Rebin2D(5,5);
       //if(std::string(hists[i]->GetName()).find("calo") != std::string::npos) hists[i]->Rebin2D(5,5);
+      if(std::string(hists[i]->GetName()).find("tgrone_eta_2") != std::string::npos)
+	{
+	  correct_eta_timing(hists[i]);
+	}
+      else
+	{
+	  cout << histbasename << " " << hists[i]->GetName() << endl;
+	  return 0;
+	}
       format_th2d(hists[i], xtitle, ytitle, ztitle);
-      if(std::string(hists[i]->GetName()).find("tgrone") != std::string::npos) draw_th2d(hists[i], can,dijetcut);
-      projx[i] = hists[i]->ProjectionX();
-      projy[i] = hists[i]->ProjectionY();
+      //if(std::string(hists[i]->GetName()).find("tgrone") != std::string::npos)
+      draw_th2d(hists[i], can,dijetcut);
+
+      projx[i] = hists[i]->ProjectionX((histbasename+"_projx"+to_string(i)).c_str(),1,hists[i]->GetNbinsY());
+      projy[i] = hists[i]->ProjectionY((histbasename+"_projy"+to_string(i)).c_str(),1,hists[i]->GetNbinsX());
       if(std::string(hists[i]->GetName()).find("frcem") != std::string::npos) cout << "frcem integral " << hists[i]->GetName() << ": " << projx[i]->Integral() << endl;
       format_th1d(projx[i],hists[i]->GetXaxis()->GetTitle(),hists[i]->GetZaxis()->GetTitle(),i);
       format_th1d(projy[i],hists[i]->GetYaxis()->GetTitle(),hists[i]->GetZaxis()->GetTitle(),i);
@@ -332,7 +411,7 @@ int plot()
   gStyle->SetPadTickX(1);
   gStyle->SetPadTickY(1);
   TFile* histfile;
-  histfile = TFile::Open("../output/hists/hadded.root");
+  histfile = TFile::Open(("../output/hists/hadded"+to_string(bit)+".root").c_str());
   int dijetcut = 1;
   const int nhist = 36;
 
@@ -357,6 +436,15 @@ int plot()
     {
       get_and_draw_th1d(th1dnames[i],region,histfile,th1dxtitl[i],"Counts / N_{bit18}^{scaled}",can,ratcan,dijetcut);
     }
+
+  TH1D* njet_lumi = (TH1D*)histfile->Get("njet_lumi");
+  njet_lumi->SetMarkerSize(1);
+  njet_lumi->SetMarkerStyle(20);
+  TCanvas* lumican = new TCanvas("","",1000,500);
+  lumican->cd();
+  njet_lumi->Draw("PE");
+  lumican->SaveAs("../output/plots/njet_lumi.png");
+
   delete can;
   delete ratcan;
   return 0;
