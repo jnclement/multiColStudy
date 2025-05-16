@@ -190,7 +190,7 @@ int make_hists(string tag, vector<int> rns, vector<int> nfiles, int triggerbit =
       int nfile = nfiles.at(g);
   for(int h=0; h<nfile; ++h)
     {
-      string filename = "/sphenix/user/jocl/projects/multiColStudy/rootfiles/"+to_string(rn)+"/events_"+tag+"_"+to_string(rn)+"_"+to_string(h)+"_0.root";
+      string filename = "multicoltree/events_"+tag+"_"+to_string(rn)+"_"+to_string(h)+"_0.root";
       cout << "Processing file " << filename << endl;
       TFile* datfile = TFile::Open(filename.c_str());
       //define branch variables
@@ -413,7 +413,7 @@ int make_hists(string tag, vector<int> rns, vector<int> nfiles, int triggerbit =
   ndijetpassgr15 = 0;
   ntotalevent = 0;
   }
-  TFile* outf = TFile::Open(("/sphenix/user/jocl/projects/multiColStudy/output/hists/hists_"+tag+"_"+(dodijetcut?"dc":"nc")+"_"+region+"_"+to_string(triggerbit)+".root").c_str(),"RECREATE");
+  TFile* outf = TFile::Open(("multicolhist/hists_"+tag+"_"+(dodijetcut?"dc":"nc")+"_"+region+"_"+to_string(triggerbit)+".root").c_str(),"RECREATE");
   outf->cd();
 
 

@@ -23,7 +23,7 @@ int make_tturn(string tag, vector<int> rns, vector<int> nfiles)
       int nfile = nfiles.at(g);
   for(int h=0; h<nfile; ++h)
     {
-      string filename = "/sphenix/user/jocl/projects/multiColStudy/rootfiles/"+to_string(rn)+"/events_"+tag+"_"+to_string(rn)+"_"+to_string(h)+"_0.root";
+      string filename = "multicoltree/events_"+tag+"_"+to_string(rn)+"_"+to_string(h)+"_0.root";
       cout << "Processing file " << filename << endl;
       TFile* datfile = TFile::Open(filename.c_str());
       //define branch variables
@@ -97,7 +97,7 @@ int make_tturn(string tag, vector<int> rns, vector<int> nfiles)
   }
 
   trigturn->Divide(num,den,1,1,"B");
-  TFile* outf = TFile::Open(("/sphenix/user/jocl/projects/multiColStudy/output/hists/trigturn_"+tag+"_"+region+".root").c_str(),"RECREATE");
+  TFile* outf = TFile::Open(("multicolhist/trigturn_"+tag+"_"+region+".root").c_str(),"RECREATE");
   outf->cd();
 
   trigturn->Write();
