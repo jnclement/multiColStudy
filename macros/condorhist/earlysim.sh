@@ -1,5 +1,4 @@
 #!/bin/bash
-# file name: firstcondor.sh
 
 source /opt/sphenix/core/bin/sphenix_setup.sh -n ana.468
 source /opt/sphenix/core/bin/setup_local.sh "/sphenix/user/jocl/projects/testinstall"
@@ -23,4 +22,4 @@ cp -r /sphenix/user/jocl/projects/multiColStudy/macros/make_tturn.C .
 bash make_all_dc.sh 18 $RN
 bash make_all_dc.sh 10 $RN
 
-cp multicolhist/* /sphenix/user/jocl/projects/multiColStudy/hists
+cp multicolhist/* /sphenix/user/jocl/projects/multiColStudy/output/hists

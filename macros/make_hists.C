@@ -413,7 +413,7 @@ int make_hists(string tag, vector<int> rns, vector<int> nfiles, int triggerbit =
   ndijetpassgr15 = 0;
   ntotalevent = 0;
   }
-  TFile* outf = TFile::Open(("multicolhist/hists_"+tag+"_"+(dodijetcut?"dc":"nc")+"_"+region+"_"+to_string(triggerbit)+".root").c_str(),"RECREATE");
+  TFile* outf = TFile::Open(("multicolhist/hists_"+tag+"_"+(dodijetcut?"dc":"nc")+"_"+region+(rns.size()==1?"_"+to_string(rns[0])+"_":"_")+to_string(triggerbit)+".root").c_str(),"RECREATE");
   outf->cd();
 
 

@@ -27,9 +27,10 @@ int make_tturn(string tag, vector<int> rns, vector<int> nfiles)
       cout << "Processing file " << filename << endl;
       TFile* datfile = TFile::Open(filename.c_str());
       //define branch variables
+      if(!datfile)
       {
 	cout << "no file " << filename << endl;
-	if(!datfile) continue;
+	continue;
       }
       int njet, hitsgrone, isdijet;
       double dphilead;
@@ -97,7 +98,7 @@ int make_tturn(string tag, vector<int> rns, vector<int> nfiles)
   }
 
   trigturn->Divide(num,den,1,1,"B");
-  TFile* outf = TFile::Open(("multicolhist/trigturn_"+tag+"_"+region+".root").c_str(),"RECREATE");
+  TFile* outf = TFile::Open(("multicolhist/trigturn_"+tag+"_"+region+(rns.size()==1?"_"+to_string(rns[0]):"")+".root").c_str(),"RECREATE");
   outf->cd();
 
   trigturn->Write();
