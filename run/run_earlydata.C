@@ -70,7 +70,7 @@ int run_earlydata(string tag = "", int nproc = 0, int debug = 0, int nevt = 0, s
   if(debug > 1) cout << "test1" << endl;
   Fun4AllServer *se = Fun4AllServer::instance();
   recoConsts *rc =  recoConsts::instance();
-  rc->set_StringFlag("CDB_GLOBALTAG",issim?"MDC2":"ProdA_2024");
+  rc->set_StringFlag("CDB_GLOBALTAG",issim?"MDC2":"2024p012");
   rc->set_uint64Flag("TIMESTAMP",issim?21:rn);
   
   se->Verbosity(verbosity);
@@ -109,7 +109,7 @@ int run_earlydata(string tag = "", int nproc = 0, int debug = 0, int nevt = 0, s
     }
   std::cout << "status setters" << std::endl;
 
-  CDBInterface::instance()->Verbosity(0);
+  CDBInterface::instance()->Verbosity(1);
 
   //auto mbddigi = new MbdDigitization();
   auto mbdreco = new MbdReco();
@@ -172,6 +172,7 @@ int run_earlydata(string tag = "", int nproc = 0, int debug = 0, int nevt = 0, s
   cout << "test4" << endl;
   se->Print("NODETREE");
   cout << "run " << nevt << endl;
+  se->skip(35000);
   se->run(nevt);
   cout << "ran " << nevt << endl;
   cout << "Ran all events" << endl;

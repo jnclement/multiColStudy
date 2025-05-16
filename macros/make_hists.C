@@ -134,6 +134,7 @@ int make_hists(string tag, vector<int> rns, vector<int> nfiles, int triggerbit =
   TH2D* jet_at_oh_frcem = new TH2D(("jet_at_oh_frcem_"+region).c_str(),"",60,-6,6,24,-0.1,1.1);
   TH2D* jet_at_oh_frcem_gr20 = new TH2D(("jet_at_oh_frcem_gr20_"+region).c_str(),"",60,-6,6,24,-0.1,1.1);
   TH1D* njet_lumi = new TH1D("njet_lumi","",49280-49120,49120-0.5,49280-0.5);
+  TH1D* njet_lumiecut = new TH1D("njet_lumi_Ecut","",49280-49120,49120-0.5,49280-0.5);
   for(int i=0; i<3; ++i)
     {
       calo_hitsgrone[i] = new TH1D(("calo_hitsgrone_"+to_string(i)+"_"+region).c_str(),"",20,-0.5,19.5);
@@ -161,6 +162,8 @@ int make_hists(string tag, vector<int> rns, vector<int> nfiles, int triggerbit =
   int nzvtxanyjet = 0;
   int nzvtx30jc = 0;
   int nzvtxanyjc = 0;
+  int ntotalevent = 0;
+  int ndijetpassgr15 = 0;
   //start processing
   long long unsigned int totalentries = 0;
   if(triggerbit==18)
@@ -187,7 +190,7 @@ int make_hists(string tag, vector<int> rns, vector<int> nfiles, int triggerbit =
       int nfile = nfiles.at(g);
   for(int h=0; h<nfile; ++h)
     {
-      string filename = "/sphenix/tg/tg01/jets/jocl/multiCol/"+to_string(rn)+"/events_"+tag+"_"+to_string(rn)+"_"+to_string(h)+"_0.root";
+      string filename = "/sphenix/user/jocl/projects/multiColStudy/rootfiles/"+to_string(rn)+"/events_"+tag+"_"+to_string(rn)+"_"+to_string(h)+"_0.root";
       cout << "Processing file " << filename << endl;
       TFile* datfile = TFile::Open(filename.c_str());
       //define branch variables
@@ -248,6 +251,7 @@ int make_hists(string tag, vector<int> rns, vector<int> nfiles, int triggerbit =
 	      trigs[1][j] += (trigvec >> trigs[0][j]) & 1;
 	    }
 	  if(!((trigvec >> triggerbit) & 1)) continue;
+	  ++ntotalevent;
 	  ++totalentries;
 	  if(!std::isnan(zvtx[0]))
 	    {
@@ -276,6 +280,10 @@ int make_hists(string tag, vector<int> rns, vector<int> nfiles, int triggerbit =
 	      ++nzvtxany;
 	      if(abs(zvtx[0]) < 30) ++nzvtx30;
 	    }
+	  for(int j=0; j<njet; ++j)
+	    {
+	      if(jet_e[j] > 15 && lumi != 0 && triggerbit == 18) njet_lumiecut->Fill(rn,1./lumi);
+	    }
 	  if(jetcut && ETmax < 15) continue;
 	  mbdnq = 0;
 	  mbdsq = 0;
@@ -284,6 +292,7 @@ int make_hists(string tag, vector<int> rns, vector<int> nfiles, int triggerbit =
 	    {
 	      ++nzvtxanyjc;
 	      if(abs(zvtx[0]) < 30) ++nzvtx30jc;
+	      else continue;
 	    }
 	  //emat_calo_emfrac->Fill(emat,calo_emfrac);
 	  for(int j=0; j<njet; ++j)
@@ -299,6 +308,7 @@ int make_hists(string tag, vector<int> rns, vector<int> nfiles, int triggerbit =
 		      if(lumi != 0 && triggerbit == 18) njet_lumi->Fill(rn,1./lumi);
 		    }
 		}
+	      ++ndijetpassgr15;
 	      jet_at_em_at_oh->Fill(jet_at_em[j],jet_at_oh[j]);
 	      jet_at_em_frcem->Fill(jet_at_em[j],frcem[j]);
 	      jet_at_em_eta->Fill(jet_at_em[j],jet_eta[j]);
@@ -314,13 +324,13 @@ int make_hists(string tag, vector<int> rns, vector<int> nfiles, int triggerbit =
 	      frcem_frcoh->Fill(frcem[j],frcoh[j]);
 	      jet_eta_frcem->Fill(jet_eta[j],frcem[j]);
 	      jet_phi_frcem->Fill(jet_phi[j],frcem[j]);
-	      cout << ncgroe[j] << ": ";
+	      //cout << ncgroe[j] << ": ";
 	      for(int k = 0; k<ncgroe[j]; ++k)
 		{
 		  h_emat->Fill(emat[j][k]);
-		  cout << emat[j][k] << " ";
+		  //cout << emat[j][k] << " ";
 		}
-	      cout << endl;
+	      //cout << endl;
 	      for(int k=0; k<ncgroo[j]; ++k)
 		{
 		  h_ohat->Fill(ohat[j][k]);
@@ -399,6 +409,9 @@ int make_hists(string tag, vector<int> rns, vector<int> nfiles, int triggerbit =
 	}
       datfile->Close();
     }
+  cout << "rn ndjpg15 tot rat: " << rn << " " << ndijetpassgr15 << " " << ntotalevent << " " << ((float)ndijetpassgr15)/ntotalevent << endl;
+  ndijetpassgr15 = 0;
+  ntotalevent = 0;
   }
   TFile* outf = TFile::Open(("/sphenix/user/jocl/projects/multiColStudy/output/hists/hists_"+tag+"_"+(dodijetcut?"dc":"nc")+"_"+region+"_"+to_string(triggerbit)+".root").c_str(),"RECREATE");
   outf->cd();
@@ -461,6 +474,7 @@ int make_hists(string tag, vector<int> rns, vector<int> nfiles, int triggerbit =
       calo_tgrone_eta[i]->Write();
     }
   njet_lumi->Write();
+  njet_lumiecut->Write();
   h_emat->Write();
   h_ohat->Write();
   jet_eta_phi->Write();

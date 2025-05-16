@@ -1,7 +1,7 @@
 #include <dlUtility.h>
 const int nhistplot = 4;
 string region[nhistplot] = {"RegionA", "RegionB","RegionC","RegionD"};
-int bit = 10;
+int bit = 18;
 int colors[nhistplot] = {kBlack,kCyan+2,kMagenta+2,kYellow+2}; 
 double singlegaus(double* x, double* par)
 {
@@ -20,7 +20,7 @@ TF1* fit_doublegaus(TH1D* hist, int n)
   TF1* dgaus = new TF1((hist->GetName()+to_string(n)).c_str(),doublegaus,-2,2,6);
   dgaus->SetParameters(0.25,0,1,0.075,-1,0.5);
   dgaus->SetParNames("A1","M1","W1","A2","M2","W2");
-  hist->Fit(dgaus,"RI");
+  hist->Fit(dgaus,"RI0");
   return dgaus;
 }
 
@@ -124,7 +124,7 @@ int draw_overlay_with_ratio_th1d(TH1D** hists, string histbasename, TCanvas* can
     }
   can->cd(1);
   float ymax = 0;
-  TLegend* leg = new TLegend(0.4,0.65,0.6,0.85);
+  TLegend* leg = new TLegend(0.6,0.65,0.8,0.85);
   for(int i=0; i<nhistplot; ++i)
     {
       if(hists[i]->GetMaximum() > ymax) ymax = hists[i]->GetMaximum();
@@ -178,6 +178,28 @@ int draw_overlay_with_ratio_th1d(TH1D** hists, string histbasename, TCanvas* can
   can->cd(2);
   oneline->Draw();
   can->SaveAs(("/sphenix/user/jocl/projects/multiColStudy/output/plots/"+string(hists[0]->GetName())+"_"+to_string(bit)+"_overlay_"+(dijetcut?"dc":"nc")+".png").c_str());
+
+
+  can->cd(1);
+  hists[0]->GetYaxis()->SetRangeUser(hists[0]->GetBinContent(hists[0]->FindLastBinAbove(0))*0.5,1.5*ymax);
+  gPad->SetLogy();
+  for(int i=0; i<nhistplot; ++i)
+    {
+      hists[i]->Draw(i==0?"PE":"SAME PE");
+    }
+  sphenixtext(0.65,0.96);
+  sqrt_s_text(0.65,0.92);
+  if(bit != 10)
+    {
+  antikt_text(0.4,0.3,0.92);
+
+  if(std::string(hists[0]->GetName()).find("gr20") != std::string::npos) minet = 20;
+  et_cut_text(minet,0.015,0.96);
+  dijet_cut_text(0.3,0.96);
+    }
+  leg->Draw();
+  can->SaveAs(("/sphenix/user/jocl/projects/multiColStudy/output/plots/"+string(hists[0]->GetName())+"_"+to_string(bit)+"_overlay_"+(dijetcut?"dc":"nc")+"_log.png").c_str());
+  gPad->SetLogy(0);
   ymax = 0;
   for(int i=0; i<nhistplot; ++i)
     {
@@ -192,10 +214,12 @@ int draw_overlay_with_ratio_th1d(TH1D** hists, string histbasename, TCanvas* can
     }
 
   hists[0]->GetYaxis()->SetRangeUser(0,1.5*ymax);
+  /*
   for(int i=0; i<nhistplot; ++i)
     {
       dgaus[i] = fit_doublegaus(hists[i],i);
     }
+  */
   for(int i=0; i<nhistplot; ++i)
     {
       can->cd(1);
@@ -207,15 +231,16 @@ int draw_overlay_with_ratio_th1d(TH1D** hists, string histbasename, TCanvas* can
 	  ymax = 0.2;
 	}
       if(i>0) ratio[i]->Divide(hists[i],hists[0]);
-      
-      dgaus[i]->SetLineColor(colors[i]);
+      //dgaus[i]->SetLineColor(colors[i]);
       hists[i]->Draw(i==0?"PE":"SAME PE");
-      dgaus[i]->Draw("SAME");
+      //dgaus[i]->Draw("SAME");
       can->cd(2);
-      ratio[i]->GetYaxis()->SetRangeUser(0,2);
+      if(i>0) ratio[i]->GetYaxis()->SetRangeUser(0,2);
       if(i>0) ratio[i]->Draw(i==1?"PE":"SAME PE");
     }
 
+
+  
   can->cd(1);
   leg->SetBorderSize(0);
   leg->SetFillStyle(0);
@@ -233,7 +258,9 @@ int draw_overlay_with_ratio_th1d(TH1D** hists, string histbasename, TCanvas* can
 
   can->SaveAs(("/sphenix/user/jocl/projects/multiColStudy/output/plots/"+string(hists[0]->GetName())+"_"+to_string(bit)+"_overlay_"+(dijetcut?"dc":"nc")+"_normed.png").c_str());
 
-  gPad->SetLogy(0);
+
+
+  
   
   delete leg;
   for(int i=0; i<nhistplot; ++i)
@@ -296,7 +323,9 @@ int get_and_draw_th1d(string histbasename, string* region, TFile* histfile, stri
     {
       hists[i] = (TH1D*)histfile->Get((histbasename+"_"+region[i]).c_str());
       if(std::string(hists[i]->GetName()).find("zhist") != std::string::npos) hists[i]->Rebin(10);
+
       format_th1d(hists[i], xtitle, ytitle,i);
+      if(std::string(hists[i]->GetName()).find("trigturn") != std::string::npos) hists[i]->GetYaxis()->SetTitle("Efficiency");;
       //draw_th1d(hists[i], can, dijetcut);
     }
   draw_overlay_with_ratio_th1d(hists,histbasename,ratcan,dijetcut);
@@ -379,7 +408,6 @@ int get_and_draw_th2d(string histbasename, string* region, TFile* histfile, stri
       //if(std::string(hists[i]->GetName()).find("calo") != std::string::npos) hists[i]->Rebin2D(5,5);
       if(std::string(hists[i]->GetName()).find("tgrone_eta_2") != std::string::npos)
 	{
-	  cout << "no correct" << endl;
 	  //correct_eta_timing(hists[i]);
 	}
       /*
@@ -418,8 +446,10 @@ int get_and_draw_th2d(string histbasename, string* region, TFile* histfile, stri
   return 0;
 }
 
-int plot()
+int plot(int tb)
 {
+  //gROOT->ProcessLine( "gErrorIgnoreLevel = 1001;");
+  bit = tb;
   gStyle->SetOptStat(0);
   gStyle->SetOptTitle(0);
   gStyle->SetPadTickX(1);
@@ -440,16 +470,16 @@ int plot()
   get_and_draw_th2d(histnames[11],region,histfile,xtitles[11],ytitles[11],"Counts / N_{"+to_string(bit)+"}^{scaled}",can,ratcan,dijetcut);
   get_and_draw_th2d(histnames[13],region,histfile,xtitles[13],ytitles[13],"Counts / N_{"+to_string(bit)+"}^{scaled}",can,ratcan,dijetcut);
   
-  for(int i=28; i<nhist; ++i)
+  for(int i=nhist; i<nhist; ++i)
     {
       get_and_draw_th2d(histnames[i],region,histfile,xtitles[i],ytitles[i],"Counts / N_{"+to_string(bit)+"}^{scaled}",can,ratcan,dijetcut);
     }
 
-  const int nth1d = 11;
-  string th1dnames[nth1d] = {"zhist","mbdn","mbds","mbdt","calo_hitsgrone_0","calo_hitsgrone_1","calo_hitsgrone_2","zhist_gr20","zhist_nocut","h_emat","h_ohat"};
-  string th1dxtitl[nth1d] = {"z_{vtx} [cm]","MBD Charge [Arb.]","MBD Charge [Arb.]","MBD Charge [Arb.]","Number of Towers with E > 1 GeV","Number of Towers with E > 1 GeV","Number of Towers with E > 1 GeV","z_{vtx} [cm]","z_{vtx} [cm]","Peak Sample Time of EMCal Jet Constituents with E_{T}>1 GeV","Peak Sample Time of OHCal Jet Constituents with E_{T}>1 GeV"};
+  const int nth1d = 12;
+  string th1dnames[nth1d] = {"zhist","mbdn","mbds","mbdt","calo_hitsgrone_0","calo_hitsgrone_1","calo_hitsgrone_2","zhist_gr20","zhist_nocut","h_emat","h_ohat","trigturn"};
+  string th1dxtitl[nth1d] = {"z_{vtx} [cm]","MBD Charge [Arb.]","MBD Charge [Arb.]","MBD Charge [Arb.]","Number of Towers with E > 1 GeV","Number of Towers with E > 1 GeV","Number of Towers with E > 1 GeV","z_{vtx} [cm]","z_{vtx} [cm]","Peak Sample Time of EMCal Jet Constituents with E_{T}>1 GeV","Peak Sample Time of OHCal Jet Constituents with E_{T}>1 GeV","Jet E_{T} [GeV]"};
 
-  for(int i=9; i<nth1d; ++i)
+  for(int i=nth1d-1; i<nth1d+(bit==18?0:1); ++i)
     {
       get_and_draw_th1d(th1dnames[i],region,histfile,th1dxtitl[i],"Counts / N_{"+to_string(bit)+"}^{scaled}",can,ratcan,dijetcut);
     }

@@ -41,13 +41,13 @@ class multiColStudy : public SubsysReco
   std::string _filename;
   
   static const int _maxzvtx = 3;
-  static const int _maxjet = 10;
+  static const int _maxjet = 100;
   static const int _mbdside = 2;
   static const int _etow = 24576;
   static const int _htow = 1536;
   static const int _gronefield = 6;
   static const int _ncalotype = 3;
-  static const int _maxjetcomp = 64;
+  static const int _maxjetcomp = 2000;
   TFile* _f;
   TTree* _tree;
   int _njet;

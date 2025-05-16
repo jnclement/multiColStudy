@@ -267,7 +267,7 @@ int multiColStudy::process_event(PHCompositeNode *topNode)
       if(towers[h])
 	{
 	  if(_debug > 1) cout << "got towers " << h << endl;
-	  for(int i=0; i<nchan; ++i)
+	  for(int i=0; i<(h==0?24576:nchan); ++i)
 	    {
 	      TowerInfo* tower = towers[h]->get_tower_at_channel(i);
 	      TowerInfo* rawtower = rawtowers[h]->get_tower_at_channel(i);
@@ -346,10 +346,10 @@ int multiColStudy::process_event(PHCompositeNode *topNode)
 	      float testJetE = jet->get_e();
 	      float testJetPhi = jet->get_phi();
 	      if(_debug > 5) cout << "jet E/eta: " << testJetE  << " " << jet->get_eta() << endl;
-	      if(testJetE < 7) continue;
+	      if(testJetE < 4) continue;
 	      if(_debug > 3) cout << "got a candidate jet" << endl;
 	      _jet_eta[_njet] = jet->get_eta();
-	      if(check_bad_jet_eta(_jet_eta[_njet],_rzvtx[0],0.4)) continue;
+	      //if(check_bad_jet_eta(_jet_eta[_njet],_rzvtx[0],0.4)) continue;
 	      _frcem[_njet] = 0;
 	      _frcoh[_njet] = 0;
 	      _jet_e[_njet] = testJetE;
@@ -457,7 +457,7 @@ int multiColStudy::process_event(PHCompositeNode *topNode)
 	      _jet_at_em[_njet] /= ntem;
 	      _jet_at_oh[_njet] /= ntoh;
 	      ++_njet;
-	      if(_njet > 9) break;
+	      if(_njet > _maxjet-1) break;
 	    }
 	  else
 	    {
@@ -472,7 +472,7 @@ int multiColStudy::process_event(PHCompositeNode *topNode)
       */
       _dphilead = abs(maxJetPhi-subJetPhi);
       if(_dphilead > M_PI) _dphilead = 2*M_PI - _dphilead;
-      if(subJetE > 7) _isdijet = 1;
+      if(subJetE > 4) _isdijet = 1;
       else _isdijet = 0;
     }
   else
