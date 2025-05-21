@@ -1,17 +1,17 @@
 #include <dlUtility.h>
-const int nhistplot = 6;
-string region[nhistplot] = {"RegionA","RegionD","RegionA","RegionD","RegionA","RegionD"};
-int triggers[nhistplot] = {17, 17, 18, 18, 19, 19};
+const int nhistplot = 2;
+string region[nhistplot] = {"RegionA","RegionD"};//,"RegionA","RegionD","RegionA","RegionD"};
+int triggers[nhistplot] = {18, 18};//, 17, 17, 19, 19};
 int bit = 18;
-int colors[nhistplot] = {kCyan+2,kCyan+2,kMagenta+2,kMagenta+2,kYellow+2,kYellow+2};
-int markers[nhistplot] = {20,53,21,54,33,56};
+int colors[nhistplot] = {kCyan+2,kCyan+2};//,kMagenta+2,kMagenta+2,kYellow+2,kYellow+2};
+int markers[nhistplot] = {20,53};//,21,54,33,56};
 double singlegaus(double* x, double* par)
 {
   double exparg = (x[0]-par[1])/par[2];
   double result = par[0]*exp(-exparg*exparg);
   return result;
 }
-
+long long unsigned int globntot[nhistplot] = {0};
 
 vector<double> binom_error_hack(TH1D* num, TH1D* den)
 {
@@ -333,6 +333,7 @@ int get_and_draw_th1d(string histbasename, string* region, TFile* histfile, stri
   for(int i=0; i<nhistplot; ++i)
     {
       hists[i] = (TH1D*)histfile->Get((histbasename+"_"+region[i]).c_str());
+      hists[i]->Scale(1./globntot);
       if(std::string(hists[i]->GetName()).find("zhist") != std::string::npos) hists[i]->Rebin(10);
 
       format_th1d(hists[i], xtitle, ytitle,i);
@@ -415,6 +416,7 @@ int get_and_draw_th2d(string histbasename, string* region, TFile* histfile, stri
   for(int i=0; i<nhistplot; ++i)
     {
       hists[i] = (TH2D*)histfile->Get((histbasename+"_"+region[i]).c_str());
+      hists[i]->Scale(1./globntot);
       //if(std::string(hists[i]->GetName()).find("frcem") != std::string::npos) hists[i]->Rebin2D(5,5);
       //if(std::string(hists[i]->GetName()).find("calo") != std::string::npos) hists[i]->Rebin2D(5,5);
       if(std::string(hists[i]->GetName()).find("tgrone_eta_2") != std::string::npos)
@@ -444,7 +446,7 @@ int get_and_draw_th2d(string histbasename, string* region, TFile* histfile, stri
 
   //draw_ratio_th1d(projx, histbasename+"_projx", region, can, dijetcut);
   //draw_ratio_th1d(projy, histbasename+"_projy", region, can, dijetcut);
-  //draw_ratio_th2d(hists, histbasename, region, can, dijetcut);
+  draw_ratio_th2d(hists, histbasename, region, can, dijetcut);
   draw_overlay_with_ratio_th1d(projx, histbasename+"_projx",ratcan,dijetcut);
   draw_overlay_with_ratio_th1d(projy, histbasename+"_projy",ratcan,dijetcut);
   if(std::string(hists[0]->GetName()).find("jet_at_em_at_oh") != std::string::npos)
@@ -467,6 +469,23 @@ int plot(int tb)
   gStyle->SetPadTickY(1);
   TFile* histfile;
   histfile = TFile::Open(("../output/hists/hadded"+to_string(bit)+".root").c_str());
+  TTree* outt = (TTree*)histfile->Get("outt");
+  long long unsigned int totalentries[nhistplot] = {0};
+
+  for(int i=0; i<nhistplot; ++i)
+    {
+      outt->SetBranchaddress(("totalentries_"+regions[i]).c_str(),&totalentries[i]);
+    }
+  for(int j=0; j<outt->GetEntries(); ++j)
+    {
+      outt->GetEntry(j);
+      for(int i=0; i<nhistplot; ++i)
+	{
+	  globntot[i] += totalentries[i];
+	}
+    }
+  
+  
   int dijetcut = 1;
   const int nhist = 38;
 
@@ -477,24 +496,24 @@ int plot(int tb)
   string xtitles[nhist] = {"Jet #eta","Jet #eta","Tower #eta","Tower #eta","Tower Detector #eta","Tower Detector #eta","jet E [GeV]","Tower E [GeV]","Tower E [GeV]","Jet E [GeV]","Tower E [GeV]","Jet E_{T} [GeV]","Tower E_{T} [GeV]","Tower E_{T} [GeV]","Jet E_{T} [GeV]","Tower E_{T} [GeV]","Jet E [GeV]","Jet E_{T} [GeV]","Jet #eta","Jet #eta","Jet #phi","Jet #phi","E_{jet}^{EM}/E_{jet}","E_{jet}^{EM}/E_{jet}","Mean E_{T}^{tower}>1 GeV Peak Sample of Jet","Mean E_{T}^{tower}>1 GeV Peak Sample of Jet","Mean E_{T}^{tower}>1 GeV Peak Sample of EMCal","Mean EMCal Time for E_{T}^{tower}>1 GeV","Mean EMCal E_{T}^{tower}>1 GeV Peak Sample of Jet","Mean EMCal E_{T}^{tower}>1 GeV Peak Sample of Jet","Mean EMCal E_{T}^{tower}>1 GeV Peak Sample of Jet","Mean EMCal E_{T}^{tower}>1 GeV Peak Sample of Jet","Mean OHCal E_{T}^{tower}>1 GeV Peak Sample of Jet","Mean OHCal E_{T}^{tower}>1 GeV Peak Sample of Jet","EMCal Peak Time for E_{T}^{tower}>1 GeV","OHCal Peak Time for E_{T}^{tower} > 1 GeV","EMCal Tower E [GeV]","OHCal Tower E [GeV]"};
 
   string ytitles[nhist] = {"Jet #phi","Jet #phi","Tower #phi","Tower #phi","Tower #phi","Tower #phi","Jet #eta","Tower #eta","Tower Detector #eta","Jet #phi","Tower #phi","Jet #eta","Tower #eta","Tower Detector #eta","Jet #phi","Tower #phi","E_{jet}^{EM}/E_{jet}","#Delta#phi","E_{jet}^{EM}/E_{jet}","E_{jet}^{EM}/E_{jet}","E_{jet}^{EM}/E_{jet}","E_{jet}^{EM}/E_{jet}","E_{jet}^{OH}/E_{jet}","E_{jet}^{OH}/E_{jet}","E_{jet}^{EM}/E_{jet}","E_{jet}^{EM}/E_{jet}","EMCal Peak Time for E{T}^{tower}>1 GeV","E_{calo}^{EM}/E_{calo}","Mean E_{T}^{tower}>1 GeV OHCal Peak Sample of Jet","Mean OHCal E_{T}^{tower}>1 GeV Peak Sample of Jet","E_{jet}^{EM}/E_{jet}","E_{jet}^{EM}/E_{jet}","E_{jet}^{EM}/E_{jet}","E_{jet}^{EM}/E_{jet}","#eta","#eta","#Detector Coordinate #eta","Detector Coordinate #eta"};
-  /*
+
   get_and_draw_th2d(histnames[11],region,histfile,xtitles[11],ytitles[11],"Counts / N_{"+to_string(bit)+"}^{scaled}",can,ratcan,dijetcut);
   get_and_draw_th2d(histnames[13],region,histfile,xtitles[13],ytitles[13],"Counts / N_{"+to_string(bit)+"}^{scaled}",can,ratcan,dijetcut);
   
-  for(int i=nhist; i<nhist; ++i)
+  for(int i=0; i<nhist; ++i)
     {
       get_and_draw_th2d(histnames[i],region,histfile,xtitles[i],ytitles[i],"Counts / N_{"+to_string(bit)+"}^{scaled}",can,ratcan,dijetcut);
     }
-  */
-  const int nth1d = 12;
-  string th1dnames[nth1d] = {"zhist","mbdn","mbds","mbdt","calo_hitsgrone_0","calo_hitsgrone_1","calo_hitsgrone_2","zhist_gr20","zhist_nocut","h_emat","h_ohat","trigturn"};
-  string th1dxtitl[nth1d] = {"z_{vtx} [cm]","MBD Charge [Arb.]","MBD Charge [Arb.]","MBD Charge [Arb.]","Number of Towers with E > 1 GeV","Number of Towers with E > 1 GeV","Number of Towers with E > 1 GeV","z_{vtx} [cm]","z_{vtx} [cm]","Peak Sample Time of EMCal Jet Constituents with E_{T}>1 GeV","Peak Sample Time of OHCal Jet Constituents with E_{T}>1 GeV","Jet E_{T} [GeV]"};
-  /*
-  for(int i=nth1d-1; i<nth1d-1;++i)//(bit==18?0:1); ++i)
+
+  const int nth1d = 13;
+  string th1dnames[nth1d] = {"zhist","mbdn","mbds","mbdt","calo_hitsgrone_0","calo_hitsgrone_1","calo_hitsgrone_2","zhist_gr20","zhist_nocut","h_emat","h_ohat","spectrum","leadspec"};
+  string th1dxtitl[nth1d] = {"z_{vtx} [cm]","MBD Charge [Arb.]","MBD Charge [Arb.]","MBD Charge [Arb.]","Number of Towers with E > 1 GeV","Number of Towers with E > 1 GeV","Number of Towers with E > 1 GeV","z_{vtx} [cm]","z_{vtx} [cm]","Peak Sample Time of EMCal Jet Constituents with E_{T}>1 GeV","Peak Sample Time of OHCal Jet Constituents with E_{T}>1 GeV","Jet E_{T} [GeV]","Jet E_{T} [GeV]","Lead Jet E_{T} [GeV]"};
+
+  for(int i=0; i<nth1d;++i)//(bit==18?0:1); ++i)
     {
       get_and_draw_th1d(th1dnames[i],region,histfile,th1dxtitl[i],"Counts / N_{"+to_string(bit)+"}^{scaled}",can,ratcan,dijetcut);
     }
-  */
+
   /*
   TH1D* njet_lumi = (TH1D*)histfile->Get("njet_lumi");
   njet_lumi->SetMarkerSize(1);

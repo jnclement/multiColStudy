@@ -108,13 +108,14 @@ int make_tturn(string tag, vector<int> rns, vector<int> nfiles)
 
 	      if(ET > ETmax) ETmax = ET;
 	    }
-	  den->Fill(ETmax);
+	  
 
 
 	  for(int j=0; j<ntrig; ++j)
 	    {
 	      if((trigvec[0]>>triggers[j])&1) leadhists[j]->Fill(ETmax);
 	      if(!((trigvec[0] >> 10) & 1)) continue;
+	      if(j==0) den->Fill(ETmax);
 	      if((trigvec[1]>>triggers[j]) & 1)
 		{
 		  num[j]->Fill(ETmax);

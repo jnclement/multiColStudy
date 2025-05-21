@@ -135,6 +135,9 @@ int make_hists(string tag, vector<int> rns, vector<int> nfiles, int triggerbit =
   TH2D* jet_at_oh_frcem_gr20 = new TH2D(("jet_at_oh_frcem_gr20_"+region).c_str(),"",60,-6,6,24,-0.1,1.1);
   TH1D* njet_lumi = new TH1D("njet_lumi","",49280-49120,49120-0.5,49280-0.5);
   TH1D* njet_lumiecut = new TH1D("njet_lumi_Ecut","",49280-49120,49120-0.5,49280-0.5);
+  TH1D* spectrum = new TH1D(("spectrum_"+region).c_str(),"",50,0,50);
+  TH1D* leadspec = new TH1D(("leadspec_"+region).c_str(),"",50,0,50);
+  
   for(int i=0; i<3; ++i)
     {
       calo_hitsgrone[i] = new TH1D(("calo_hitsgrone_"+to_string(i)+"_"+region).c_str(),"",20,-0.5,19.5);
@@ -283,7 +286,9 @@ int make_hists(string tag, vector<int> rns, vector<int> nfiles, int triggerbit =
 	  for(int j=0; j<njet; ++j)
 	    {
 	      if(jet_e[j] > 15 && lumi != 0 && triggerbit == 18) njet_lumiecut->Fill(rn,1./lumi);
+	      spectrum->Fill(jet_e[j]/cosh(jet_eta[j]));
 	    }
+	  leadspec->Fill(ETmax);
 	  if(jetcut && ETmax < 15) continue;
 	  mbdnq = 0;
 	  mbdsq = 0;
@@ -417,6 +422,13 @@ int make_hists(string tag, vector<int> rns, vector<int> nfiles, int triggerbit =
   outf->cd();
 
 
+
+  TTree* outt = new TTree("outt","a persevering date tree");
+  outt->Branch(("totalentries_"+region).c_str(),&totalentries,("totalentries_"+region+"/l").c_str());
+  outt->Fill();
+
+
+  /*
   for(int i=0; i<3; ++i)
     {
       calo_hitsgrone[i]->Scale(1./totalentries);
@@ -468,6 +480,10 @@ int make_hists(string tag, vector<int> rns, vector<int> nfiles, int triggerbit =
   jet_at_oh_frcem->Scale(1./totalentries);
   jet_at_em_frcem_gr20->Scale(1./totalentries);
   jet_at_oh_frcem_gr20->Scale(1./totalentries);
+  */
+  outt->Write();
+  spectrum->Write();
+  leadspec->Write();
   for(int i=0; i<3; ++i)
     {
       calo_hitsgrone[i]->Write();
