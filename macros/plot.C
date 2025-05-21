@@ -469,18 +469,23 @@ int plot(int tb)
   gStyle->SetPadTickY(1);
   TFile* histfile;
   histfile = TFile::Open(("../output/hists/hadded"+to_string(bit)+".root").c_str());
-  TTree* outt = (TTree*)histfile->Get("outt");
+  TTree* outt[nhistplot];
+  for(int i=0; i<nhistplot; ++i)
+    {
+      outt[i] = (TTree*)histfile->Get(("outt_"+region[i]).c_str());
+    }
   long long unsigned int totalentries[nhistplot] = {0};
 
   for(int i=0; i<nhistplot; ++i)
     {
-      outt->SetBranchAddress(("totalentries_"+region[i]).c_str(),&totalentries[i]);
+      outt[i]->SetBranchAddress(("totalentries_"+region[i]).c_str(),&totalentries[i]);
     }
-  for(int j=0; j<outt->GetEntries(); ++j)
+        
+  for(int i=0; i<nhistplot; ++i)
     {
-      outt->GetEntry(j);
-      for(int i=0; i<nhistplot; ++i)
+      for(int j=0; j<outt[i]->GetEntries(); ++j)
 	{
+	  outt[i]->GetEntry(j);
 	  globntot[i] += totalentries[i];
 	}
     }

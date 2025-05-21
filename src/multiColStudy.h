@@ -90,6 +90,12 @@ class multiColStudy : public SubsysReco
 
   int _hitsgrone;
 
+  double _cluster_e[_maxjet];
+  double _cluster_eta[_maxjet];
+  double _cluster_deteta[_maxjet];
+  double _cluster_phi[_maxjet];
+  int _ncluster;
+  
   long long unsigned int _trigvec[3];
   GlobalVertex::VTXTYPE _vtxtype = GlobalVertex::MBD;
 };

@@ -423,7 +423,7 @@ int make_hists(string tag, vector<int> rns, vector<int> nfiles, int triggerbit =
 
 
 
-  TTree* outt = new TTree("outt","a persevering date tree");
+  TTree* outt = new TTree(("outt_"+region).c_str(),"a persevering date tree");
   outt->Branch(("totalentries_"+region).c_str(),&totalentries,("totalentries_"+region+"/l").c_str());
   outt->Fill();
 

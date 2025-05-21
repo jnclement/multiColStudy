@@ -31,6 +31,8 @@
 #include <ffaobjects/EventHeader.h>
 #include <jetbase/Jet.h>
 #include <jetbase/JetContainerv1.h>
+#include <calobase/RawCluster.h>
+#include <calobase/RawClusterContainer.h>
 using namespace std;
 static const float radius_EM = 93.5;
 static const float minz_EM = -130.23;
@@ -118,16 +120,21 @@ multiColStudy::~multiColStudy()
 //____________________________________________________________________________..
 int multiColStudy::Init(PHCompositeNode *topNode)
 {
-  
+
   if(_debug > 1) cout << "Begin init: " << endl;
+
+  _tree->Branch("ncluster",&_ncluster,"ncluster/I");
+  _tree->Branch("cluster_e",_cluster_e,"cluster_e[ncluster]/D");
+  _tree->Branch("cluster_eta",_cluster_eta,"cluster_eta[ncluster]/D");
+  _tree->Branch("cluster_deteta",_cluster_deteta,"cluster_deteta[ncluster]/D");
+  _tree->Branch("cluster_phi",_cluster_phi,"cluster_phi[ncluster]/D");
+  
   _tree->Branch("njet",&_njet,"njet/I");
   _tree->Branch("jet_e",_jet_e,"jet_e[njet]/D");
   _tree->Branch("jet_et",_jet_et,"jet_et[njet]/D");
   _tree->Branch("jet_at",_jet_at,"jet_at[njet]/D");
   _tree->Branch("jet_at_em",_jet_at_em,"jet_at_em[njet]/D");
   _tree->Branch("jet_at_oh",_jet_at_oh,"jet_at_oh[njet]/D");
-  _tree->Branch("jet_eta",_jet_eta,"jet_eta[njet]/D");
-  _tree->Branch("jet_phi",_jet_phi,"jet_phi[njet]/D");
   _tree->Branch("ncgroe",_ncgroe,"ncgroe[njet]/I");
   _tree->Branch("ncgroo",_ncgroo,"ncgroo[njet]/I");
   if(!_issim) _tree->Branch("trigvec",_trigvec,"trigvec[3]/l");
@@ -179,7 +186,7 @@ void print_debug(float jet_eta, float jet_phi, float tower_eta, float tower_phi,
 int multiColStudy::process_event(PHCompositeNode *topNode)
 {
 
-  
+
 
   MbdVertexMap* mbdvtxmap = findNode::getClass<MbdVertexMapv1>(topNode, "MbdVertexMap");
 
@@ -216,7 +223,7 @@ int multiColStudy::process_event(PHCompositeNode *topNode)
   _hitsgrone = 0;
   if(!std::isnan(zvtx))
     {
-      
+
       //return Fun4AllReturnCodes::ABORTEVENT;
 
 
@@ -229,9 +236,10 @@ int multiColStudy::process_event(PHCompositeNode *topNode)
   rawtowers[0] = findNode::getClass<TowerInfoContainerv4>(topNode, "TOWERS_CEMC");
   rawtowers[1] = findNode::getClass<TowerInfoContainerv4>(topNode, "TOWERS_HCALIN");
   rawtowers[2] = findNode::getClass<TowerInfoContainerv4>(topNode, "TOWERS_HCALOUT");
-  
 
-  
+  RawClusterContainer *clusters = findNode::getClass<RawClusterContainer>(topNode, "CLUSTERINFO_CEMC");
+
+
   JetContainer *jets = findNode::getClass<JetContainerv1>(topNode, "AntiKt_Tower_HIRecoSeedsRaw_r04");//"AntiKt_unsubtracted_r04");
   if(!jets) jets = findNode::getClass<JetContainerv1>(topNode, "AntiKt_unsubtracted_r04");
   JetContainer* truthjets = findNode::getClass<JetContainerv1>(topNode,"AntiKt_Truth_r04");
@@ -239,12 +247,12 @@ int multiColStudy::process_event(PHCompositeNode *topNode)
   if(!mbdtow) mbdtow = findNode::getClass<MbdPmtContainerV1>(topNode,"MbdPmtContainer");
   if(!mbdtow) mbdtow = findNode::getClass<MbdPmtSimContainerV1>(topNode,"MbdPmtContainer");
   if(_debug > 2) cout << towers[0] << " " << towers[1] << " " << towers[2] << endl;
-  
+
   RawTowerGeomContainer *geom[3];
   geom[0] = findNode::getClass<RawTowerGeomContainer_Cylinderv1>(topNode, "TOWERGEOM_CEMC");
   geom[1] = findNode::getClass<RawTowerGeomContainer_Cylinderv1>(topNode, "TOWERGEOM_HCALIN");
   geom[2] = findNode::getClass<RawTowerGeomContainer_Cylinderv1>(topNode, "TOWERGEOM_HCALOUT");
-  
+
   //TowerInfoContainer* emcrt = findNode::getClass<TowerInfoContainer>(topNode, "TOWERINFO_CALIB_CEMC_RETOWER");
   int sectormb=128;
   if(mbdtow)
@@ -263,7 +271,7 @@ int multiColStudy::process_event(PHCompositeNode *topNode)
   _calo_emfrac = 0;
   _calo_ohfrac = 0;
   _calo_e = 0;
-  
+
   for(int h=0; h<_ncalotype; ++h)
     {
       if(towers[h])
@@ -308,7 +316,7 @@ int multiColStudy::process_event(PHCompositeNode *topNode)
 		    }
 		  _calo_e += towerE;
 		  ++_hitsgrone;
-		} 
+		}
 	    }
 	}
       else if(_debug > 1)
@@ -322,7 +330,7 @@ int multiColStudy::process_event(PHCompositeNode *topNode)
       _calo_emfrac /= _calo_e;
       _calo_ohfrac /= _calo_e;
     }
-  
+
   float maxJetE = 0;
   float maxJetPhi = 0;
   float subJetE = 0;
@@ -371,7 +379,7 @@ int multiColStudy::process_event(PHCompositeNode *topNode)
 		  maxJetE = _jet_et[_njet];
 		  maxJetPhi = _jet_phi[_njet];
 		}
-	
+
 	      if(_debug > 3) cout << "getting comp vec" << endl;
 	      int nt = 0;
 	      int ntem = 0;
@@ -389,14 +397,14 @@ int multiColStudy::process_event(PHCompositeNode *topNode)
 		    }
 		  else if(comp.first == 7 || comp.first == 27)
 		    {
-		      
+
 		      towerType = 2;
-		     
+
 		    }
 		  else if(comp.first == 13 || comp.first == 25 || comp.first == 28)
 		    {
 		      towerType = 0;
-		      
+
 		    }
 		  else
 		    {
@@ -515,15 +523,41 @@ int multiColStudy::process_event(PHCompositeNode *topNode)
 		}
 	      maxJetE = _tjet_et[_tnjet];
 	    }
+	  ++_tnjet;
+	  if(_tnjet > _maxjet - 1) break;
 	}
       _tdphilead = abs(maxJetPhi-subJetPhi);
       if(_tdphilead > M_PI) _tdphilead = 2*M_PI - _tdphilead;
       if(subJetE > 4) _tisdijet = 1;
-      else _tisdijet = 0;      
+      else _tisdijet = 0;
+
     }
   //if(maxJetE > 4)
   //{
+
   if(_debug > 0) cout << "filling jet tree" << endl;
+  if(clusters)
+    {
+      RawClusterContainer::ConstRange begin_end = clusters->getClusters();
+      _ncluster = 0;
+      for (RawClusterContainer::ConstIterator rtiter = begin_end.first; rtiter != begin_end.second; ++rtiter)
+        {
+          RawCluster *cluster = rtiter->second;
+          if (cluster->get_energy() < 2) continue;
+          
+          _cluster_e[_ncluster] = cluster->get_energy();
+          _cluster_phi[_ncluster] = cluster->get_phi();
+          _cluster_eta[_ncluster] = asinh((cluster->get_z()-_rzvtx[0])/cluster->get_r());
+	  _cluster_deteta[_ncluster] = asinh(cluster->get_z()/cluster->get_r());
+          ++_ncluster;
+	  if(_ncluster > _maxjet - 1) break;
+        }
+
+    }
+  else
+    {
+      if(_debug > 0) cout << "No cluster info!" << endl;
+    }
     }
   else
     {
@@ -531,10 +565,10 @@ int multiColStudy::process_event(PHCompositeNode *topNode)
     }
  _tree->Fill();
   //}
-  
+
   if(_debug > 3) cout << "end event" << endl;
   return Fun4AllReturnCodes::EVENT_OK;
-    
+
 }
 //____________________________________________________________________________..
 int multiColStudy::ResetEvent(PHCompositeNode *topNode)
