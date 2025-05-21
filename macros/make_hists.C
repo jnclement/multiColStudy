@@ -208,7 +208,7 @@ int make_hists(string tag, vector<int> rns, vector<int> nfiles, int triggerbit =
       double jet_at[nmaxjet];
       double jet_at_oh[nmaxjet];
       double jet_at_em[nmaxjet];
-      long long unsigned int trigvec;
+      long long unsigned int trigvec[3];
       //define non-branch variables
       double mbdnq, mbdsq, mbdtq;
       double calo_emfrac;//, calo_ohfrac, calo_e;
@@ -222,7 +222,7 @@ int make_hists(string tag, vector<int> rns, vector<int> nfiles, int triggerbit =
       dattree->SetBranchAddress("njet",&njet);
       dattree->SetBranchAddress("hitsgrone",&hitsgrone);
       dattree->SetBranchAddress("isdijet",&isdijet);
-      dattree->SetBranchAddress("trigvec",&trigvec);
+      dattree->SetBranchAddress("trigvec",trigvec);
       dattree->SetBranchAddress("jet_e",jet_e);
       dattree->SetBranchAddress("jet_eta",jet_eta);
       dattree->SetBranchAddress("jet_phi",jet_phi);
@@ -248,9 +248,9 @@ int make_hists(string tag, vector<int> rns, vector<int> nfiles, int triggerbit =
 	  dattree->GetEntry(i);
 	  for(int j=0; j<ntrigtypes; ++j)
 	    {
-	      trigs[1][j] += (trigvec >> trigs[0][j]) & 1;
+	      trigs[1][j] += (trigvec[2] >> trigs[0][j]) & 1;
 	    }
-	  if(!((trigvec >> triggerbit) & 1)) continue;
+	  if(!((trigvec[2] >> triggerbit) & 1)) continue;
 	  ++ntotalevent;
 	  ++totalentries;
 	  if(!std::isnan(zvtx[0]))

@@ -130,7 +130,7 @@ int multiColStudy::Init(PHCompositeNode *topNode)
   _tree->Branch("jet_phi",_jet_phi,"jet_phi[njet]/D");
   _tree->Branch("ncgroe",_ncgroe,"ncgroe[njet]/I");
   _tree->Branch("ncgroo",_ncgroo,"ncgroo[njet]/I");
-  if(!_issim) _tree->Branch("trigvec",&_trigvec,"trigvec/l");
+  if(!_issim) _tree->Branch("trigvec",_trigvec,"trigvec[3]/l");
   if(_issim)
     {
       _tree->Branch("tnjet",&_tnjet,"tnjet/I");
@@ -193,7 +193,9 @@ int multiColStudy::process_event(PHCompositeNode *topNode)
 	  cout << "No trigger info!" << endl;
 	  return Fun4AllReturnCodes::ABORTRUN;
 	}
-      _trigvec = gl1->getScaledVector();
+      _trigvec[2] = gl1->getScaledVector();
+      _trigvec[1] = gl1->getLiveVector();
+      _trigvec[0] = gl1->getLiveVector(); //raw must be identical to live if event was taken
     }
   _nzvtx = 0;
   if(mbdvtxmap)

@@ -90,7 +90,7 @@ class multiColStudy : public SubsysReco
 
   int _hitsgrone;
 
-  long long unsigned int _trigvec;
+  long long unsigned int _trigvec[3];
   GlobalVertex::VTXTYPE _vtxtype = GlobalVertex::MBD;
 };
 
