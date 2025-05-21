@@ -333,7 +333,7 @@ int get_and_draw_th1d(string histbasename, string* region, TFile* histfile, stri
   for(int i=0; i<nhistplot; ++i)
     {
       hists[i] = (TH1D*)histfile->Get((histbasename+"_"+region[i]).c_str());
-      hists[i]->Scale(1./globntot);
+      hists[i]->Scale(1./globntot[i]);
       if(std::string(hists[i]->GetName()).find("zhist") != std::string::npos) hists[i]->Rebin(10);
 
       format_th1d(hists[i], xtitle, ytitle,i);
@@ -416,7 +416,7 @@ int get_and_draw_th2d(string histbasename, string* region, TFile* histfile, stri
   for(int i=0; i<nhistplot; ++i)
     {
       hists[i] = (TH2D*)histfile->Get((histbasename+"_"+region[i]).c_str());
-      hists[i]->Scale(1./globntot);
+      hists[i]->Scale(1./globntot[i]);
       //if(std::string(hists[i]->GetName()).find("frcem") != std::string::npos) hists[i]->Rebin2D(5,5);
       //if(std::string(hists[i]->GetName()).find("calo") != std::string::npos) hists[i]->Rebin2D(5,5);
       if(std::string(hists[i]->GetName()).find("tgrone_eta_2") != std::string::npos)
@@ -474,7 +474,7 @@ int plot(int tb)
 
   for(int i=0; i<nhistplot; ++i)
     {
-      outt->SetBranchaddress(("totalentries_"+regions[i]).c_str(),&totalentries[i]);
+      outt->SetBranchAddress(("totalentries_"+region[i]).c_str(),&totalentries[i]);
     }
   for(int j=0; j<outt->GetEntries(); ++j)
     {
@@ -507,7 +507,7 @@ int plot(int tb)
 
   const int nth1d = 13;
   string th1dnames[nth1d] = {"zhist","mbdn","mbds","mbdt","calo_hitsgrone_0","calo_hitsgrone_1","calo_hitsgrone_2","zhist_gr20","zhist_nocut","h_emat","h_ohat","spectrum","leadspec"};
-  string th1dxtitl[nth1d] = {"z_{vtx} [cm]","MBD Charge [Arb.]","MBD Charge [Arb.]","MBD Charge [Arb.]","Number of Towers with E > 1 GeV","Number of Towers with E > 1 GeV","Number of Towers with E > 1 GeV","z_{vtx} [cm]","z_{vtx} [cm]","Peak Sample Time of EMCal Jet Constituents with E_{T}>1 GeV","Peak Sample Time of OHCal Jet Constituents with E_{T}>1 GeV","Jet E_{T} [GeV]","Jet E_{T} [GeV]","Lead Jet E_{T} [GeV]"};
+  string th1dxtitl[nth1d] = {"z_{vtx} [cm]","MBD Charge [Arb.]","MBD Charge [Arb.]","MBD Charge [Arb.]","Number of Towers with E > 1 GeV","Number of Towers with E > 1 GeV","Number of Towers with E > 1 GeV","z_{vtx} [cm]","z_{vtx} [cm]","Peak Sample Time of EMCal Jet Constituents with E_{T}>1 GeV","Peak Sample Time of OHCal Jet Constituents with E_{T}>1 GeV","Jet E_{T} [GeV]","Lead Jet E_{T} [GeV]"};
 
   for(int i=0; i<nth1d;++i)//(bit==18?0:1); ++i)
     {
