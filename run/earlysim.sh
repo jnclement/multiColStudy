@@ -10,7 +10,7 @@ else
     echo condor scratch NOT set
     exit -1
 fi
-STARTN=$(( $2 * 5 ))
+STARTN=$(( $2 * 3 ))
 ISSIM=$4
 RN=$5
 for i in {0..4}; do

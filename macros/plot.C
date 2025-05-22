@@ -528,6 +528,7 @@ int plot(int tb)
   njet_lumi->Draw("PE");
   lumican->SaveAs(("../output/plots/"+to_string(bit)+"_njet_lumi.png").c_str());
   */
+  if(bit==10) return 0;
   TH1D* histsnum[nhistplot];
   TH1D* histsden[nhistplot];
   TH1D* histstrn[nhistplot];

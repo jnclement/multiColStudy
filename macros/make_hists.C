@@ -136,6 +136,7 @@ int make_hists(string tag, vector<int> rns, vector<int> nfiles, int triggerbit =
   TH1D* njet_lumi = new TH1D("njet_lumi","",49280-49120,49120-0.5,49280-0.5);
   TH1D* njet_lumiecut = new TH1D("njet_lumi_Ecut","",49280-49120,49120-0.5,49280-0.5);
   TH1D* spectrum = new TH1D(("spectrum_"+region).c_str(),"",50,0,50);
+  TH1D* spectrum_zg30 = new TH1D(("spectrum_zg30_"+region).c_str(),"",50,0,50);
   TH1D* leadspec = new TH1D(("leadspec_"+region).c_str(),"",50,0,50);
   
   for(int i=0; i<3; ++i)
@@ -261,6 +262,7 @@ int make_hists(string tag, vector<int> rns, vector<int> nfiles, int triggerbit =
 	      ++nzvtxanyndj;
 	      if(abs(zvtx[0]) < 30) ++nzvtx30ndj;
 	    }
+	  else continue;
 	  
 	  if(dodijetcut && (dphilead < 3*M_PI/4 || isdijet == 0)) continue;
 	  double ETmax = 0;
@@ -285,6 +287,16 @@ int make_hists(string tag, vector<int> rns, vector<int> nfiles, int triggerbit =
 	    }
 	  for(int j=0; j<njet; ++j)
 	    {
+	      spectrum_zg30->Fill(jet_e[j]/cosh(jet_eta[j]));
+	    }
+	  if(!std::isnan(zvtx[0]))
+	    {
+	      ++nzvtxanyjc;
+	      if(abs(zvtx[0]) < 30) ++nzvtx30jc;
+	      else continue;
+	    }
+	  for(int j=0; j<njet; ++j)
+	    {
 	      if(jet_e[j] > 15 && lumi != 0 && triggerbit == 18) njet_lumiecut->Fill(rn,1./lumi);
 	      spectrum->Fill(jet_e[j]/cosh(jet_eta[j]));
 	    }
@@ -293,12 +305,7 @@ int make_hists(string tag, vector<int> rns, vector<int> nfiles, int triggerbit =
 	  mbdnq = 0;
 	  mbdsq = 0;
 	  mbdtq = 0;
- 	  if(!std::isnan(zvtx[0]))
-	    {
-	      ++nzvtxanyjc;
-	      if(abs(zvtx[0]) < 30) ++nzvtx30jc;
-	      else continue;
-	    }
+
 	  //emat_calo_emfrac->Fill(emat,calo_emfrac);
 	  for(int j=0; j<njet; ++j)
 	    {

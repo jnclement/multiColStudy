@@ -6,8 +6,8 @@ int make_tturn(string tag, vector<int> rns, vector<int> nfiles)
   else if(rns[0] < 49238) region = "RegionB";
   else if(rns[0] < 49256) region = "RegionC";
   else region = "RegionD";
-  const int ntrig = 4;
-  int triggers[ntrig] = {10,17,18,19};
+  const int ntrig = 3;
+  int triggers[ntrig] = {17,18,19};
   TH1D* leadhists[ntrig];
   TH1D* spectra[ntrig];
   TH1D* turn[ntrig];
@@ -103,7 +103,7 @@ int make_tturn(string tag, vector<int> rns, vector<int> nfiles)
 	      double ET = jet_e[j]/cosh(jet_eta[j]);
 	      for(int k=0; k<ntrig; ++k)
 		{
-		  if((trigvec[0]>>triggers[j])&1)spectra[k]->Fill(ET);
+		  if((trigvec[0]>>triggers[k])&1)spectra[k]->Fill(ET);
 		}
 
 	      if(ET > ETmax) ETmax = ET;

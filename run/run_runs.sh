@@ -15,8 +15,8 @@ echo $evt
 for rn in `ls  lists/dst_calofitting_run2pp*.list | awk -F'.' '{print $1}' | awk -F'/' '{print $2}' | awk -F'-' '{print $2}'`; do
     rn=$(expr $rn + 0)
     nfile=`wc -l lists/dst_calofitting_run2pp-000${rn}.list | awk '{print $1}'`
-    njob=$(( $nfile + 4 ))
-    njob=$(( $njob / 5 ))
+    njob=$(( $nfile + 2 ))
+    njob=$(( $njob / 3 ))
     filecounter=$(( $filecounter + $njob ))
     if [ $filecounter -gt $nmax ]; then
 	break
