@@ -192,7 +192,10 @@ int draw_overlay_with_ratio_th1d(TH1D** hists, string histbasename, TCanvas* can
 
 
   can->cd(1);
-  hists[0]->GetYaxis()->SetRangeUser(hists[0]->GetBinContent(hists[0]->FindLastBinAbove(0))*0.5,1.5*ymax);
+  for(int i=0; i<nhistplot; ++i)
+    {
+      hists[i]->GetYaxis()->SetRangeUser(hists[0]->GetBinContent(hists[0]->FindLastBinAbove(0))*0.5,1.5*ymax);
+    }
   gPad->SetLogy();
   for(int i=0; i<nhistplot; ++i)
     {

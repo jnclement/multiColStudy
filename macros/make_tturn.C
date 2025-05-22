@@ -103,7 +103,7 @@ int make_tturn(string tag, vector<int> rns, vector<int> nfiles)
 	      double ET = jet_e[j]/cosh(jet_eta[j]);
 	      for(int k=0; k<ntrig; ++k)
 		{
-		  if((trigvec[0]>>triggers[k])&1)spectra[k]->Fill(ET);
+		  if((trigvec[2]>>triggers[k])&1)spectra[k]->Fill(ET);
 		}
 
 	      if(ET > ETmax) ETmax = ET;
@@ -113,8 +113,8 @@ int make_tturn(string tag, vector<int> rns, vector<int> nfiles)
 
 	  for(int j=0; j<ntrig; ++j)
 	    {
-	      if((trigvec[0]>>triggers[j])&1) leadhists[j]->Fill(ETmax);
-	      if(!((trigvec[0] >> 10) & 1)) continue;
+	      if((trigvec[2]>>triggers[j])&1) leadhists[j]->Fill(ETmax);
+	      if(!((trigvec[2] >> 10) & 1)) continue;
 	      if(j==0) den->Fill(ETmax);
 	      if((trigvec[1]>>triggers[j]) & 1)
 		{
