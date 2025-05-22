@@ -254,9 +254,10 @@ int make_hists(string tag, vector<int> rns, vector<int> nfiles, int triggerbit =
 	    {
 	      trigs[1][j] += (trigvec[2] >> trigs[0][j]) & 1;
 	    }
+	  if((trigvec[1] >> triggerbit) & 1) ++totalentries;
 	  if(!((trigvec[2] >> triggerbit) & 1)) continue;
 	  ++ntotalevent;
-	  ++totalentries;
+
 	  if(!std::isnan(zvtx[0]))
 	    {
 	      ++nzvtxanyndj;
