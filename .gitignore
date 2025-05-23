@@ -14,3 +14,7 @@ src/missing
 macros/trigcounts
 run/*.sub
 macros/make_*_wrap.sh
+run/rm_condor.sh
+run/run_temp.C
+temp/
+rootfiles/
