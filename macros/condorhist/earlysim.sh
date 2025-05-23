@@ -10,7 +10,7 @@ else
     exit -1
 fi
 RN=$1
-TAG=20250513
+TAG=20250521
 mkdir -p multicoltree
 mkdir -p multicolhist
 cp /sphenix/tg/tg01/jets/jocl/multiCol/$RN/*$TAG* multicoltree
@@ -19,7 +19,7 @@ cp -r /sphenix/user/jocl/projects/multiColStudy/macros/make_all_dc.sh .
 cp -r /sphenix/user/jocl/projects/multiColStudy/macros/make_hists.C .
 cp -r /sphenix/user/jocl/projects/multiColStudy/macros/make_tturn.C .
 
-bash make_all_dc.sh 18 $RN
-bash make_all_dc.sh 10 $RN
+bash make_all_dc.sh 18 $TAG $RN
+bash make_all_dc.sh 10 $TAG $RN
 
 cp multicolhist/* /sphenix/user/jocl/projects/multiColStudy/output/hists

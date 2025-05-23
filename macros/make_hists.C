@@ -63,20 +63,6 @@ bool check_bad_jet_eta(float jet_eta, float zertex, float jet_radius) {
   return jet_eta < minlimit || jet_eta > maxlimit;
 }
 
-int rnvals[42] = {49121,49125,49127,49128,49133,49136,49138,49140,49141,49143,49148,49157,49159,49165,49217,49218,49219,49224,49226,49227,49228,49229,49230,49233,49240,49241,49244,49245,49247,49248,49249,49250,49251,49254,49262,49263,49264,49265,49266,49267,49268,49270};
-
-double lumivals[42] ={0.0567942,0.0516462,0.0642938,0.0354406,0.0143268,0.0412767,0.0238550,0.0116476,0.0245767,0.0052713,0.0169815,0.0210836,0.0154796,0.0065756,0.0309800,0.0160149,0.0832480,0.0123099,0.0130056,0.0192810,0.0217280,0.0598882,0.0129254,0.0044402,0.0409331,0.0264116,0.0432918,0.0188073,0.0003522,0.0666371,0.0388263,0.0269200,0.0107077,0.0131979,0.0228682,0.0243940,0.0414531,0.0592927,0.0187420,0.0446407,0.0159728,0.0176773};
-
-
-
-
-
-
-
-
-
-
-
 int make_hists(string tag, vector<int> rns, vector<int> nfiles, int triggerbit = 18, int dodijetcut = 1, int jetcut = 1, int issim = 0)
 {
   //define histograms
@@ -134,7 +120,7 @@ int make_hists(string tag, vector<int> rns, vector<int> nfiles, int triggerbit =
   TH2D* jet_at_oh_frcem = new TH2D(("jet_at_oh_frcem_"+region).c_str(),"",60,-6,6,24,-0.1,1.1);
   TH2D* jet_at_oh_frcem_gr20 = new TH2D(("jet_at_oh_frcem_gr20_"+region).c_str(),"",60,-6,6,24,-0.1,1.1);
   TH1D* njet_lumi = new TH1D("njet_lumi","",49280-49120,49120-0.5,49280-0.5);
-  TH1D* njet_lumiecut = new TH1D("njet_lumi_Ecut","",49280-49120,49120-0.5,49280-0.5);
+  TH1D* njet_lumiecut = new TH1D("njet_lumi_Ecut","",48800-49600,48800-0.5,49600-0.5);
   TH1D* spectrum = new TH1D(("spectrum_"+region).c_str(),"",50,0,50);
   TH1D* spectrum_zg30 = new TH1D(("spectrum_zg30_"+region).c_str(),"",50,0,50);
   TH1D* leadspec = new TH1D(("leadspec_"+region).c_str(),"",50,0,50);
@@ -180,18 +166,19 @@ int make_hists(string tag, vector<int> rns, vector<int> nfiles, int triggerbit =
       dodijetcut = 0;
       jetcut = 0;
     }
-  for(int g = 0; g<rns.size(); ++g)
+
+
+  double lumi = 0;
+  double othervals[5];
+  int rnval;
+  int rn = rns[0];
+  int nfile = nfiles[0];
+  ifstream inlumi("/sphenix/user/jocl/projects/analysis/LuminosityCounterGoodRuns/run/list_forplot_2.list");
+  while(inlumi >> rnval >> lumi >> othervals[0] >> othervals[1] >> othervals[2] >> othervals[3] >> othervals[4])
     {
-      int rn = rns.at(g);
-      double lumi = 0;
-      for(int i=0; i<42; ++i)
-	{
-	  if(rn == rnvals[i])
-	    {
-	      lumi = lumivals[i];
-	    }
-	}
-      int nfile = nfiles.at(g);
+      if(rnval == rn) break;
+    }
+  
   for(int h=0; h<nfile; ++h)
     {
       string filename = "multicoltree/events_"+tag+"_"+to_string(rn)+"_"+to_string(h)+"_0.root";
@@ -254,7 +241,7 @@ int make_hists(string tag, vector<int> rns, vector<int> nfiles, int triggerbit =
 	    {
 	      trigs[1][j] += (trigvec[2] >> trigs[0][j]) & 1;
 	    }
-	  if((trigvec[1] >> triggerbit) & 1) ++totalentries;
+	  if((trigvec[2] >> triggerbit) & 1) ++totalentries;
 	  if(!((trigvec[2] >> triggerbit) & 1)) continue;
 	  ++ntotalevent;
 
@@ -425,7 +412,6 @@ int make_hists(string tag, vector<int> rns, vector<int> nfiles, int triggerbit =
   cout << "rn ndjpg15 tot rat: " << rn << " " << ndijetpassgr15 << " " << ntotalevent << " " << ((float)ndijetpassgr15)/ntotalevent << endl;
   ndijetpassgr15 = 0;
   ntotalevent = 0;
-  }
   TFile* outf = TFile::Open(("multicolhist/hists_"+tag+"_"+(dodijetcut?"dc":"nc")+"_"+region+(rns.size()==1?"_"+to_string(rns[0])+"_":"_")+to_string(triggerbit)+".root").c_str(),"RECREATE");
   outf->cd();
 
@@ -433,6 +419,7 @@ int make_hists(string tag, vector<int> rns, vector<int> nfiles, int triggerbit =
 
   TTree* outt = new TTree(("outt_"+region).c_str(),"a persevering date tree");
   outt->Branch(("totalentries_"+region).c_str(),&totalentries,("totalentries_"+region+"/l").c_str());
+  outt->Branch(("lumi_"+region).c_str(),&lumi,("lumi_"+region+"/D").c_str());
   outt->Fill();
 
 
@@ -490,6 +477,8 @@ int make_hists(string tag, vector<int> rns, vector<int> nfiles, int triggerbit =
   jet_at_oh_frcem_gr20->Scale(1./totalentries);
   */
   outt->Write();
+  //spectrum->Scale(1./lumi);
+  //leadspec->Scale(1./lumi);
   spectrum->Write();
   leadspec->Write();
   for(int i=0; i<3; ++i)

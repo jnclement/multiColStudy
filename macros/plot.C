@@ -1,10 +1,10 @@
 #include <dlUtility.h>
-const int nhistplot = 2;
-string region[nhistplot] = {"RegionA","RegionD"};//,"RegionA","RegionD","RegionA","RegionD"};
-int triggers[nhistplot] = {18, 18};//, 17, 17, 19, 19};
+const int nhistplot = 4;
+string region[nhistplot] = {"RegionA","RegionD","RegionA","RegionD"};//,"RegionA","RegionD","RegionA","RegionD"};
+int triggers[nhistplot] = {18, 18,26,26};//, 17, 17, 19, 19};
 int bit = 18;
-int colors[nhistplot] = {kCyan+2,kCyan+2};//,kMagenta+2,kMagenta+2,kYellow+2,kYellow+2};
-int markers[nhistplot] = {20,53};//,21,54,33,56};
+int colors[nhistplot] = {kCyan+2,kCyan+2,kMagenta+2,kMagenta+2};//,kMagenta+2,kMagenta+2,kYellow+2,kYellow+2};
+int markers[nhistplot] = {20,53,21,54};//,21,54,33,56};
 double singlegaus(double* x, double* par)
 {
   double exparg = (x[0]-par[1])/par[2];
@@ -12,6 +12,7 @@ double singlegaus(double* x, double* par)
   return result;
 }
 long long unsigned int globntot[nhistplot] = {0};
+double globlumi[nhistplot] = {0};
 
 vector<double> binom_error_hack(TH1D* num, TH1D* den)
 {
@@ -138,6 +139,8 @@ int draw_overlay_with_ratio_th1d(TH1D** hists, string histbasename, TCanvas* can
   TLegend* leg = new TLegend(0.6,0.65,0.8,0.85);
   for(int i=0; i<nhistplot; ++i)
     {
+      if(std::string(hists[i]->GetName()).find("spec") != std::string::npos || std::string(hists[i]->GetName()).find("lead") != std::string::npos) hists[i]->GetYaxis()->SetTitle("Counts / \mathscr{L}_{int} [pb]");
+      if(std::string(hists[i]->GetName()).find("lead") != std::string::npos || std::string(hists[i]->GetName()).find("lead") != std::string::npos) hists[i]->GetYaxis()->SetTitle("Counts / \mathscr{L}_{int} [pb]");
       if(hists[i]->GetMaximum() > ymax) ymax = hists[i]->GetMaximum();
       leg->AddEntry(hists[i],(region[i]+" Trig"+to_string(triggers[i])).c_str(),"p");
       ratio[i] = new TH1D((histbasename+"_"+region[0]+"_ratio_"+region[i]+"_trigger_"+to_string(triggers[i])).c_str(),"",hists[0]->GetNbinsX(),hists[0]->GetXaxis()->GetXmin(),hists[0]->GetXaxis()->GetXmax());
@@ -218,7 +221,8 @@ int draw_overlay_with_ratio_th1d(TH1D** hists, string histbasename, TCanvas* can
   for(int i=0; i<nhistplot; ++i)
     {
       hists[i]->Scale(1./hists[i]->Integral());
-      hists[i]->GetYaxis()->SetTitle("Counts / N_{bit18}^{scaled} (Normalized to #Sigma(bins)=1)");
+      hists[i]->GetYaxis()->SetTitle("Counts / N_{bit10}^{live} (Normalized to #Sigma(bins)=1)");
+
       if(hists[i]->GetMaximum() > ymax) ymax = hists[i]->GetMaximum();
       if(std::string(hists[i]->GetName()).find("mbd") != std::string::npos) ymax = hists[i]->GetBinContent(11)*1.5;
       if(std::string(hists[i]->GetName()).find("mbdt") != std::string::npos)
@@ -336,7 +340,8 @@ int get_and_draw_th1d(string histbasename, string* region, TFile* histfile, stri
   for(int i=0; i<nhistplot; ++i)
     {
       hists[i] = (TH1D*)histfile->Get((histbasename+"_"+region[i]).c_str());
-      hists[i]->Scale(1./globntot[i]);
+      if(std::string(hists[i]->GetName()).find("spec") == std::string::npos && std::string(hists[i]->GetName()).find("lead") == std::string::npos) hists[i]->Scale(1./globntot[i]);
+      else hists[i]->Scale(1./globlumi[i]);
       if(std::string(hists[i]->GetName()).find("zhist") != std::string::npos) hists[i]->Rebin(10);
 
       format_th1d(hists[i], xtitle, ytitle,i);
@@ -419,7 +424,8 @@ int get_and_draw_th2d(string histbasename, string* region, TFile* histfile, stri
   for(int i=0; i<nhistplot; ++i)
     {
       hists[i] = (TH2D*)histfile->Get((histbasename+"_"+region[i]).c_str());
-      hists[i]->Scale(1./globntot[i]);
+      if(std::string(hists[i]->GetName()).find("spec") == std::string::npos && std::string(hists[i]->GetName()).find("lead") == std::string::npos) hists[i]->Scale(1./globntot[i]);
+      else hists[i]->Scale(1./globlumi[i]);
       //if(std::string(hists[i]->GetName()).find("frcem") != std::string::npos) hists[i]->Rebin2D(5,5);
       //if(std::string(hists[i]->GetName()).find("calo") != std::string::npos) hists[i]->Rebin2D(5,5);
       if(std::string(hists[i]->GetName()).find("tgrone_eta_2") != std::string::npos)
@@ -478,10 +484,11 @@ int plot(int tb)
       outt[i] = (TTree*)histfile->Get(("outt_"+region[i]).c_str());
     }
   long long unsigned int totalentries[nhistplot] = {0};
-
+  double lumi[nhistplot] = {0};
   for(int i=0; i<nhistplot; ++i)
     {
       outt[i]->SetBranchAddress(("totalentries_"+region[i]).c_str(),&totalentries[i]);
+      outt[i]->SetBranchAddress(("lumi_"+region[i]).c_str(),&lumi[i]);
     }
         
   for(int i=0; i<nhistplot; ++i)
@@ -490,6 +497,7 @@ int plot(int tb)
 	{
 	  outt[i]->GetEntry(j);
 	  globntot[i] += totalentries[i];
+	  globlumi[i] += lumi[i];
 	}
     }
   
@@ -505,12 +513,12 @@ int plot(int tb)
 
   string ytitles[nhist] = {"Jet #phi","Jet #phi","Tower #phi","Tower #phi","Tower #phi","Tower #phi","Jet #eta","Tower #eta","Tower Detector #eta","Jet #phi","Tower #phi","Jet #eta","Tower #eta","Tower Detector #eta","Jet #phi","Tower #phi","E_{jet}^{EM}/E_{jet}","#Delta#phi","E_{jet}^{EM}/E_{jet}","E_{jet}^{EM}/E_{jet}","E_{jet}^{EM}/E_{jet}","E_{jet}^{EM}/E_{jet}","E_{jet}^{OH}/E_{jet}","E_{jet}^{OH}/E_{jet}","E_{jet}^{EM}/E_{jet}","E_{jet}^{EM}/E_{jet}","EMCal Peak Time for E{T}^{tower}>1 GeV","E_{calo}^{EM}/E_{calo}","Mean E_{T}^{tower}>1 GeV OHCal Peak Sample of Jet","Mean OHCal E_{T}^{tower}>1 GeV Peak Sample of Jet","E_{jet}^{EM}/E_{jet}","E_{jet}^{EM}/E_{jet}","E_{jet}^{EM}/E_{jet}","E_{jet}^{EM}/E_{jet}","#eta","#eta","#Detector Coordinate #eta","Detector Coordinate #eta"};
 
-  get_and_draw_th2d(histnames[11],region,histfile,xtitles[11],ytitles[11],"Counts / N_{"+to_string(bit)+"}^{scaled}",can,ratcan,dijetcut);
-  get_and_draw_th2d(histnames[13],region,histfile,xtitles[13],ytitles[13],"Counts / N_{"+to_string(bit)+"}^{scaled}",can,ratcan,dijetcut);
+  get_and_draw_th2d(histnames[11],region,histfile,xtitles[11],ytitles[11],"Counts / N_{10}^{live}",can,ratcan,dijetcut);
+  get_and_draw_th2d(histnames[13],region,histfile,xtitles[13],ytitles[13],"Counts / N_{10}^{live}",can,ratcan,dijetcut);
   
   for(int i=0; i<nhist; ++i)
     {
-      get_and_draw_th2d(histnames[i],region,histfile,xtitles[i],ytitles[i],"Counts / N_{"+to_string(bit)+"}^{scaled}",can,ratcan,dijetcut);
+      get_and_draw_th2d(histnames[i],region,histfile,xtitles[i],ytitles[i],"Counts / N_{10}^{live}",can,ratcan,dijetcut);
     }
 
   const int nth1d = 13;
@@ -519,7 +527,7 @@ int plot(int tb)
 
   for(int i=0; i<nth1d;++i)//(bit==18?0:1); ++i)
     {
-      get_and_draw_th1d(th1dnames[i],region,histfile,th1dxtitl[i],"Counts / N_{"+to_string(bit)+"}^{scaled}",can,ratcan,dijetcut);
+      get_and_draw_th1d(th1dnames[i],region,histfile,th1dxtitl[i],"Counts / N_{10}^{live}",can,ratcan,dijetcut);
     }
 
   /*
@@ -546,8 +554,8 @@ int plot(int tb)
       //f[i] = new TF1(("f"+to_string(i)+"_"+to_string(trigger[i])).c_str(),"[0]/(1+TMath::Exp(-[1]*(x-[2])))",0,30);
       histstrn[i] = new TH1D(("trigturn"+region[i]+"_"+to_string(triggers[i])).c_str(),"",10,0,30);
       histsnum[i] = (TH1D*)histfile->Get(("num_"+to_string(triggers[i])+"_"+region[i]).c_str());
-      if(i<2) histsden[i] = (TH1D*)histfile->Get(("den_"+region[i]).c_str());
-      else histsden[i] = histsden[i%2];
+      histsden[i] = (TH1D*)histfile->Get(("den_"+to_string(triggers[i])+"_"+region[i]).c_str());
+      
       cout << "hack binom errors:" << endl;
       vector<double> hackvec = binom_error_hack(histsnum[i],histsden[i]);
       cout << "divide: " << endl;

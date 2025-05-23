@@ -6,17 +6,30 @@ int make_tturn(string tag, vector<int> rns, vector<int> nfiles)
   else if(rns[0] < 49238) region = "RegionB";
   else if(rns[0] < 49256) region = "RegionC";
   else region = "RegionD";
-  const int ntrig = 3;
-  int triggers[ntrig] = {17,18,19};
+  const int ntrig = 2;
+  int triggers[ntrig] = {18,26};
   TH1D* leadhists[ntrig];
   TH1D* spectra[ntrig];
   TH1D* turn[ntrig];
   TH1D* num[ntrig];
-  TH1D* den; 
+  TH1D* den[ntrig]; 
 
-  den = new TH1D(("den_"+region).c_str(),"",10,0,30);
+
+  double lumi = 0;
+  double othervals[5];
+  int rnval;
+  int rn = rns[0];
+  int nfile = nfiles[0];
+  ifstream inlumi("/sphenix/user/jocl/projects/analysis/LuminosityCounterGoodRuns/run/list_forplot_2.list");
+  while(inlumi >> rnval >> lumi >> othervals[0] >> othervals[1] >> othervals[2] >> othervals[3] >> othervals[4])
+    {
+      if(rnval == rn) break;
+    }
+  
+  
   for(int j=0; j<ntrig; ++j)
     {
+      den[j] = new TH1D(("den_"+to_string(triggers[j])+"_"+region).c_str(),"",10,0,30);
       leadhists[j] = new TH1D(("leadhists_"+to_string(triggers[j])+"_"+region).c_str(),"",50,0,50);
       spectra[j] = new TH1D(("spectra_"+to_string(triggers[j])+"_"+region).c_str(),"",50,0,50);
       //trigturn[j] = new TH1D(("trigturn_"+to_string(triggers[j])+"_"+region).c_str(),"",10,0,30);
@@ -24,16 +37,14 @@ int make_tturn(string tag, vector<int> rns, vector<int> nfiles)
     }
   
   //define constants
-  const int nmaxjet = 10;
+  const int nmaxjet = 100;
   const int nzvtx = 3;
   const int maxtow = 24576+1536*2;
   const int ntowfield = 6;
   const int mbdchan = 64;
   const int mbdside = 2;
-  for(int g = 0; g<rns.size(); ++g)
+  for(int g = 0; g<1; ++g)
     {
-      int rn = rns.at(g);
-      int nfile = nfiles.at(g);
   for(int h=0; h<nfile; ++h)
     {
       string filename = "multicoltree/events_"+tag+"_"+to_string(rn)+"_"+to_string(h)+"_0.root";
@@ -66,9 +77,15 @@ int make_tturn(string tag, vector<int> rns, vector<int> nfiles)
       double ohat[nmaxjet][64];
       int ncgroe[nmaxjet];
       int ncgroo[nmaxjet];
+      double cluster_e[nmaxjet];
+      double cluster_eta[nmaxjet];
+      int ncluster;
       //get TTree
       TTree* dattree = (TTree*)datfile->Get("tree");
       //set up branches
+      dattree->SetBranchAddress("cluster_e",cluster_e);
+      dattree->SetBranchAddress("cluster_eta",cluster_eta);
+      dattree->SetBranchAddress("ncluster",&ncluster);
       dattree->SetBranchAddress("njet",&njet);
       dattree->SetBranchAddress("hitsgrone",&hitsgrone);
       dattree->SetBranchAddress("isdijet",&isdijet);
@@ -98,28 +115,41 @@ int make_tturn(string tag, vector<int> rns, vector<int> nfiles)
 	{
 	  dattree->GetEntry(i);
 	  double ETmax = 0;
+	  double ETmax_clus = 0;
 	  for(int j=0; j<njet; ++j)
 	    {
 	      double ET = jet_e[j]/cosh(jet_eta[j]);
 	      for(int k=0; k<ntrig; ++k)
 		{
-		  if((trigvec[2]>>triggers[k])&1)spectra[k]->Fill(ET);
+		  if((trigvec[2]>>triggers[k])&1 && triggers[k] < 24) spectra[k]->Fill(ET);
 		}
 
 	      if(ET > ETmax) ETmax = ET;
 	    }
-	  
-
+	  for(int j=0; j<ncluster; ++j)
+	    {
+	      double ET = cluster_e[j]/cosh(cluster_eta[j]);
+	      for(int k=0; k<ntrig; ++k)
+		{
+		  if((trigvec[2]>>triggers[k])&1 && triggers[k] < 32) spectra[k]->Fill(ET);
+		}
+	      if(ET>ETmax_clus) ETmax_clus = ET;
+	    }
 
 	  for(int j=0; j<ntrig; ++j)
 	    {
-	      if((trigvec[2]>>triggers[j])&1) leadhists[j]->Fill(ETmax);
+	      if((trigvec[2]>>triggers[j])&1 &&triggers[j] < 24) leadhists[j]->Fill(ETmax);
+	      else if((trigvec[2]>>triggers[j])&1 &&triggers[j]<32) leadhists[j]->Fill(ETmax_clus);
 	      if(!((trigvec[2] >> 10) & 1)) continue;
-	      if(j==0) den->Fill(ETmax);
-	      if((trigvec[1]>>triggers[j]) & 1)
+	      if(triggers[j]<24) den[j]->Fill(ETmax);
+	      else if(triggers[j]<32) den[j]->Fill(ETmax_clus);
+	      if((trigvec[1]>>triggers[j]) & 1 && triggers[j] < 24)
 		{
 		  num[j]->Fill(ETmax);
-
+		}
+	      else if((trigvec[1]>>triggers[j]) &1 && triggers[j] < 32)
+		{
+		  num[j]->Fill(ETmax_clus);
 		}
 	    }
 	}
@@ -143,13 +173,17 @@ int make_tturn(string tag, vector<int> rns, vector<int> nfiles)
       cout << i << endl;
       num[i]->Write();
       cout << "Wrote num" << endl;
+      spectra[i]->Scale(1./lumi);
       spectra[i]->Write();
       cout << "Wrote spectrum" << endl;
+      leadhists[i]->Scale(1./lumi);
       leadhists[i]->Write();
       cout << "Wrote lead spectrum" << endl;
+      den[i]->Write();
+      cout << "Write den" << endl;      
     }
-  cout << "Write den" << endl;
-  den->Write();
+
+  
   cout << "Write file and close" << endl;
   outf->Write();
   outf->Close();

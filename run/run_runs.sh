@@ -21,6 +21,9 @@ for rn in `ls  lists/dst_calofitting_run2pp*.list | awk -F'.' '{print $1}' | awk
     if [ $filecounter -gt $nmax ]; then
 	break
     fi
+    if [ $rn -lt 49350 ]; then
+	continue;
+    fi
 #    mkdir -p /sphenix/tg/tg01/jets/jocl/multiCol/$rn
 #    mkdir -p /sphenix/tg/tg01/jets/jocl/multiCol/$rn
     echo $rn $filecounter
