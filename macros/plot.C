@@ -137,10 +137,11 @@ int draw_overlay_with_ratio_th1d(TH1D** hists, string histbasename, TCanvas* can
   can->cd(1);
   float ymax = 0;
   TLegend* leg = new TLegend(0.6,0.65,0.8,0.85);
+  cout <<" overlay and ratio time" << endl;
   for(int i=0; i<nhistplot; ++i)
     {
-      if(std::string(hists[i]->GetName()).find("spec") != std::string::npos || std::string(hists[i]->GetName()).find("lead") != std::string::npos) hists[i]->GetYaxis()->SetTitle("Counts / \mathscr{L}_{int} [pb]");
-      if(std::string(hists[i]->GetName()).find("lead") != std::string::npos || std::string(hists[i]->GetName()).find("lead") != std::string::npos) hists[i]->GetYaxis()->SetTitle("Counts / \mathscr{L}_{int} [pb]");
+      if(std::string(hists[i]->GetName()).find("spec") != std::string::npos || std::string(hists[i]->GetName()).find("lead") != std::string::npos) hists[i]->GetYaxis()->SetTitle("Counts / \\mathscr{L}_{int} [pb]");
+      if(std::string(hists[i]->GetName()).find("lead") != std::string::npos || std::string(hists[i]->GetName()).find("lead") != std::string::npos) hists[i]->GetYaxis()->SetTitle("Counts / \\mathscr{L}_{int} [pb]");
       if(hists[i]->GetMaximum() > ymax) ymax = hists[i]->GetMaximum();
       leg->AddEntry(hists[i],(region[i]+" Trig"+to_string(triggers[i])).c_str(),"p");
       ratio[i] = new TH1D((histbasename+"_"+region[0]+"_ratio_"+region[i]+"_trigger_"+to_string(triggers[i])).c_str(),"",hists[0]->GetNbinsX(),hists[0]->GetXaxis()->GetXmin(),hists[0]->GetXaxis()->GetXmax());
@@ -150,6 +151,7 @@ int draw_overlay_with_ratio_th1d(TH1D** hists, string histbasename, TCanvas* can
 	  hists[i]->Rebin(5);
 	}
       if(i>0) ratio[i]->Divide(hists[i],hists[0]);
+      
       ratio[i]->GetYaxis()->SetRangeUser(0,2);
       format_th1d(ratio[i],hists[i]->GetXaxis()->GetTitle(),"Ratio to Region A Trigger "+to_string(triggers[0]),i);
       ratio[i]->GetXaxis()->SetTitleSize(ratio[i]->GetXaxis()->GetTitleSize()/0.5);
@@ -157,6 +159,7 @@ int draw_overlay_with_ratio_th1d(TH1D** hists, string histbasename, TCanvas* can
       ratio[i]->GetXaxis()->SetLabelSize(ratio[i]->GetXaxis()->GetLabelSize()/0.5);
       ratio[i]->GetYaxis()->SetLabelSize(ratio[i]->GetYaxis()->GetLabelSize()/0.5);
     }
+  cout << "did firstloop" << endl;
   TF1* dgaus[nhistplot];
   hists[0]->GetYaxis()->SetRangeUser(0,1.5*ymax);
   for(int i=0; i<nhistplot; ++i)
@@ -385,15 +388,17 @@ int draw_th2d(TH2D* hist, TCanvas* can, int dijetcut)
   et_cut_text(minet,0.015,0.96);
   dijet_cut_text(0.3,0.96);
   can->SaveAs(("/sphenix/user/jocl/projects/multiColStudy/output/plots/"+string(hist->GetName())+"_"+to_string(bit)+"_"+(dijetcut?"dc":"nc")+".png").c_str());
-
+  cout << "hangs here??" << endl;
   gPad->SetLogz();
   hist->Draw("COLZ");
   sphenixtext(0.65,0.96);
   sqrt_s_text(0.65,0.92);
+  cout << "hangs 1" << endl;
   antikt_text(0.4,0.3,0.92);
   et_cut_text(minet,0.015,0.96);
   dijet_cut_text(0.3,0.96);
-  can->SaveAs(("/sphenix/user/jocl/projects/multiColStudy/output/plots/"+string(hist->GetName())+"_"+to_string(bit)+"_"+(dijetcut?"dc":"nc")+"_log.png").c_str());
+  cout << "hangs 2" << endl;
+  //can->SaveAs(("/sphenix/user/jocl/projects/multiColStudy/output/plots/"+string(hist->GetName())+"_"+to_string(bit)+"_"+(dijetcut?"dc":"nc")+"_log.png").c_str());
   gPad->SetLogz(0);
   return 0;
 }
@@ -490,7 +495,7 @@ int plot(int tb)
       outt[i]->SetBranchAddress(("totalentries_"+region[i]).c_str(),&totalentries[i]);
       outt[i]->SetBranchAddress(("lumi_"+region[i]).c_str(),&lumi[i]);
     }
-        
+  cout << "get lumis" << endl;
   for(int i=0; i<nhistplot; ++i)
     {
       for(int j=0; j<outt[i]->GetEntries(); ++j)
@@ -500,7 +505,7 @@ int plot(int tb)
 	  globlumi[i] += lumi[i];
 	}
     }
-  
+  cout << "got lumis" << endl;
   
   int dijetcut = 1;
   const int nhist = 38;

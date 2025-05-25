@@ -131,6 +131,8 @@ int multiColStudy::Init(PHCompositeNode *topNode)
   
   _tree->Branch("njet",&_njet,"njet/I");
   _tree->Branch("jet_e",_jet_e,"jet_e[njet]/D");
+  _tree->Branch("jet_eta",_jet_eta,"jet_eta[njet]/D");
+  _tree->Branch("jet_phi",_jet_phi,"jet_phi[njet]/D");
   _tree->Branch("jet_et",_jet_et,"jet_et[njet]/D");
   _tree->Branch("jet_at",_jet_at,"jet_at[njet]/D");
   _tree->Branch("jet_at_em",_jet_at_em,"jet_at_em[njet]/D");
