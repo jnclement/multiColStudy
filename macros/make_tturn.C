@@ -29,11 +29,11 @@ int make_tturn(string tag, vector<int> rns, vector<int> nfiles)
   
   for(int j=0; j<ntrig; ++j)
     {
-      den[j] = new TH1D(("den_"+to_string(triggers[j])+"_"+region).c_str(),"",10,0,30);
+      den[j] = new TH1D(("den_"+to_string(triggers[j])+"_"+region).c_str(),"",10,0,j==0?30:10);
       leadhists[j] = new TH1D(("leadhists_"+to_string(triggers[j])+"_"+region).c_str(),"",50,0,50);
       spectra[j] = new TH1D(("spectra_"+to_string(triggers[j])+"_"+region).c_str(),"",50,0,50);
       //trigturn[j] = new TH1D(("trigturn_"+to_string(triggers[j])+"_"+region).c_str(),"",10,0,30);
-      num[j] = new TH1D(("num_"+to_string(triggers[j])+"_"+region).c_str(),"",10,0,30);	 
+      num[j] = new TH1D(("num_"+to_string(triggers[j])+"_"+region).c_str(),"",10,0,j==0?30:10);	 
     }
   
   //define constants
@@ -118,28 +118,28 @@ int make_tturn(string tag, vector<int> rns, vector<int> nfiles)
 	  double ETmax_clus = 0;
 	  for(int j=0; j<njet; ++j)
 	    {
-	      double ET = jet_e[j]/cosh(jet_eta[j]);
+	      double ET = jet_e[j];
 	      for(int k=0; k<ntrig; ++k)
 		{
-		  if((trigvec[2]>>triggers[k])&1 && triggers[k] < 24) spectra[k]->Fill(ET);
+		  if((trigvec[2]>>triggers[k])&1 && triggers[k] < 24) spectra[k]->Fill(ET/cosh(jet_eta[j]));
 		}
 
 	      if(ET > ETmax) ETmax = ET;
 	    }
 	  for(int j=0; j<ncluster; ++j)
 	    {
-	      double ET = cluster_e[j]/cosh(cluster_eta[j]);
+	      double ET = cluster_e[j];
 	      for(int k=0; k<ntrig; ++k)
 		{
-		  if((trigvec[2]>>triggers[k])&1 && triggers[k] < 32) spectra[k]->Fill(ET);
+		  if((trigvec[2]>>triggers[k])&1 && triggers[k] < 32) spectra[k]->Fill(ET/cosh(cluster_eta[j]));
 		}
 	      if(ET>ETmax_clus) ETmax_clus = ET;
 	    }
 
 	  for(int j=0; j<ntrig; ++j)
 	    {
-	      if((trigvec[2]>>triggers[j])&1 &&triggers[j] < 24) leadhists[j]->Fill(ETmax);
-	      else if((trigvec[2]>>triggers[j])&1 &&triggers[j]<32) leadhists[j]->Fill(ETmax_clus);
+	      if((trigvec[2]>>triggers[j])&1 &&triggers[j] < 24) leadhists[j]->Fill(ETmax/cosh(cluster_eta[j]));
+	      else if((trigvec[2]>>triggers[j])&1 &&triggers[j]<32) leadhists[j]->Fill(ETmax_clus/cosh(cluster_eta[j]));
 	      if(!((trigvec[2] >> 10) & 1)) continue;
 	      if(triggers[j]<24) den[j]->Fill(ETmax);
 	      else if(triggers[j]<32) den[j]->Fill(ETmax_clus);

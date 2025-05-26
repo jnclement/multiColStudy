@@ -557,7 +557,7 @@ int plot(int tb)
       spectra[i] = (TH1D*)histfile->Get(("spectra_"+to_string(triggers[i])+"_"+region[i]).c_str());
       f[i] = new TF1(("f"+to_string(i)).c_str(),"[0]*TMath::Erf((x-[2])/[1])+[0]",0,30);
       //f[i] = new TF1(("f"+to_string(i)+"_"+to_string(trigger[i])).c_str(),"[0]/(1+TMath::Exp(-[1]*(x-[2])))",0,30);
-      histstrn[i] = new TH1D(("trigturn"+region[i]+"_"+to_string(triggers[i])).c_str(),"",10,0,30);
+      histstrn[i] = new TH1D(("trigturn"+region[i]+"_"+to_string(triggers[i])).c_str(),"",10,0,i<2?30:10);
       histsnum[i] = (TH1D*)histfile->Get(("num_"+to_string(triggers[i])+"_"+region[i]).c_str());
       histsden[i] = (TH1D*)histfile->Get(("den_"+to_string(triggers[i])+"_"+region[i]).c_str());
       
@@ -582,7 +582,7 @@ int plot(int tb)
       f[i]->SetParLimits(0,0,0.5);
       f[i]->SetLineColor(colors[i]);
       cout << "fit: " << endl;
-      histstrn[i]->Fit(f[i],"IM","",6,30);
+      histstrn[i]->Fit(f[i],"IM","",i<2?6:1,30);
       cout << "done with loop " << i << endl;
     }
 
