@@ -1,9 +1,9 @@
 #include <dlUtility.h>
-const int nhistplot = 4;
-string region[nhistplot] = {"RegionA","RegionD","RegionA","RegionD"};//,"RegionA","RegionD","RegionA","RegionD"};
-int triggers[nhistplot] = {18, 18,26,26};//, 17, 17, 19, 19};
+const int nhistplot = 4;//4;
+string region[nhistplot] = {"RegionA","RegionB","RegionC","RegionD"};//,"RegionA","RegionD"};//,"RegionA","RegionD","RegionA","RegionD"};
+int triggers[nhistplot] = {18,18,18,18};//{18, 18,26,26};//, 17, 17, 19, 19};
 int bit = 18;
-int colors[nhistplot] = {kCyan+2,kCyan+2,kMagenta+2,kMagenta+2};//,kMagenta+2,kMagenta+2,kYellow+2,kYellow+2};
+int colors[nhistplot] = {kCyan+2,kMagenta+2,kYellow+2,kOrange+2};
 int markers[nhistplot] = {20,53,21,54};//,21,54,33,56};
 double singlegaus(double* x, double* par)
 {
@@ -137,29 +137,29 @@ int draw_overlay_with_ratio_th1d(TH1D** hists, string histbasename, TCanvas* can
   can->cd(1);
   float ymax = 0;
   TLegend* leg = new TLegend(0.6,0.65,0.8,0.85);
-  cout <<" overlay and ratio time" << endl;
+  //cout <<" overlay and ratio time" << endl;
   for(int i=0; i<nhistplot; ++i)
     {
       if(std::string(hists[i]->GetName()).find("spec") != std::string::npos || std::string(hists[i]->GetName()).find("lead") != std::string::npos) hists[i]->GetYaxis()->SetTitle("Counts / \\mathscr{L}_{int} [pb]");
       if(std::string(hists[i]->GetName()).find("lead") != std::string::npos || std::string(hists[i]->GetName()).find("lead") != std::string::npos) hists[i]->GetYaxis()->SetTitle("Counts / \\mathscr{L}_{int} [pb]");
       if(hists[i]->GetMaximum() > ymax) ymax = hists[i]->GetMaximum();
       leg->AddEntry(hists[i],(region[i]+" Trig"+to_string(triggers[i])).c_str(),"p");
-      ratio[i] = new TH1D((histbasename+"_"+region[0]+"_ratio_"+region[i]+"_trigger_"+to_string(triggers[i])).c_str(),"",hists[0]->GetNbinsX(),hists[0]->GetXaxis()->GetXmin(),hists[0]->GetXaxis()->GetXmax());
+      ratio[i] = new TH1D((histbasename+"_"+region[0]+"_ratio_"+region[i]+"_trigger_"+to_string(triggers[i])).c_str(),"",hists[i]->GetNbinsX(),hists[i]->GetXaxis()->GetXmin(),hists[i]->GetXaxis()->GetXmax());
       if(std::string(hists[i]->GetName()).find("mbdt") != std::string::npos)
 	{
 	  ymax = 0.2;
 	  hists[i]->Rebin(5);
 	}
       if(i>0) ratio[i]->Divide(hists[i],hists[0]);
-      
+
       ratio[i]->GetYaxis()->SetRangeUser(0,2);
-      format_th1d(ratio[i],hists[i]->GetXaxis()->GetTitle(),"Ratio to Region A Trigger "+to_string(triggers[0]),i);
+      format_th1d(ratio[i],hists[i]->GetXaxis()->GetTitle(),"Ratio to Region A",i);
       ratio[i]->GetXaxis()->SetTitleSize(ratio[i]->GetXaxis()->GetTitleSize()/0.5);
       ratio[i]->GetYaxis()->SetTitleSize(ratio[i]->GetYaxis()->GetTitleSize()/0.5);
       ratio[i]->GetXaxis()->SetLabelSize(ratio[i]->GetXaxis()->GetLabelSize()/0.5);
       ratio[i]->GetYaxis()->SetLabelSize(ratio[i]->GetYaxis()->GetLabelSize()/0.5);
     }
-  cout << "did firstloop" << endl;
+  //cout << "did firstloop" << endl;
   TF1* dgaus[nhistplot];
   hists[0]->GetYaxis()->SetRangeUser(0,1.5*ymax);
   for(int i=0; i<nhistplot; ++i)
@@ -174,6 +174,7 @@ int draw_overlay_with_ratio_th1d(TH1D** hists, string histbasename, TCanvas* can
       hists[i]->Draw(i==0?"PE":"SAME PE");
       can->cd(2);
       if(i>0) ratio[i]->Draw(i==1?"PE":"SAME PE");
+      cout << "DREW HIST!!!" << endl;
     }
 
   can->cd(1);
@@ -183,13 +184,13 @@ int draw_overlay_with_ratio_th1d(TH1D** hists, string histbasename, TCanvas* can
   sphenixtext(0.65,0.96);
   sqrt_s_text(0.65,0.92);
   float minet = 15;
-  if(bit != 10)
+  if(triggers[0] == 18)
     {
   antikt_text(0.4,0.3,0.92);
 
   if(std::string(hists[0]->GetName()).find("gr20") != std::string::npos) minet = 20;
-  et_cut_text(minet,0.015,0.96);
-  dijet_cut_text(0.3,0.96);
+  //et_cut_text(minet,0.015,0.96);
+  //dijet_cut_text(0.3,0.96);
     }
   TLine* oneline = new TLine(hists[0]->GetXaxis()->GetXmin(),1,hists[0]->GetXaxis()->GetXmax(),1);
   can->cd(2);
@@ -224,7 +225,7 @@ int draw_overlay_with_ratio_th1d(TH1D** hists, string histbasename, TCanvas* can
   for(int i=0; i<nhistplot; ++i)
     {
       hists[i]->Scale(1./hists[i]->Integral());
-      hists[i]->GetYaxis()->SetTitle("Counts / N_{bit10}^{live} (Normalized to #Sigma(bins)=1)");
+      hists[i]->GetYaxis()->SetTitle("Counts / N_{bit10}^{scaled} (Normalized to #Sigma(bins)=1)");
 
       if(hists[i]->GetMaximum() > ymax) ymax = hists[i]->GetMaximum();
       if(std::string(hists[i]->GetName()).find("mbd") != std::string::npos) ymax = hists[i]->GetBinContent(11)*1.5;
@@ -388,16 +389,13 @@ int draw_th2d(TH2D* hist, TCanvas* can, int dijetcut)
   et_cut_text(minet,0.015,0.96);
   dijet_cut_text(0.3,0.96);
   can->SaveAs(("/sphenix/user/jocl/projects/multiColStudy/output/plots/"+string(hist->GetName())+"_"+to_string(bit)+"_"+(dijetcut?"dc":"nc")+".png").c_str());
-  cout << "hangs here??" << endl;
   gPad->SetLogz();
   hist->Draw("COLZ");
   sphenixtext(0.65,0.96);
   sqrt_s_text(0.65,0.92);
-  cout << "hangs 1" << endl;
   antikt_text(0.4,0.3,0.92);
   et_cut_text(minet,0.015,0.96);
   dijet_cut_text(0.3,0.96);
-  cout << "hangs 2" << endl;
   //can->SaveAs(("/sphenix/user/jocl/projects/multiColStudy/output/plots/"+string(hist->GetName())+"_"+to_string(bit)+"_"+(dijetcut?"dc":"nc")+"_log.png").c_str());
   gPad->SetLogz(0);
   return 0;
@@ -429,6 +427,7 @@ int get_and_draw_th2d(string histbasename, string* region, TFile* histfile, stri
   for(int i=0; i<nhistplot; ++i)
     {
       hists[i] = (TH2D*)histfile->Get((histbasename+"_"+region[i]).c_str());
+      cout << globntot[i] << endl;
       if(std::string(hists[i]->GetName()).find("spec") == std::string::npos && std::string(hists[i]->GetName()).find("lead") == std::string::npos) hists[i]->Scale(1./globntot[i]);
       else hists[i]->Scale(1./globlumi[i]);
       //if(std::string(hists[i]->GetName()).find("frcem") != std::string::npos) hists[i]->Rebin2D(5,5);
@@ -448,8 +447,8 @@ int get_and_draw_th2d(string histbasename, string* region, TFile* histfile, stri
       //if(std::string(hists[i]->GetName()).find("tgrone") != std::string::npos)
       draw_th2d(hists[i], can,dijetcut);
 
-      projx[i] = hists[i]->ProjectionX((histbasename+"_projx"+to_string(i)).c_str(),1,hists[i]->GetNbinsY());
-      projy[i] = hists[i]->ProjectionY((histbasename+"_projy"+to_string(i)).c_str(),1,hists[i]->GetNbinsX());
+      projx[i] = hists[i]->ProjectionX((histbasename+"_projx"+to_string(i)).c_str(),1,hists[i]->GetNbinsX());
+      projy[i] = hists[i]->ProjectionY((histbasename+"_projy"+to_string(i)).c_str(),1,hists[i]->GetNbinsY());
       if(std::string(hists[i]->GetName()).find("frcem") != std::string::npos) cout << "frcem integral " << hists[i]->GetName() << ": " << projx[i]->Integral() << endl;
       format_th1d(projx[i],hists[i]->GetXaxis()->GetTitle(),hists[i]->GetZaxis()->GetTitle(),i);
       format_th1d(projy[i],hists[i]->GetYaxis()->GetTitle(),hists[i]->GetZaxis()->GetTitle(),i);
@@ -475,7 +474,8 @@ int get_and_draw_th2d(string histbasename, string* region, TFile* histfile, stri
 
 int plot(int tb)
 {
-  //gROOT->ProcessLine( "gErrorIgnoreLevel = 1001;");
+  cout << "test" << endl;
+  gROOT->ProcessLine( "gErrorIgnoreLevel = 1001;");
   bit = tb;
   gStyle->SetOptStat(0);
   gStyle->SetOptTitle(0);
@@ -484,10 +484,12 @@ int plot(int tb)
   TFile* histfile;
   histfile = TFile::Open(("../output/hists/hadded"+to_string(bit)+".root").c_str());
   TTree* outt[nhistplot];
+  cout << "get tree" << endl;
   for(int i=0; i<nhistplot; ++i)
     {
       outt[i] = (TTree*)histfile->Get(("outt_"+region[i]).c_str());
     }
+  cout << "got tree" << endl;
   long long unsigned int totalentries[nhistplot] = {0};
   double lumi[nhistplot] = {0};
   for(int i=0; i<nhistplot; ++i)
@@ -517,34 +519,52 @@ int plot(int tb)
   string xtitles[nhist] = {"Jet #eta","Jet #eta","Tower #eta","Tower #eta","Tower Detector #eta","Tower Detector #eta","jet E [GeV]","Tower E [GeV]","Tower E [GeV]","Jet E [GeV]","Tower E [GeV]","Jet E_{T} [GeV]","Tower E_{T} [GeV]","Tower E_{T} [GeV]","Jet E_{T} [GeV]","Tower E_{T} [GeV]","Jet E [GeV]","Jet E_{T} [GeV]","Jet #eta","Jet #eta","Jet #phi","Jet #phi","E_{jet}^{EM}/E_{jet}","E_{jet}^{EM}/E_{jet}","Mean E_{T}^{tower}>1 GeV Peak Sample of Jet","Mean E_{T}^{tower}>1 GeV Peak Sample of Jet","Mean E_{T}^{tower}>1 GeV Peak Sample of EMCal","Mean EMCal Time for E_{T}^{tower}>1 GeV","Mean EMCal E_{T}^{tower}>1 GeV Peak Sample of Jet","Mean EMCal E_{T}^{tower}>1 GeV Peak Sample of Jet","Mean EMCal E_{T}^{tower}>1 GeV Peak Sample of Jet","Mean EMCal E_{T}^{tower}>1 GeV Peak Sample of Jet","Mean OHCal E_{T}^{tower}>1 GeV Peak Sample of Jet","Mean OHCal E_{T}^{tower}>1 GeV Peak Sample of Jet","EMCal Peak Time for E_{T}^{tower}>1 GeV","OHCal Peak Time for E_{T}^{tower} > 1 GeV","EMCal Tower E [GeV]","OHCal Tower E [GeV]"};
 
   string ytitles[nhist] = {"Jet #phi","Jet #phi","Tower #phi","Tower #phi","Tower #phi","Tower #phi","Jet #eta","Tower #eta","Tower Detector #eta","Jet #phi","Tower #phi","Jet #eta","Tower #eta","Tower Detector #eta","Jet #phi","Tower #phi","E_{jet}^{EM}/E_{jet}","#Delta#phi","E_{jet}^{EM}/E_{jet}","E_{jet}^{EM}/E_{jet}","E_{jet}^{EM}/E_{jet}","E_{jet}^{EM}/E_{jet}","E_{jet}^{OH}/E_{jet}","E_{jet}^{OH}/E_{jet}","E_{jet}^{EM}/E_{jet}","E_{jet}^{EM}/E_{jet}","EMCal Peak Time for E{T}^{tower}>1 GeV","E_{calo}^{EM}/E_{calo}","Mean E_{T}^{tower}>1 GeV OHCal Peak Sample of Jet","Mean OHCal E_{T}^{tower}>1 GeV Peak Sample of Jet","E_{jet}^{EM}/E_{jet}","E_{jet}^{EM}/E_{jet}","E_{jet}^{EM}/E_{jet}","E_{jet}^{EM}/E_{jet}","#eta","#eta","#Detector Coordinate #eta","Detector Coordinate #eta"};
-
-  get_and_draw_th2d(histnames[11],region,histfile,xtitles[11],ytitles[11],"Counts / N_{10}^{live}",can,ratcan,dijetcut);
-  get_and_draw_th2d(histnames[13],region,histfile,xtitles[13],ytitles[13],"Counts / N_{10}^{live}",can,ratcan,dijetcut);
+  //goto _gotospot0;
+  get_and_draw_th2d(histnames[11],region,histfile,xtitles[11],ytitles[11],"Counts / N_{10}^{scaled}",can,ratcan,dijetcut);
+  get_and_draw_th2d(histnames[13],region,histfile,xtitles[13],ytitles[13],"Counts / N_{10}^{scaled}",can,ratcan,dijetcut);
   
   for(int i=0; i<nhist; ++i)
     {
-      get_and_draw_th2d(histnames[i],region,histfile,xtitles[i],ytitles[i],"Counts / N_{10}^{live}",can,ratcan,dijetcut);
+      cout << histnames[i] << endl;
+      get_and_draw_th2d(histnames[i],region,histfile,xtitles[i],ytitles[i],"Counts / N_{10}^{scaled}",can,ratcan,dijetcut);
     }
-
+ _gotospot0:
   const int nth1d = 13;
   string th1dnames[nth1d] = {"zhist","mbdn","mbds","mbdt","calo_hitsgrone_0","calo_hitsgrone_1","calo_hitsgrone_2","zhist_gr20","zhist_nocut","h_emat","h_ohat","spectrum","leadspec"};
   string th1dxtitl[nth1d] = {"z_{vtx} [cm]","MBD Charge [Arb.]","MBD Charge [Arb.]","MBD Charge [Arb.]","Number of Towers with E > 1 GeV","Number of Towers with E > 1 GeV","Number of Towers with E > 1 GeV","z_{vtx} [cm]","z_{vtx} [cm]","Peak Sample Time of EMCal Jet Constituents with E_{T}>1 GeV","Peak Sample Time of OHCal Jet Constituents with E_{T}>1 GeV","Jet E_{T} [GeV]","Lead Jet E_{T} [GeV]"};
-
+  //goto _gotospot1;
   for(int i=0; i<nth1d;++i)//(bit==18?0:1); ++i)
     {
-      get_and_draw_th1d(th1dnames[i],region,histfile,th1dxtitl[i],"Counts / N_{10}^{live}",can,ratcan,dijetcut);
+      cout << th1dnames[i] << endl;
+      get_and_draw_th1d(th1dnames[i],region,histfile,th1dxtitl[i],"Counts / N_{10}^{scaled}",can,ratcan,dijetcut);
     }
 
-  /*
+ _gotospot1:
   TH1D* njet_lumi = (TH1D*)histfile->Get("njet_lumi");
+
+  TCanvas* lumican = new TCanvas("","",1000,500);
+  //goto _gotospot2;
+  njet_lumi->GetYaxis()->SetRangeUser(0,1e5);
   njet_lumi->SetMarkerSize(1);
   njet_lumi->SetMarkerStyle(20);
-  TCanvas* lumican = new TCanvas("","",1000,500);
+
+
   lumican->cd();
+  njet_lumi->GetYaxis()->SetTitle("N_{cluster}/\\mathscr{L}_{int,corr}^{trig26}");
+  njet_lumi->GetXaxis()->SetTitle("Run Number");
+  
   njet_lumi->Draw("PE");
+  sphenixtext(0.65,0.96);
+  sqrt_s_text(0.65,0.92);
+  antikt_text(0.4,0.3,0.92);
+  et_cut_text(15,0.015,0.96);
+  dijet_cut_text(0.3,0.96);
+
+
   lumican->SaveAs(("../output/plots/"+to_string(bit)+"_njet_lumi.png").c_str());
-  */
+  //return 0;
   if(bit==10) return 0;
+ _gotospot2:
   TH1D* histsnum[nhistplot];
   TH1D* histsden[nhistplot];
   TH1D* histstrn[nhistplot];
@@ -557,7 +577,7 @@ int plot(int tb)
       spectra[i] = (TH1D*)histfile->Get(("spectra_"+to_string(triggers[i])+"_"+region[i]).c_str());
       f[i] = new TF1(("f"+to_string(i)).c_str(),"[0]*TMath::Erf((x-[2])/[1])+[0]",0,30);
       //f[i] = new TF1(("f"+to_string(i)+"_"+to_string(trigger[i])).c_str(),"[0]/(1+TMath::Exp(-[1]*(x-[2])))",0,30);
-      histstrn[i] = new TH1D(("trigturn"+region[i]+"_"+to_string(triggers[i])).c_str(),"",10,0,i<2?30:10);
+      histstrn[i] = new TH1D(("trigturn"+region[i]+"_"+to_string(triggers[i])).c_str(),"",10,0,triggers[0]==18?30:10);
       histsnum[i] = (TH1D*)histfile->Get(("num_"+to_string(triggers[i])+"_"+region[i]).c_str());
       histsden[i] = (TH1D*)histfile->Get(("den_"+to_string(triggers[i])+"_"+region[i]).c_str());
       
@@ -571,18 +591,19 @@ int plot(int tb)
 	  histstrn[i]->SetBinError(j,hackvec.at(j-1));
 	}
       cout << "format divided: " << endl;
-      format_th1d(histstrn[i], "E_{T}^{jet} [GeV]","Efficiency", i);
+      format_th1d(histstrn[i], std::string("E_{T}")+(triggers[0]==18?"^{jet}":"^{clus}")+" [GeV]","Efficiency", i);
       cout << "format spectra: " << endl;
-      format_th1d(spectra[i], "E_{T}^{jet} [GeV]","Normalized Counts", i);
+      format_th1d(spectra[i], "E_{T} [GeV]","Normalized Counts", i);
       cout << "format lead spectra: " << endl;
-      format_th1d(leadhists[i], "E_{T}^{lead jet} [GeV]","Normalized Counts", i);
-      f[i]->SetParameter(1,1);
-      f[i]->SetParameter(2,12);
+      format_th1d(leadhists[i], "E_{T} [GeV]","Normalized Counts", i);
+      f[i]->SetParameter(1,triggers[0]==18?4:1);
+      f[i]->SetParameter(2,triggers[0]==18?12:4);
       f[i]->SetParameter(0,0.4);
       f[i]->SetParLimits(0,0,0.5);
+      f[i]->SetParLimits(1,0,1000);
       f[i]->SetLineColor(colors[i]);
       cout << "fit: " << endl;
-      histstrn[i]->Fit(f[i],"IM","",i<2?6:1,30);
+      histstrn[i]->Fit(f[i],"IMW","",triggers[0]==18?6:3,triggers[0]==18?30:10);
       cout << "done with loop " << i << endl;
     }
 

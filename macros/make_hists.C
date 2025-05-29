@@ -67,9 +67,9 @@ int make_hists(string tag, vector<int> rns, vector<int> nfiles, int triggerbit =
 {
   //define histograms
   string region = "";
-  if(rns[0] < 49216) region = "RegionA";
-  else if(rns[0] < 49238) region = "RegionB";
-  else if(rns[0] < 49256) region = "RegionC";
+  if(rns[0] < 47894) region = "RegionA";
+  else if(rns[0] < 48660) region = "RegionB";
+  else if(rns[0] < 49166 || (rns[0] > 49239 && rns[0] < 49255)) region = "RegionC";
   else region = "RegionD";
   TH2D* jet_eta_phi = new TH2D(("jet_eta_phi_"+region).c_str(),"",30,-1.5,1.5,64,-M_PI,M_PI);
   TH2D* jet_eta_phi_gr20 = new TH2D(("jet_eta_phi_gr20_"+region).c_str(),"",30,-1.5,1.5,64,-M_PI,M_PI);
@@ -119,8 +119,8 @@ int make_hists(string tag, vector<int> rns, vector<int> nfiles, int triggerbit =
   TH2D* jet_at_em_frcem_gr20 = new TH2D(("jet_at_em_frcem_gr20_"+region).c_str(),"",60,-6,6,24,-0.1,1.1);
   TH2D* jet_at_oh_frcem = new TH2D(("jet_at_oh_frcem_"+region).c_str(),"",60,-6,6,24,-0.1,1.1);
   TH2D* jet_at_oh_frcem_gr20 = new TH2D(("jet_at_oh_frcem_gr20_"+region).c_str(),"",60,-6,6,24,-0.1,1.1);
-  TH1D* njet_lumi = new TH1D("njet_lumi","",49280-49120,49120-0.5,49280-0.5);
-  TH1D* njet_lumiecut = new TH1D("njet_lumi_Ecut","",48800-49600,48800-0.5,49600-0.5);
+  TH1D* njet_lumi = new TH1D("njet_lumi","",49600-48800,48800-0.5,49600-0.5);
+  TH1D* njet_lumiecut = new TH1D("njet_lumi_Ecut","",49600-48800,48800-0.5,49600-0.5);
   TH1D* spectrum = new TH1D(("spectrum_"+region).c_str(),"",50,0,50);
   TH1D* spectrum_zg30 = new TH1D(("spectrum_zg30_"+region).c_str(),"",50,0,50);
   TH1D* leadspec = new TH1D(("leadspec_"+region).c_str(),"",50,0,50);
@@ -161,20 +161,22 @@ int make_hists(string tag, vector<int> rns, vector<int> nfiles, int triggerbit =
       dodijetcut = 1;
       jetcut = 1;
     }
-  else if(triggerbit == 10)
+  else if(triggerbit == 10 || triggerbit == 26)
     {
       dodijetcut = 0;
       jetcut = 0;
     }
 
-
-  double lumi = 0;
+  int whichlumi = 0;
+  if(triggerbit==18) whichlumi = 0;
+  else if(triggerbit==26) whichlumi = 2;
+  double lumi[6] = {0};
   double othervals[5];
   int rnval;
   int rn = rns[0];
   int nfile = nfiles[0];
   ifstream inlumi("/sphenix/user/jocl/projects/analysis/LuminosityCounterGoodRuns/run/list_forplot_2.list");
-  while(inlumi >> rnval >> lumi >> othervals[0] >> othervals[1] >> othervals[2] >> othervals[3] >> othervals[4])
+  while(inlumi >> rnval >> lumi[0] >> lumi[1] >> lumi[2] >> lumi[3] >> lumi[4] >> lumi[5])
     {
       if(rnval == rn) break;
     }
@@ -199,6 +201,9 @@ int make_hists(string tag, vector<int> rns, vector<int> nfiles, int triggerbit =
       double jet_at[nmaxjet];
       double jet_at_oh[nmaxjet];
       double jet_at_em[nmaxjet];
+      double cluster_e[nmaxjet];
+      double cluster_eta[nmaxjet];
+      int ncluster;
       long long unsigned int trigvec[3];
       //define non-branch variables
       double mbdnq, mbdsq, mbdtq;
@@ -211,6 +216,7 @@ int make_hists(string tag, vector<int> rns, vector<int> nfiles, int triggerbit =
       TTree* dattree = (TTree*)datfile->Get("tree");
       //set up branches
       dattree->SetBranchAddress("njet",&njet);
+      dattree->SetBranchAddress("ncluster",&ncluster);
       dattree->SetBranchAddress("hitsgrone",&hitsgrone);
       dattree->SetBranchAddress("isdijet",&isdijet);
       dattree->SetBranchAddress("trigvec",trigvec);
@@ -232,6 +238,8 @@ int make_hists(string tag, vector<int> rns, vector<int> nfiles, int triggerbit =
       dattree->SetBranchAddress("jet_at_oh",jet_at_oh);
       dattree->SetBranchAddress("ncgroe",ncgroe);
       dattree->SetBranchAddress("ncgroo",ncgroo);
+      dattree->SetBranchAddress("cluster_e",cluster_e);
+      dattree->SetBranchAddress("cluster_eta",cluster_eta);
       
       
       for(int i=0; i<dattree->GetEntries(); ++i)
@@ -283,10 +291,17 @@ int make_hists(string tag, vector<int> rns, vector<int> nfiles, int triggerbit =
 	      if(abs(zvtx[0]) < 30) ++nzvtx30jc;
 	      else continue;
 	    }
-	  for(int j=0; j<njet; ++j)
+	  for(int j=0; j<ncluster; ++j)
 	    {
-	      if(jet_e[j] > 15 && lumi != 0 && triggerbit == 18) njet_lumiecut->Fill(rn,1./lumi);
-	      spectrum->Fill(jet_e[j]/cosh(jet_eta[j]));
+	      if(!std::isnan(zvtx[0]))
+		{
+		  if(abs(zvtx[0]) < 30)
+		    {
+		      if(cluster_e[j]/cosh(cluster_eta[j]) > 5 && lumi[whichlumi] != 0 && triggerbit == 26) njet_lumiecut->Fill(rn,1./lumi[whichlumi]);
+		      if(lumi[whichlumi] != 0 && triggerbit == 26) njet_lumi->Fill(rn,1./lumi[whichlumi]);
+		    }
+		}
+	      spectrum->Fill(cluster_e[j]/cosh(cluster_eta[j]));
 	    }
 	  leadspec->Fill(ETmax);
 	  if(jetcut && ETmax < 15) continue;
@@ -299,15 +314,6 @@ int make_hists(string tag, vector<int> rns, vector<int> nfiles, int triggerbit =
 	    {
 	      double ET = jet_e[j]/cosh(jet_eta[j]);
 	      if(ET < 15) continue;
-	      if(!std::isnan(zvtx[0]))
-		{
-		  ++nzvtxanyjet;
-		  if(abs(zvtx[0]) < 30)
-		    {
-		      ++nzvtx30jet;
-		      if(lumi != 0 && triggerbit == 18) njet_lumi->Fill(rn,1./lumi);
-		    }
-		}
 	      ++ndijetpassgr15;
 	      jet_at_em_at_oh->Fill(jet_at_em[j],jet_at_oh[j]);
 	      jet_at_em_frcem->Fill(jet_at_em[j],frcem[j]);
@@ -419,7 +425,7 @@ int make_hists(string tag, vector<int> rns, vector<int> nfiles, int triggerbit =
 
   TTree* outt = new TTree(("outt_"+region).c_str(),"a persevering date tree");
   outt->Branch(("totalentries_"+region).c_str(),&totalentries,("totalentries_"+region+"/l").c_str());
-  outt->Branch(("lumi_"+region).c_str(),&lumi,("lumi_"+region+"/D").c_str());
+  outt->Branch(("lumi_"+region).c_str(),&lumi[whichlumi],("lumi_"+region+"/D").c_str());
   outt->Fill();
 
 

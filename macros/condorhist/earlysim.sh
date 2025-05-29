@@ -9,17 +9,20 @@ else
     echo condor scratch NOT set
     exit -1
 fi
+echo "got into condor scratch dir"
 RN=$1
-TAG=20250521
+TAG=20250527
 mkdir -p multicoltree
 mkdir -p multicolhist
+echo "copy file from tg to here"
 cp /sphenix/tg/tg01/jets/jocl/multiCol/$RN/*$TAG* multicoltree
 mkdir -p /sphenix/user/jocl/projects/multiColStudy/output/hists
 cp -r /sphenix/user/jocl/projects/multiColStudy/macros/make_all_dc.sh .
 cp -r /sphenix/user/jocl/projects/multiColStudy/macros/make_hists.C .
 cp -r /sphenix/user/jocl/projects/multiColStudy/macros/make_tturn.C .
-
+echo "got all files, run code"
 bash make_all_dc.sh 18 $TAG $RN
-bash make_all_dc.sh 10 $TAG $RN
-
+#bash make_all_dc.sh 10 $TAG $RN
+#bash make_all_dc.sh 26 $TAG $RN
+echo "copy file back"
 cp multicolhist/* /sphenix/user/jocl/projects/multiColStudy/output/hists
