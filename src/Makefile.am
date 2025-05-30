@@ -34,7 +34,8 @@ libmulticolstudy_la_LIBADD = \
   libmulticolstudy_io.la \
   -lcalo_io \
   -lSubsysReco -lphg4hit -lffaobjects -lmbd_io \
-  -ljetbase -lglobalvertex -lcentrality -lcalotrigger
+  -ljetbase -lglobalvertex -lcentrality -lcalotrigger \
+  -lcalotrigger
 #-lg4jets_io
 %_Dict.cc: %.h %LinkDef.h
 	rootcint -f $@ @CINTDEFS@ $(DEFAULT_INCLUDES) $(AM_CPPFLAGS) $^

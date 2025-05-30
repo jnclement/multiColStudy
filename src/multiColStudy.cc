@@ -33,6 +33,13 @@
 #include <jetbase/JetContainerv1.h>
 #include <calobase/RawCluster.h>
 #include <calobase/RawClusterContainer.h>
+#include <calotrigger/LL1Out.h>
+#include <calotrigger/LL1Outv1.h>
+#include <calotrigger/TriggerPrimitive.h>
+#include <calotrigger/TriggerPrimitivev1.h>
+#include <calotrigger/TriggerPrimitiveContainer.h>
+#include <calotrigger/TriggerPrimitiveContainerv1.h>
+#include <calotrigger/TriggerDefs.h>
 using namespace std;
 static const float radius_EM = 93.5;
 static const float minz_EM = -130.23;
@@ -166,6 +173,14 @@ int multiColStudy::Init(PHCompositeNode *topNode)
   _tree->Branch("calo_emfrac",&_calo_emfrac,"calo_emfrac/D");
   _tree->Branch("calo_ohfrac",&_calo_ohfrac,"calo_ohfrac/D");
   _tree->Branch("calo_e",&_calo_e,"calo_e/D");
+
+  _tree->Branch("trig_jet_phi",&_trig_jet_phi,"trig_jet_phi/I");
+  _tree->Branch("trig_jet_eta",&_trig_jet_eta,"trig_jet_eta/I");
+  _tree->Branch("trig_photon_phi",&_trig_photon_phi,"trig_photon_phi/I");
+  _tree->Branch("trig_photon_eta",&_trig_photon_eta,"trig_photon_eta/I");
+
+  _tree->Branch("em_gl1_scaledvec",&_em_gl1_scaledvec,"em_gl1_scaledvec/l");
+  
   return Fun4AllReturnCodes::EVENT_OK;
 }
 
@@ -189,7 +204,7 @@ int multiColStudy::process_event(PHCompositeNode *topNode)
 {
 
 
-
+  _em_gl1_scaledvec = 0;
   MbdVertexMap* mbdvtxmap = findNode::getClass<MbdVertexMapv1>(topNode, "MbdVertexMap");
 
   float zvtx = NAN;
@@ -223,11 +238,65 @@ int multiColStudy::process_event(PHCompositeNode *topNode)
   zvtx = _rzvtx[0];
   _njet = 0;
   _hitsgrone = 0;
+
+  LL1Out* ll1out_jet = findNode::getClass<LL1Out>(topNode, "LL1OUT_JET");
+
+  LL1Out* ll1out_photon = findNode::getClass<LL1Out>(topNode, "LL1OUT_PHOTON");
+
+  int max_jet = 0;
+  int max_photon = 0;
   if(!std::isnan(zvtx))
     {
 
-      //return Fun4AllReturnCodes::ABORTEVENT;
 
+      for (int i = 0; i < 4; i++)
+	{
+	  if (ll1out_photon->passesThreshold(i + 1))
+	    {
+	      unsigned int bit = i + 16;
+	      _em_gl1_scaledvec |= (0x1U << bit);
+	    }
+	}
+      
+      if (ll1out_photon)
+	{
+	  auto triggered_sums = ll1out_photon->getTriggeredSums();
+	  for (auto &keypair : triggered_sums)
+	    {
+	      TriggerDefs::TriggerSumKey key = keypair.first;
+	      unsigned short bit = keypair.second;
+	      if (static_cast<int>(bit) > max_photon)
+		{
+		  _trig_photon_phi = TriggerDefs::getSumPhiId(key) + TriggerDefs::getPrimitivePhiId_from_TriggerSumKey(key)*2;
+		  _trig_photon_eta = TriggerDefs::getSumEtaId(key);
+		}
+	    }
+	}
+
+      
+      for (int i = 0; i < 4; i++)
+	{
+	  if (ll1out_jet->passesThreshold(i + 1))
+	    {
+	      unsigned int bit = i + 20;
+	      _em_gl1_scaledvec |= (0x1U << bit);
+	    }
+	}
+
+      if (ll1out_jet)
+	{
+	  auto triggered_sums = ll1out_jet->getTriggeredSums();
+	  for (auto &keypair : triggered_sums)
+	    {
+	      TriggerDefs::TriggerSumKey key = keypair.first;
+	      unsigned short bit = keypair.second;
+	      if (static_cast<int>(bit) > max_jet)
+		{
+		  _trig_jet_phi = static_cast<int>(key & 0xffffU);
+		  _trig_jet_phi = static_cast<int>((key >> 16U) & 0xffffU);
+		}
+	    }
+	}
 
   TowerInfoContainer *towers[3];
   towers[0] = findNode::getClass<TowerInfoContainerv4>(topNode, "TOWERINFO_CALIB_CEMC");

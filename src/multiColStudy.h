@@ -48,6 +48,11 @@ class multiColStudy : public SubsysReco
   static const int _gronefield = 6;
   static const int _ncalotype = 3;
   static const int _maxjetcomp = 2000;
+  int _trig_jet_phi;
+  int _trig_jet_eta;
+  int _trig_photon_phi;
+  int _trig_photon_eta;
+  long long unsigned int _em_gl1_scaledvec;
   TFile* _f;
   TTree* _tree;
   int _njet;

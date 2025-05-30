@@ -33,6 +33,7 @@ for i in {0..4}; do
 	cp -r /sphenix/user/jocl/projects/multiColStudy/run/lists/dst_mbd_epd.list ./lists/dst_mbd_epd.list
     else
 	cp -r /sphenix/user/jocl/projects/multiColStudy/run/lists/dst_calofitting_run2pp-000${RN}.list ./lists/dst_calo_cluster.list
+	cp -r /sphenix/user/jocl/projects/multiColStudy/run/lists/dst_triggered_event_run2pp-000${RN}.list ./lists/dst_global.list
     fi
     G4HITSF=`sed -n "${UPLN}"p ./lists/g4hits.list`
     CALOCLF=`sed -n "${UPLN}"p ./lists/dst_calo_cluster.list`
@@ -63,11 +64,11 @@ for i in {0..4}; do
     echo ""
     echo ""
     mv $CALOCLF ./dsts/$SUBDIR/calo_cluster_${SUBDIR}.root
+    mv $GLOBALF ./dsts/$SUBDIR/global_${SUBDIR}.root
     if [ $ISSIM -ne 0 ]; then
 	mv $G4HITSF ./dsts/$SUBDIR/g4hits_${SUBDIR}.root
 	mv $TRTHJET ./dsts/$SUBDIR/truth_jet_${SUBDIR}.root
 	mv $DMBDEPD ./dsts/$SUBDIR/mbd_epd_${SUBDIR}.root
-	mv $GLOBALF ./dsts/$SUBDIR/global_${SUBDIR}.root
     fi
     ls ./dsts/$SUBDIR
     #cp -r $TRTHJET ./dsts/$SUBDIR/truth_jet_${SUBDIR}.root

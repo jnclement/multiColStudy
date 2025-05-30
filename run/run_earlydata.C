@@ -24,6 +24,7 @@
 #include <MbdDigitization.h>
 #include <MbdReco.h>
 #include <Calo_Calib.C>
+#include <calotrigger/CaloTriggerEmulator.h>
 using namespace std;
 
 R__LOAD_LIBRARY(libg4centrality.so)
@@ -44,6 +45,7 @@ R__LOAD_LIBRARY(libjetbackground.so)
 R__LOAD_LIBRARY(libg4dst.so)
 R__LOAD_LIBRARY(libmulticolstudy.so)
 R__LOAD_LIBRARY(libtrigzvtxchecker.so)
+R__LOAD_LIBRARY(libcalotrigger.so)
 //gSystem->Load("libg4detectors.so");
 //gSystem->Load("libg4detectors.so");
 
@@ -70,7 +72,7 @@ int run_earlydata(string tag = "", int nproc = 0, int debug = 0, int nevt = 0, s
   if(debug > 1) cout << "test1" << endl;
   Fun4AllServer *se = Fun4AllServer::instance();
   recoConsts *rc =  recoConsts::instance();
-  rc->set_StringFlag("CDB_GLOBALTAG",issim?"MDC2":"2024p012");
+  rc->set_StringFlag("CDB_GLOBALTAG",issim?"MDC2":"ProdA_2024");
   rc->set_uint64Flag("TIMESTAMP",issim?21:rn);
   
   se->Verbosity(verbosity);
@@ -88,10 +90,12 @@ int run_earlydata(string tag = "", int nproc = 0, int debug = 0, int nevt = 0, s
   cout << "get filenames" << endl;
   string line1, line2, line3, line4, line5;
   line1 = "./dsts/"+to_string(nproc)+"/calo_cluster_"+to_string(nproc)+".root";
+  line2 = "./dsts/"+to_string(nproc)+"/global_"+to_string(nproc)+".root";
   in_1->AddFile(line1);
+  in_2->AddFile(line2);
   cout << "register managers" << endl;
   se->registerInputManager( in_1 );
-  
+  se->registerInputManager( in_2 );
   if(issim)
     {
       line2 = "./dsts/"+to_string(nproc)+"/global_"+to_string(nproc)+".root";
@@ -109,8 +113,22 @@ int run_earlydata(string tag = "", int nproc = 0, int debug = 0, int nevt = 0, s
     }
   std::cout << "status setters" << std::endl;
 
-  CDBInterface::instance()->Verbosity(1);
+  CDBInterface::instance()->Verbosity(0);
 
+  CaloTriggerEmulator *te = new CaloTriggerEmulator("CALOTRIGGEREMULATOR");
+  te->setNSamples(12);
+  te->setTriggerSample(6);
+  te->setJetThreshold(8, 13, 17, 22);
+  te->setPhotonThreshold(40, 56, 70, 78);
+  // subrtraction delay of the post and pre sample                                                                     
+  te->setTriggerDelay(5);
+  te->SetIsData(true); // only for sim                                                                                
+  te->Verbosity(0);
+  te->setEmcalLUTFile("/sphenix/user/dlis/Projects/macros/CDBTest/emcal_ll1_lut_0.50tr_new.root");
+  te->setHcalinLUTFile("/sphenix/user/dlis/Projects/macros/CDBTest/hcalin_ll1_lut_0.50tr_new.root");
+  te->setHcaloutLUTFile("/sphenix/user/dlis/Projects/macros/CDBTest/hcalout_ll1_lut_0.50tr_new.root");
+  se->registerSubsystem(te);
+  
   //auto mbddigi = new MbdDigitization();
   auto mbdreco = new MbdReco();
   GlobalVertexReco* gblvertex = new GlobalVertexReco();

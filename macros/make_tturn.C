@@ -16,6 +16,10 @@ int make_tturn(string tag, vector<int> rns, vector<int> nfiles)
   TH1D* num[ntrig];
   TH1D* den[ntrig]; 
 
+  TH1D* em_num_phot[ntrig];
+  TH1D* em_num_jet[ntrig];
+  TH2D* em_phot_eta_phi[ntrig];
+  TH2D* em_jet_eta_phi[ntrig];
 
   double lumi = 0;
   double othervals[5];
@@ -35,7 +39,11 @@ int make_tturn(string tag, vector<int> rns, vector<int> nfiles)
       leadhists[j] = new TH1D(("leadhists_"+to_string(triggers[j])+"_"+region).c_str(),"",50,0,50);
       spectra[j] = new TH1D(("spectra_"+to_string(triggers[j])+"_"+region).c_str(),"",50,0,50);
       //trigturn[j] = new TH1D(("trigturn_"+to_string(triggers[j])+"_"+region).c_str(),"",10,0,30);
-      num[j] = new TH1D(("num_"+to_string(triggers[j])+"_"+region).c_str(),"",10,0,j==0?30:10);	 
+      num[j] = new TH1D(("num_"+to_string(triggers[j])+"_"+region).c_str(),"",10,0,j==0?30:10);
+      em_num_phot[j] = new TH1D(("em_num_phot_"+to_string(triggers[j])+"_"+region).c_str(),"",10,0,j==0?30:10);
+      em_num_jet[j] = new TH1D(("em_num_jet_"+to_string(triggers[j])+"_"+region).c_str(),"",10,0,j==0?30:10);
+      em_phot_eta_phi[j] = new TH2D(("em_phot_eta_phi"+to_string(triggers[j])+"_"+region).c_str(),"",96,-0.5,95.5,256,-0.5,255.5);
+      em_jet_eta_phi[j] = new TH2D(("em_jet_eta_phi"+to_string(triggers[j])+"_"+region).c_str(),"",96,-0.5,95.5,256,-0.5,255.5);
     }
   
   //define constants
@@ -82,6 +90,8 @@ int make_tturn(string tag, vector<int> rns, vector<int> nfiles)
       double cluster_e[nmaxjet];
       double cluster_eta[nmaxjet];
       int ncluster;
+      int trig_jet_phi, trig_jet_eta, trig_photon_phi, trig_photon_eta;
+      long long unsigned int em_gl1_scaledvec;
       //get TTree
       TTree* dattree = (TTree*)datfile->Get("tree");
       //set up branches
@@ -89,27 +99,18 @@ int make_tturn(string tag, vector<int> rns, vector<int> nfiles)
       dattree->SetBranchAddress("cluster_eta",cluster_eta);
       dattree->SetBranchAddress("ncluster",&ncluster);
       dattree->SetBranchAddress("njet",&njet);
-      dattree->SetBranchAddress("hitsgrone",&hitsgrone);
-      dattree->SetBranchAddress("isdijet",&isdijet);
       dattree->SetBranchAddress("trigvec",trigvec);
       dattree->SetBranchAddress("jet_e",jet_e);
       dattree->SetBranchAddress("jet_eta",jet_eta);
       dattree->SetBranchAddress("jet_phi",jet_phi);
       dattree->SetBranchAddress("rzvtx",zvtx);
-      dattree->SetBranchAddress("towgrone",towgrone);
+      dattree->SetBranchAddress("trig_jet_phi",&trig_jet_phi);
+      dattree->SetBranchAddress("trig_jet_eta",&trig_jet_eta);
+      dattree->SetBranchAddress("trig_photon_phi",&trig_photon_phi);
+      dattree->SetBranchAddress("trig_photon_eta",&trig_photon_eta);
+      dattree->SetBranchAddress("em_gl1_scaledvec",&em_gl1_scaledvec);
       //for above: 0 = E, 1 = eta, 2 = phi, 3 = detector level eta, ntrig = calo
-      dattree->SetBranchAddress("mbdq",mbdq);
-      dattree->SetBranchAddress("frcem",frcem);
-      dattree->SetBranchAddress("frcoh",frcoh);
-      dattree->SetBranchAddress("dphilead",&dphilead);
-      dattree->SetBranchAddress("jet_at",jet_at);
-      dattree->SetBranchAddress("emat",emat);
-      dattree->SetBranchAddress("ohat",ohat);
-      dattree->SetBranchAddress("calo_emfrac",&calo_emfrac);
-      dattree->SetBranchAddress("jet_at_em",jet_at_em);
-      dattree->SetBranchAddress("jet_at_oh",jet_at_oh);
-      dattree->SetBranchAddress("ncgroe",ncgroe);
-      dattree->SetBranchAddress("ncgroo",ncgroo);
+      
 
 
       
@@ -153,6 +154,19 @@ int make_tturn(string tag, vector<int> rns, vector<int> nfiles)
 		{
 		  num[j]->Fill(ETmax_clus);
 		}
+
+
+	      if((em_gl1_scaledvec>>triggers[j]) & 1 && triggers[j] < 24)
+		{
+		  em_num_jet[j]->Fill(ETmax);
+		  em_phot_eta_phi[j]->Fill(trig_photon_eta,trig_photon_phi);
+		}
+	      else if((em_gl1_scaledvec>>triggers[j]) &1 && triggers[j] < 32)
+		{
+		  em_num_phot[j]->Fill(ETmax_clus);
+		  em_jet_eta_phi[j]->Fill(trig_jet_eta,trig_jet_phi);
+		}
+
 	    }
 	}
       datfile->Close();
@@ -182,7 +196,11 @@ int make_tturn(string tag, vector<int> rns, vector<int> nfiles)
       leadhists[i]->Write();
       cout << "Wrote lead spectrum" << endl;
       den[i]->Write();
-      cout << "Write den" << endl;      
+      cout << "Write den" << endl;
+      em_num_phot[i]->Write();
+      em_num_jet[i]->Write();
+      em_phot_eta_phi[i]->Write();
+      em_jet_eta_phi[i]->Write();
     }
 
   

@@ -11,7 +11,7 @@ else
 fi
 echo "got into condor scratch dir"
 RN=$1
-TAG=20250527
+TAG=20250530
 mkdir -p multicoltree
 mkdir -p multicolhist
 echo "copy file from tg to here"
