@@ -3,7 +3,7 @@ const int nhistplot = 4;//4;
 string region[nhistplot] = {"RegionA","RegionB","RegionC","RegionD"};//,"RegionA","RegionD"};//,"RegionA","RegionD","RegionA","RegionD"};
 int triggers[nhistplot] = {18,18,18,18};//{18, 18,26,26};//, 17, 17, 19, 19};
 int bit = 18;
-int colors[nhistplot] = {kCyan+2,kMagenta+2,kYellow+2,kOrange+2};
+int colors[nhistplot] = {kRed+1,kBlue+1,kGreen+1,kMagenta+1};
 int markers[nhistplot] = {20,53,21,54};//,21,54,33,56};
 double singlegaus(double* x, double* par)
 {
@@ -120,7 +120,7 @@ int format_th1d(TH1D* hist, string xtitle, string ytitle, int n = 1)
   return 0;
 }
 
-int draw_overlay_with_ratio_th1d(TH1D** hists, string histbasename, TCanvas* can, int dijetcut)
+int draw_overlay_with_ratio_th1d(TH1D** hists, string histbasename, TCanvas* can, int dijetcut, int divfunc = 0, TF1** func = NULL)
 {
   can->cd();
   can->SetRightMargin(0.2);
@@ -150,8 +150,12 @@ int draw_overlay_with_ratio_th1d(TH1D** hists, string histbasename, TCanvas* can
 	  ymax = 0.2;
 	  hists[i]->Rebin(5);
 	}
-      if(i>0) ratio[i]->Divide(hists[i],hists[0]);
-
+      if(i>0 && !divfunc) ratio[i]->Divide(hists[i],hists[0]);
+      else if(divfunc)
+	{
+	  ratio[i] = (TH1D*)hists[i]->Clone();
+	  ratio[i]->Divide(func[i]);
+	}
       ratio[i]->GetYaxis()->SetRangeUser(0,2);
       format_th1d(ratio[i],hists[i]->GetXaxis()->GetTitle(),"Ratio to Region A",i);
       ratio[i]->GetXaxis()->SetTitleSize(ratio[i]->GetXaxis()->GetTitleSize()/0.5);
@@ -173,7 +177,9 @@ int draw_overlay_with_ratio_th1d(TH1D** hists, string histbasename, TCanvas* can
 
       hists[i]->Draw(i==0?"PE":"SAME PE");
       can->cd(2);
-      if(i>0) ratio[i]->Draw(i==1?"PE":"SAME PE");
+      if(divfunc) ratio[i]->GetListOfFunctions()->Clear();
+      if(i>0 && !divfunc) ratio[i]->Draw(i==1?"PE":"SAME PE");
+      else if(divfunc) ratio[i]->Draw(i==0?"PE":"SAME PE");
       cout << "DREW HIST!!!" << endl;
     }
 
@@ -195,7 +201,7 @@ int draw_overlay_with_ratio_th1d(TH1D** hists, string histbasename, TCanvas* can
   TLine* oneline = new TLine(hists[0]->GetXaxis()->GetXmin(),1,hists[0]->GetXaxis()->GetXmax(),1);
   can->cd(2);
   oneline->Draw();
-  can->SaveAs(("/sphenix/user/jocl/projects/multiColStudy/output/plots/"+string(hists[0]->GetName())+"_"+to_string(bit)+"_overlay_"+(dijetcut?"dc":"nc")+".png").c_str());
+  can->SaveAs(("/sphenix/user/jocl/projects/multiColStudy/output/plots/"+string(hists[0]->GetName())+"_"+to_string(bit)+"_overlay_"+(divfunc?"divfunc_":"")+(dijetcut?"dc":"nc")+".png").c_str());
 
 
   can->cd(1);
@@ -519,7 +525,7 @@ int plot(int tb)
   string xtitles[nhist] = {"Jet #eta","Jet #eta","Tower #eta","Tower #eta","Tower Detector #eta","Tower Detector #eta","jet E [GeV]","Tower E [GeV]","Tower E [GeV]","Jet E [GeV]","Tower E [GeV]","Jet E_{T} [GeV]","Tower E_{T} [GeV]","Tower E_{T} [GeV]","Jet E_{T} [GeV]","Tower E_{T} [GeV]","Jet E [GeV]","Jet E_{T} [GeV]","Jet #eta","Jet #eta","Jet #phi","Jet #phi","E_{jet}^{EM}/E_{jet}","E_{jet}^{EM}/E_{jet}","Mean E_{T}^{tower}>1 GeV Peak Sample of Jet","Mean E_{T}^{tower}>1 GeV Peak Sample of Jet","Mean E_{T}^{tower}>1 GeV Peak Sample of EMCal","Mean EMCal Time for E_{T}^{tower}>1 GeV","Mean EMCal E_{T}^{tower}>1 GeV Peak Sample of Jet","Mean EMCal E_{T}^{tower}>1 GeV Peak Sample of Jet","Mean EMCal E_{T}^{tower}>1 GeV Peak Sample of Jet","Mean EMCal E_{T}^{tower}>1 GeV Peak Sample of Jet","Mean OHCal E_{T}^{tower}>1 GeV Peak Sample of Jet","Mean OHCal E_{T}^{tower}>1 GeV Peak Sample of Jet","EMCal Peak Time for E_{T}^{tower}>1 GeV","OHCal Peak Time for E_{T}^{tower} > 1 GeV","EMCal Tower E [GeV]","OHCal Tower E [GeV]"};
 
   string ytitles[nhist] = {"Jet #phi","Jet #phi","Tower #phi","Tower #phi","Tower #phi","Tower #phi","Jet #eta","Tower #eta","Tower Detector #eta","Jet #phi","Tower #phi","Jet #eta","Tower #eta","Tower Detector #eta","Jet #phi","Tower #phi","E_{jet}^{EM}/E_{jet}","#Delta#phi","E_{jet}^{EM}/E_{jet}","E_{jet}^{EM}/E_{jet}","E_{jet}^{EM}/E_{jet}","E_{jet}^{EM}/E_{jet}","E_{jet}^{OH}/E_{jet}","E_{jet}^{OH}/E_{jet}","E_{jet}^{EM}/E_{jet}","E_{jet}^{EM}/E_{jet}","EMCal Peak Time for E{T}^{tower}>1 GeV","E_{calo}^{EM}/E_{calo}","Mean E_{T}^{tower}>1 GeV OHCal Peak Sample of Jet","Mean OHCal E_{T}^{tower}>1 GeV Peak Sample of Jet","E_{jet}^{EM}/E_{jet}","E_{jet}^{EM}/E_{jet}","E_{jet}^{EM}/E_{jet}","E_{jet}^{EM}/E_{jet}","#eta","#eta","#Detector Coordinate #eta","Detector Coordinate #eta"};
-  //goto _gotospot0;
+  goto _gotospot0;
   get_and_draw_th2d(histnames[11],region,histfile,xtitles[11],ytitles[11],"Counts / N_{10}^{scaled}",can,ratcan,dijetcut);
   get_and_draw_th2d(histnames[13],region,histfile,xtitles[13],ytitles[13],"Counts / N_{10}^{scaled}",can,ratcan,dijetcut);
   
@@ -532,7 +538,7 @@ int plot(int tb)
   const int nth1d = 13;
   string th1dnames[nth1d] = {"zhist","mbdn","mbds","mbdt","calo_hitsgrone_0","calo_hitsgrone_1","calo_hitsgrone_2","zhist_gr20","zhist_nocut","h_emat","h_ohat","spectrum","leadspec"};
   string th1dxtitl[nth1d] = {"z_{vtx} [cm]","MBD Charge [Arb.]","MBD Charge [Arb.]","MBD Charge [Arb.]","Number of Towers with E > 1 GeV","Number of Towers with E > 1 GeV","Number of Towers with E > 1 GeV","z_{vtx} [cm]","z_{vtx} [cm]","Peak Sample Time of EMCal Jet Constituents with E_{T}>1 GeV","Peak Sample Time of OHCal Jet Constituents with E_{T}>1 GeV","Jet E_{T} [GeV]","Lead Jet E_{T} [GeV]"};
-  //goto _gotospot1;
+  goto _gotospot1;
   for(int i=0; i<nth1d;++i)//(bit==18?0:1); ++i)
     {
       cout << th1dnames[i] << endl;
@@ -543,7 +549,7 @@ int plot(int tb)
   TH1D* njet_lumi = (TH1D*)histfile->Get("njet_lumi");
 
   TCanvas* lumican = new TCanvas("","",1000,500);
-  //goto _gotospot2;
+  goto _gotospot2;
   njet_lumi->GetYaxis()->SetRangeUser(0,1e5);
   njet_lumi->SetMarkerSize(1);
   njet_lumi->SetMarkerStyle(20);
@@ -603,7 +609,7 @@ int plot(int tb)
       f[i]->SetParLimits(1,0,1000);
       f[i]->SetLineColor(colors[i]);
       cout << "fit: " << endl;
-      histstrn[i]->Fit(f[i],"IMW","",triggers[0]==18?6:3,triggers[0]==18?30:10);
+      histstrn[i]->Fit(f[i],"IM","",triggers[0]==18?6:3,triggers[0]==18?30:10);
       cout << "done with loop " << i << endl;
     }
 
@@ -613,7 +619,8 @@ int plot(int tb)
       cout<< i*0.01 << " " << f[1]->Eval(i*0.01) << endl;
     }
   */
-  draw_overlay_with_ratio_th1d(histstrn,"trigturn",ratcan,dijetcut);
+  //draw_overlay_with_ratio_th1d(histstrn,"trigturn",ratcan,dijetcut);
+  draw_overlay_with_ratio_th1d(histstrn,"trigturn",ratcan,dijetcut,1,f);
   for(int i=0; i<nhistplot; ++i)
     {
       draw_th1d(leadhists[i],can,0,triggers[i]);

@@ -10,6 +10,7 @@ int make_tturn(string tag, vector<int> rns, vector<int> nfiles)
   
   const int ntrig = 2;
   int triggers[ntrig] = {18,26};
+  int fixshift[ntrig] = {22,18}; //screwed up when making ttrees for emulated vector, fix next time, but for now, just modify the bit shift values for each trigger (use only for emulated vector)
   TH1D* leadhists[ntrig];
   TH1D* spectra[ntrig];
   TH1D* turn[ntrig];
@@ -94,6 +95,7 @@ int make_tturn(string tag, vector<int> rns, vector<int> nfiles)
       long long unsigned int em_gl1_scaledvec;
       //get TTree
       TTree* dattree = (TTree*)datfile->Get("tree");
+      if(!dattree) continue;
       //set up branches
       dattree->SetBranchAddress("cluster_e",cluster_e);
       dattree->SetBranchAddress("cluster_eta",cluster_eta);
@@ -134,7 +136,7 @@ int make_tturn(string tag, vector<int> rns, vector<int> nfiles)
 	      double ET = cluster_e[j]/cosh(cluster_eta[j]);
 	      for(int k=0; k<ntrig; ++k)
 		{
-		  if((trigvec[2]>>triggers[k])&1 && triggers[k] < 32) spectra[k]->Fill(ET);
+		  if((trigvec[2]>>triggers[k])&1 && triggers[k] < 32 && triggers[k] > 24) spectra[k]->Fill(ET);
 		}
 	      if(ET>ETmax_clus) ETmax_clus = ET;
 	    }
@@ -156,12 +158,12 @@ int make_tturn(string tag, vector<int> rns, vector<int> nfiles)
 		}
 
 
-	      if((em_gl1_scaledvec>>triggers[j]) & 1 && triggers[j] < 24)
+	      if((em_gl1_scaledvec>>fixshift[j]) & 1 && triggers[j] < 24)
 		{
 		  em_num_jet[j]->Fill(ETmax);
 		  em_phot_eta_phi[j]->Fill(trig_photon_eta,trig_photon_phi);
 		}
-	      else if((em_gl1_scaledvec>>triggers[j]) &1 && triggers[j] < 32)
+	      else if((em_gl1_scaledvec>>fixshift[j]) &1 && triggers[j] < 32)
 		{
 		  em_num_phot[j]->Fill(ETmax_clus);
 		  em_jet_eta_phi[j]->Fill(trig_jet_eta,trig_jet_phi);

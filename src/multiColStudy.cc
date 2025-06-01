@@ -253,7 +253,7 @@ int multiColStudy::process_event(PHCompositeNode *topNode)
 	{
 	  if (ll1out_photon->passesThreshold(i + 1))
 	    {
-	      unsigned int bit = i + 16;
+	      unsigned int bit = i + 24;
 	      _em_gl1_scaledvec |= (0x1U << bit);
 	    }
 	}
@@ -278,7 +278,7 @@ int multiColStudy::process_event(PHCompositeNode *topNode)
 	{
 	  if (ll1out_jet->passesThreshold(i + 1))
 	    {
-	      unsigned int bit = i + 20;
+	      unsigned int bit = i + 16;
 	      _em_gl1_scaledvec |= (0x1U << bit);
 	    }
 	}

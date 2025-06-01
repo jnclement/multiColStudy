@@ -138,7 +138,7 @@ int make_hists(string tag, vector<int> rns, vector<int> nfiles, int triggerbit =
   trigs[0][2]=26;
   trigs[0][3]=30;
   //define constants
-  const int nmaxjet = 10;
+  const int nmaxjet = 100;
   const int nzvtx = 3;
   const int maxtow = 24576+1536*2;
   const int ntowfield = 6;
@@ -214,6 +214,7 @@ int make_hists(string tag, vector<int> rns, vector<int> nfiles, int triggerbit =
       int ncgroo[nmaxjet];
       //get TTree
       TTree* dattree = (TTree*)datfile->Get("tree");
+      if(!dattree) continue;
       //set up branches
       dattree->SetBranchAddress("njet",&njet);
       dattree->SetBranchAddress("ncluster",&ncluster);
