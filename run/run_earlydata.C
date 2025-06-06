@@ -90,20 +90,23 @@ int run_earlydata(string tag = "", int nproc = 0, int debug = 0, int nevt = 0, s
   cout << "get filenames" << endl;
   string line1, line2, line3, line4, line5;
   line1 = "./dsts/"+to_string(nproc)+"/calo_cluster_"+to_string(nproc)+".root";
-  line2 = "./dsts/"+to_string(nproc)+"/global_"+to_string(nproc)+".root";
+
   in_1->AddFile(line1);
-  in_2->AddFile(line2);
+
   cout << "register managers" << endl;
   se->registerInputManager( in_1 );
-  se->registerInputManager( in_2 );
+
   if(issim)
-    {
+    {      
+      line2 = "./dsts/"+to_string(nproc)+"/global_"+to_string(nproc)+".root";
       line3 = "./dsts/"+to_string(nproc)+"/mbd_epd_"+to_string(nproc)+".root";
       line4 = "./dsts/"+to_string(nproc)+"/truth_jet_"+to_string(nproc)+".root";
       line5 = "./dsts/"+to_string(nproc)+"/g4hits_"+to_string(nproc)+".root";
+      in_2->AddFile(line2);
       in_3->AddFile(line3);
       in_4->AddFile(line4);
       in_5->AddFile(line5);
+      se->registerInputManager( in_2 );
       se->registerInputManager( in_3 );
       se->registerInputManager(in_4);
       se->registerInputManager(in_5);
@@ -137,7 +140,7 @@ int run_earlydata(string tag = "", int nproc = 0, int debug = 0, int nevt = 0, s
   
   gblvertex->Verbosity(verbosity);
   se->registerSubsystem(gblvertex);
-  //Process_Calo_Calib();    
+  Process_Calo_Calib();    
   se->Print("NODETREE");
 
   

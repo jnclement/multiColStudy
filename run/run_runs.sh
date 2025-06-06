@@ -1,11 +1,11 @@
 #!/bin/bash
 
-if [ $# -lt 4 ]; then
-    echo "Need tag argument (string), evtnum (int), nlist (int), issim (1 or 0)"
+if [ $# -lt 3 ]; then
+    echo "Need tag argument (string), evtnum (int), nlist (int)"
     exit 1
 fi
 
-nmax=20000
+nmax=20
 evt=$2
 filecounter=0
 if [ $evt -gt 100000 ]; then
@@ -36,7 +36,7 @@ for rn in `cat lists/rns${3}.list`; do #`ls  lists/dst_calofitting_run2pp*.list 
 #    mkdir -p /sphenix/tg/tg01/jets/jocl/multiCol/$rn
 #    mkdir -p /sphenix/tg/tg01/jets/jocl/multiCol/$rn
     echo $rn $filecounter
-    bash run_everything.sh $1 $njob $evt $4 $rn
+    bash run_everything.sh $1 $njob $evt 0 $rn
 done
 
 
