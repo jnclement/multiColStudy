@@ -324,7 +324,7 @@ int multiColStudy::process_event(PHCompositeNode *topNode)
   towers[1] = findNode::getClass<TowerInfoContainerv4>(topNode, "TOWERINFO_CALIB_HCALIN");
   if(!towers[1])  towers[1] = findNode::getClass<TowerInfoContainerv2>(topNode, "TOWERINFO_CALIB_HCALIN");  
   towers[2] = findNode::getClass<TowerInfoContainerv4>(topNode, "TOWERINFO_CALIB_HCALOUT");
-  if(!towers[3])  towers[2] = findNode::getClass<TowerInfoContainerv2>(topNode, "TOWERINFO_CALIB_HCALOUT");
+  if(!towers[2])  towers[2] = findNode::getClass<TowerInfoContainerv2>(topNode, "TOWERINFO_CALIB_HCALOUT");
 
   TowerInfoContainer *rawtowers[3];
   rawtowers[0] = findNode::getClass<TowerInfoContainerv4>(topNode, "TOWERS_CEMC");
