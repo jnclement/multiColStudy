@@ -114,7 +114,6 @@ multiColStudy::multiColStudy(const std::string &filename, const std::string &nam
   _name = name;
   _debug = debug;
   _filename = filename;
-  _f = new TFile(_filename.c_str(), "RECREATE");
   _tree = new TTree("tree","a persevering date tree");
 }
 
@@ -222,6 +221,12 @@ int multiColStudy::process_event(PHCompositeNode *topNode)
       _trigvec[0] = gl1->getLiveVector(); //raw must be identical to live if event was taken
     }
   _nzvtx = 0;
+  _tnzvtx = 0;
+  for(int i=0; i<_maxzvtx; ++i)
+    {
+      _rzvtx[i] = NAN;
+      _tzvtx[i] = NAN;
+    }
   if(mbdvtxmap)
     {
       for(auto iter = mbdvtxmap->begin(); iter != mbdvtxmap->end(); ++iter)
@@ -235,10 +240,23 @@ int multiColStudy::process_event(PHCompositeNode *topNode)
 	    }
         }
     }
+  else
+    {
+      cout << "mbdvtxmap does not exist; abort event!" << endl;
+      return Fun4AllReturnCodes::ABORTEVENT;
+    }
+  cout << "zvtx: " << _rzvtx[0] << endl;
+  cout << ((_trigvec[2]>>22)&1) << " " << ((_trigvec[1]>>22)&1) << endl;
+  if(std::isnan(_rzvtx[0]))
+    {
+      cout << endl << endl << endl << "multiColStudy::process_event: ZVTX NAN - SET IDENTICALLY 0 ZVTX!" << endl << endl << endl;
+      _rzvtx[0] = 0;
+    }
   zvtx = _rzvtx[0];
+  _tnjet = 0;
   _njet = 0;
   _hitsgrone = 0;
-
+  _ncluster = 0;
   LL1Out* ll1out_jet = findNode::getClass<LL1Out>(topNode, "LL1OUT_JET");
 
   LL1Out* ll1out_photon = findNode::getClass<LL1Out>(topNode, "LL1OUT_PHOTON");
@@ -249,17 +267,18 @@ int multiColStudy::process_event(PHCompositeNode *topNode)
     {
 
 
-      for (int i = 0; i < 4; i++)
-	{
-	  if (ll1out_photon->passesThreshold(i + 1))
-	    {
-	      unsigned int bit = i + 24;
-	      _em_gl1_scaledvec |= (0x1U << bit);
-	    }
-	}
+
       
       if (ll1out_photon)
 	{
+	  for (int i = 0; i < 4; i++)
+	    {
+	      if (ll1out_photon->passesThreshold(i + 1))
+		{
+		  unsigned int bit = i + 24;
+		  _em_gl1_scaledvec |= (0x1U << bit);
+		}
+	    }
 	  auto triggered_sums = ll1out_photon->getTriggeredSums();
 	  for (auto &keypair : triggered_sums)
 	    {
@@ -274,17 +293,18 @@ int multiColStudy::process_event(PHCompositeNode *topNode)
 	}
 
       
-      for (int i = 0; i < 4; i++)
-	{
-	  if (ll1out_jet->passesThreshold(i + 1))
-	    {
-	      unsigned int bit = i + 16;
-	      _em_gl1_scaledvec |= (0x1U << bit);
-	    }
-	}
 
       if (ll1out_jet)
 	{
+	  for (int i = 0; i < 4; i++)
+	    {
+	      if (ll1out_jet->passesThreshold(i + 1))
+		{
+		  unsigned int bit = i + 16;
+		  _em_gl1_scaledvec |= (0x1U << bit);
+		}
+	    }
+	  
 	  auto triggered_sums = ll1out_jet->getTriggeredSums();
 	  for (auto &keypair : triggered_sums)
 	    {
@@ -300,13 +320,19 @@ int multiColStudy::process_event(PHCompositeNode *topNode)
 
   TowerInfoContainer *towers[3];
   towers[0] = findNode::getClass<TowerInfoContainerv4>(topNode, "TOWERINFO_CALIB_CEMC");
+  if(!towers[0])  towers[0] = findNode::getClass<TowerInfoContainerv2>(topNode, "TOWERINFO_CALIB_CEMC");
   towers[1] = findNode::getClass<TowerInfoContainerv4>(topNode, "TOWERINFO_CALIB_HCALIN");
+  if(!towers[1])  towers[1] = findNode::getClass<TowerInfoContainerv2>(topNode, "TOWERINFO_CALIB_HCALIN");  
   towers[2] = findNode::getClass<TowerInfoContainerv4>(topNode, "TOWERINFO_CALIB_HCALOUT");
+  if(!towers[3])  towers[2] = findNode::getClass<TowerInfoContainerv2>(topNode, "TOWERINFO_CALIB_HCALOUT");
 
   TowerInfoContainer *rawtowers[3];
   rawtowers[0] = findNode::getClass<TowerInfoContainerv4>(topNode, "TOWERS_CEMC");
+  if(!rawtowers[0])  rawtowers[0] = findNode::getClass<TowerInfoContainerv2>(topNode, "TOWERS_CEMC");
   rawtowers[1] = findNode::getClass<TowerInfoContainerv4>(topNode, "TOWERS_HCALIN");
+  if(!rawtowers[1])  rawtowers[1] = findNode::getClass<TowerInfoContainerv2>(topNode, "TOWERS_HCALIN");
   rawtowers[2] = findNode::getClass<TowerInfoContainerv4>(topNode, "TOWERS_HCALOUT");
+  if(!rawtowers[2])  rawtowers[2] = findNode::getClass<TowerInfoContainerv2>(topNode, "TOWERS_HCALOUT");
 
   RawClusterContainer *clusters = findNode::getClass<RawClusterContainer>(topNode, "CLUSTERINFO_CEMC");
 
@@ -610,7 +636,7 @@ int multiColStudy::process_event(PHCompositeNode *topNode)
   if(clusters)
     {
       RawClusterContainer::ConstRange begin_end = clusters->getClusters();
-      _ncluster = 0;
+
       for (RawClusterContainer::ConstIterator rtiter = begin_end.first; rtiter != begin_end.second; ++rtiter)
         {
           RawCluster *cluster = rtiter->second;
@@ -629,12 +655,13 @@ int multiColStudy::process_event(PHCompositeNode *topNode)
     {
       if(_debug > 0) cout << "No cluster info!" << endl;
     }
+  _tree->Fill();
     }
   else
     {
       if(_debug > 1) cout << "no good zvtx!" << endl;
     }
- _tree->Fill();
+
   //}
 
   if(_debug > 3) cout << "end event" << endl;
@@ -669,6 +696,7 @@ int multiColStudy::End(PHCompositeNode *topNode)
       std::cout << "multiColStudy::End(PHCompositeNode *topNode) This is the End..." << std::endl;
     }
   if(_debug > 1) cout << "ending run" << endl;
+  _f  = new TFile(_filename.c_str(), "RECREATE");
   _f->cd();
   _tree->Write();
   _f->Write();

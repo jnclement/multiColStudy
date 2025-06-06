@@ -68,7 +68,7 @@ int make_hists(string tag, vector<int> rns, vector<int> nfiles, int triggerbit =
   //define histograms
   string region = "";
   if(rns[0] < 47894) region = "RegionA";
-  else if(rns[0] < 48660) region = "RegionB";
+  else if(rns[0] < 48850) region = "RegionB";
   else if(rns[0] < 49166 || (rns[0] > 49239 && rns[0] < 49255)) region = "RegionC";
   else region = "RegionD";
   TH2D* jet_eta_phi = new TH2D(("jet_eta_phi_"+region).c_str(),"",30,-1.5,1.5,64,-M_PI,M_PI);
@@ -119,8 +119,12 @@ int make_hists(string tag, vector<int> rns, vector<int> nfiles, int triggerbit =
   TH2D* jet_at_em_frcem_gr20 = new TH2D(("jet_at_em_frcem_gr20_"+region).c_str(),"",60,-6,6,24,-0.1,1.1);
   TH2D* jet_at_oh_frcem = new TH2D(("jet_at_oh_frcem_"+region).c_str(),"",60,-6,6,24,-0.1,1.1);
   TH2D* jet_at_oh_frcem_gr20 = new TH2D(("jet_at_oh_frcem_gr20_"+region).c_str(),"",60,-6,6,24,-0.1,1.1);
-  TH1D* njet_lumi = new TH1D("njet_lumi","",49600-48800,48800-0.5,49600-0.5);
-  TH1D* njet_lumiecut = new TH1D("njet_lumi_Ecut","",49600-48800,48800-0.5,49600-0.5);
+  int upper = 50000;
+  int lower = 47400;
+  TH1D* njet_lumi = new TH1D("njet_lumi","",upper-lower,lower-0.5,upper-0.5);
+  TH1D* njet_lumiecut = new TH1D("njet_lumi_Ecut","",upper-lower,lower-0.5,upper-0.5);
+  TH1D* nclus_lumi = new TH1D("nclus_lumi","",upper-lower,lower-0.5,upper-0.5);
+  TH1D* nclus_lumiecut = new TH1D("nclus_lumi_Ecut","",upper-lower,lower-0.5,upper-0.5);
   TH1D* spectrum = new TH1D(("spectrum_"+region).c_str(),"",50,0,50);
   TH1D* spectrum_zg30 = new TH1D(("spectrum_zg30_"+region).c_str(),"",50,0,50);
   TH1D* leadspec = new TH1D(("leadspec_"+region).c_str(),"",50,0,50);
@@ -180,7 +184,7 @@ int make_hists(string tag, vector<int> rns, vector<int> nfiles, int triggerbit =
     {
       if(rnval == rn) break;
     }
-  
+  cout << "RN/LUMI: " << rnval << " " << lumi[whichlumi] << endl;
   for(int h=0; h<nfile; ++h)
     {
       string filename = "multicoltree/events_"+tag+"_"+to_string(rn)+"_"+to_string(h)+"_0.root";
@@ -285,6 +289,17 @@ int make_hists(string tag, vector<int> rns, vector<int> nfiles, int triggerbit =
 	  for(int j=0; j<njet; ++j)
 	    {
 	      spectrum_zg30->Fill(jet_e[j]/cosh(jet_eta[j]));
+	      if(!std::isnan(zvtx[0]))
+		{
+		  if(abs(zvtx[0]) < 30)
+		    {
+		      if(jet_e[j]/cosh(jet_eta[j]) > 20 && lumi[whichlumi] != 0 && triggerbit == 18) njet_lumiecut->Fill(rn,1./lumi[whichlumi]);
+		      if(jet_e[j]/cosh(jet_eta[j]) > 15 && lumi[whichlumi] != 0 && triggerbit == 18) njet_lumi->Fill(rn,1./lumi[whichlumi]);
+		      if(cluster_e[j]/cosh(cluster_eta[j]) > 7 && lumi[whichlumi] != 0 && triggerbit == 26) nclus_lumiecut->Fill(rn,1./lumi[whichlumi]);
+		      if(cluster_e[j]/cosh(cluster_eta[j]) > 5 && lumi[whichlumi] != 0 && triggerbit == 26) nclus_lumi->Fill(rn,1./lumi[whichlumi]);
+		    }
+		}
+
 	    }
 	  if(!std::isnan(zvtx[0]))
 	    {
@@ -294,14 +309,6 @@ int make_hists(string tag, vector<int> rns, vector<int> nfiles, int triggerbit =
 	    }
 	  for(int j=0; j<ncluster; ++j)
 	    {
-	      if(!std::isnan(zvtx[0]))
-		{
-		  if(abs(zvtx[0]) < 30)
-		    {
-		      if(cluster_e[j]/cosh(cluster_eta[j]) > 5 && lumi[whichlumi] != 0 && triggerbit == 26) njet_lumiecut->Fill(rn,1./lumi[whichlumi]);
-		      if(lumi[whichlumi] != 0 && triggerbit == 26) njet_lumi->Fill(rn,1./lumi[whichlumi]);
-		    }
-		}
 	      spectrum->Fill(cluster_e[j]/cosh(cluster_eta[j]));
 	    }
 	  leadspec->Fill(ETmax);
@@ -541,8 +548,8 @@ int make_hists(string tag, vector<int> rns, vector<int> nfiles, int triggerbit =
   jet_at_oh_frcem_gr20->Write();
   jet_at_em_eta->Write();
   jet_at_oh_eta->Write();
-  
-
+  nclus_lumi->Write();
+  nclus_lumiecut->Write();
   ofstream outtrigs("trigcounts/outtrigs"+region+".txt");
   for(int i=0; i<ntrigtypes; ++i)
     {

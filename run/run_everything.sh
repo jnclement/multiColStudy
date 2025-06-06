@@ -14,7 +14,6 @@ SUBNAME="${BASENAME}.sub"
 
 #echo "executable = containerscripts/earlydata.sh" > $PREFIX/$SUBNAME
 echo "executable = earlysim.sh" > $PREFIX/$SUBNAME
-echo "concurrency_limits=CONCURRENCY_LIMIT_DEFAULT:40" >> $PREFIX/$SUBNAME
 echo "arguments = ${TAG} \$(Process) ${EVT} ${4} ${5}" >> $PREFIX/$SUBNAME
 echo "priority = 1000" >> $SUBNAME
 echo "output = /sphenix/user/jocl/projects/multiColStudy/output/out/output_${BASENAME}_\$(Process).out" >> $PREFIX/$SUBNAME

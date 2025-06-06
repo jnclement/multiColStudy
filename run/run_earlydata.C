@@ -20,7 +20,7 @@
 #include <GlobalVertex.h>
 #include <multicolstudy/multiColStudy.h>
 #include <TruthJetInput.h>//#include <G4Setup_sPHENIX.C>
-#include <trigzvtxchecker/Trigzvtxchecker.h>
+//#include <trigzvtxchecker/Trigzvtxchecker.h>
 #include <MbdDigitization.h>
 #include <MbdReco.h>
 #include <Calo_Calib.C>
@@ -44,7 +44,7 @@ R__LOAD_LIBRARY(libjetbase.so)
 R__LOAD_LIBRARY(libjetbackground.so)
 R__LOAD_LIBRARY(libg4dst.so)
 R__LOAD_LIBRARY(libmulticolstudy.so)
-R__LOAD_LIBRARY(libtrigzvtxchecker.so)
+//R__LOAD_LIBRARY(libtrigzvtxchecker.so)
 R__LOAD_LIBRARY(libcalotrigger.so)
 //gSystem->Load("libg4detectors.so");
 //gSystem->Load("libg4detectors.so");
@@ -54,9 +54,9 @@ bool file_exists(const char* filename)
   std::ifstream infile(filename);
   return infile.good();
 }
-int run_earlydata(string tag = "", int nproc = 0, int debug = 0, int nevt = 0, string dir = ".", int issim = 1, int rn = 0)
+int run_earlydata(string tag = "", int nproc = 0, int debug = 0, int nevt = 0, string dir = ".", int issim = 0, int rn = 0)
 {
-  int verbosity = 0;//debug;
+  int verbosity = 1;//debug;
   string filename = dir+"/"+to_string(nproc)+"_multicol/events_"+tag+(tag==""?"":"_");
   if(!issim) filename += to_string(rn)+"_";
   filename += to_string(nproc)+"_";
@@ -98,15 +98,12 @@ int run_earlydata(string tag = "", int nproc = 0, int debug = 0, int nevt = 0, s
   se->registerInputManager( in_2 );
   if(issim)
     {
-      line2 = "./dsts/"+to_string(nproc)+"/global_"+to_string(nproc)+".root";
       line3 = "./dsts/"+to_string(nproc)+"/mbd_epd_"+to_string(nproc)+".root";
       line4 = "./dsts/"+to_string(nproc)+"/truth_jet_"+to_string(nproc)+".root";
       line5 = "./dsts/"+to_string(nproc)+"/g4hits_"+to_string(nproc)+".root";
-      in_2->AddFile(line2);
       in_3->AddFile(line3);
       in_4->AddFile(line4);
       in_5->AddFile(line5);
-      se->registerInputManager( in_2 );
       se->registerInputManager( in_3 );
       se->registerInputManager(in_4);
       se->registerInputManager(in_5);
@@ -127,7 +124,7 @@ int run_earlydata(string tag = "", int nproc = 0, int debug = 0, int nevt = 0, s
   te->setEmcalLUTFile("/sphenix/user/dlis/Projects/macros/CDBTest/emcal_ll1_lut_0.50tr_new.root");
   te->setHcalinLUTFile("/sphenix/user/dlis/Projects/macros/CDBTest/hcalin_ll1_lut_0.50tr_new.root");
   te->setHcaloutLUTFile("/sphenix/user/dlis/Projects/macros/CDBTest/hcalout_ll1_lut_0.50tr_new.root");
-  se->registerSubsystem(te);
+  //se->registerSubsystem(te);
   
   //auto mbddigi = new MbdDigitization();
   auto mbdreco = new MbdReco();
@@ -140,7 +137,7 @@ int run_earlydata(string tag = "", int nproc = 0, int debug = 0, int nevt = 0, s
   
   gblvertex->Verbosity(verbosity);
   se->registerSubsystem(gblvertex);
-  Process_Calo_Calib();    
+  //Process_Calo_Calib();    
   se->Print("NODETREE");
 
   
@@ -170,9 +167,9 @@ int run_earlydata(string tag = "", int nproc = 0, int debug = 0, int nevt = 0, s
   TowerJetInput* ohtji = new TowerJetInput(Jet::HCALIN_TOWERINFO,"TOWERINFO_CALIB");
   TowerJetInput* ihtji = new TowerJetInput(Jet::HCALOUT_TOWERINFO,"TOWERINFO_CALIB");
   //towerjetreco->add_input(new TowerJetInput(Jet::CEMC_TOWER));
-  //emtji->set_GlobalVertexType(GlobalVertex::VTXTYPE::MBD);
-  //ohtji->set_GlobalVertexType(GlobalVertex::VTXTYPE::MBD);
-  //ihtji->set_GlobalVertexType(GlobalVertex::VTXTYPE::MBD);
+  emtji->set_GlobalVertexType(GlobalVertex::VTXTYPE::MBD);
+  ohtji->set_GlobalVertexType(GlobalVertex::VTXTYPE::MBD);
+  ihtji->set_GlobalVertexType(GlobalVertex::VTXTYPE::MBD);
       
   towerjetreco->add_input(emtji);
   towerjetreco->add_input(ohtji);
@@ -190,7 +187,7 @@ int run_earlydata(string tag = "", int nproc = 0, int debug = 0, int nevt = 0, s
   cout << "test4" << endl;
   se->Print("NODETREE");
   cout << "run " << nevt << endl;
-  se->skip(35000);
+  se->skip(0);
   se->run(nevt);
   cout << "ran " << nevt << endl;
   cout << "Ran all events" << endl;

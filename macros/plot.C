@@ -157,7 +157,7 @@ int draw_overlay_with_ratio_th1d(TH1D** hists, string histbasename, TCanvas* can
 	  ratio[i]->Divide(func[i]);
 	}
       ratio[i]->GetYaxis()->SetRangeUser(0,2);
-      format_th1d(ratio[i],hists[i]->GetXaxis()->GetTitle(),"Ratio to Region A",i);
+      format_th1d(ratio[i],hists[i]->GetXaxis()->GetTitle(),"Ratio to Fit",i);
       ratio[i]->GetXaxis()->SetTitleSize(ratio[i]->GetXaxis()->GetTitleSize()/0.5);
       ratio[i]->GetYaxis()->SetTitleSize(ratio[i]->GetYaxis()->GetTitleSize()/0.5);
       ratio[i]->GetXaxis()->SetLabelSize(ratio[i]->GetXaxis()->GetLabelSize()/0.5);
@@ -546,31 +546,77 @@ int plot(int tb)
     }
 
  _gotospot1:
+  TCanvas* lumican = new TCanvas("","",1000,500);
+  if(bit==18)
+    {
   TH1D* njet_lumi = (TH1D*)histfile->Get("njet_lumi");
 
-  TCanvas* lumican = new TCanvas("","",1000,500);
-  goto _gotospot2;
-  njet_lumi->GetYaxis()->SetRangeUser(0,1e5);
+  njet_lumi->GetYaxis()->SetRangeUser(0,7e4);
   njet_lumi->SetMarkerSize(1);
   njet_lumi->SetMarkerStyle(20);
-
-
   lumican->cd();
-  njet_lumi->GetYaxis()->SetTitle("N_{cluster}/\\mathscr{L}_{int,corr}^{trig26}");
+  njet_lumi->GetYaxis()->SetTitle("N_{jet}/\\mathscr{L}_{int,corr}^{trig18}");
   njet_lumi->GetXaxis()->SetTitle("Run Number");
-  
   njet_lumi->Draw("PE");
   sphenixtext(0.65,0.96);
   sqrt_s_text(0.65,0.92);
   antikt_text(0.4,0.3,0.92);
   et_cut_text(15,0.015,0.96);
   dijet_cut_text(0.3,0.96);
-
-
   lumican->SaveAs(("../output/plots/"+to_string(bit)+"_njet_lumi.png").c_str());
+
+  TH1D* njet_lumi_Ecut = (TH1D*)histfile->Get("njet_lumi_Ecut");
+  njet_lumi_Ecut->GetYaxis()->SetRangeUser(0,1.5e4);
+  njet_lumi_Ecut->SetMarkerSize(1);
+  njet_lumi_Ecut->SetMarkerStyle(20);
+  lumican->cd();
+  njet_lumi_Ecut->GetYaxis()->SetTitle("N_{jet}/\\mathscr{L}_{int,corr}^{trig18}");
+  njet_lumi_Ecut->GetXaxis()->SetTitle("Run Number");
+  njet_lumi_Ecut->Draw("PE");
+  sphenixtext(0.65,0.96);
+  sqrt_s_text(0.65,0.92);
+  antikt_text(0.4,0.3,0.92);
+  et_cut_text(20,0.015,0.96);
+  dijet_cut_text(0.3,0.96);
+  lumican->SaveAs(("../output/plots/"+to_string(bit)+"_njet_lumi_Ecut.png").c_str());
+    }
+
+  if(bit==26)
+    {
+  TH1D* nclus_lumi = (TH1D*)histfile->Get("nclus_lumi");
+  nclus_lumi->GetYaxis()->SetRangeUser(0,2e6);
+  nclus_lumi->SetMarkerSize(1);
+  nclus_lumi->SetMarkerStyle(20);
+  lumican->cd();
+  nclus_lumi->GetYaxis()->SetTitle("N_{clus}/\\mathscr{L}_{int,corr}^{trig26}");
+  nclus_lumi->GetXaxis()->SetTitle("Run Number");
+  nclus_lumi->Draw("PE");
+  sphenixtext(0.65,0.96);
+  sqrt_s_text(0.65,0.92);
+  antikt_text(0.4,0.3,0.92);
+  et_cut_text(5,0.015,0.96);
+  dijet_cut_text(0.3,0.96);
+  lumican->SaveAs(("../output/plots/"+to_string(bit)+"_nclus_lumi.png").c_str());
+
+  TH1D* nclus_lumi_Ecut = (TH1D*)histfile->Get("nclus_lumi_Ecut");
+  nclus_lumi_Ecut->GetYaxis()->SetRangeUser(0,5e5);
+  nclus_lumi_Ecut->SetMarkerSize(1);
+  nclus_lumi_Ecut->SetMarkerStyle(20);
+  lumican->cd();
+  nclus_lumi_Ecut->GetYaxis()->SetTitle("N_{clus}/\\mathscr{L}_{int,corr}^{trig26}");
+  nclus_lumi_Ecut->GetXaxis()->SetTitle("Run Number");
+  nclus_lumi_Ecut->Draw("PE");
+  sphenixtext(0.65,0.96);
+  sqrt_s_text(0.65,0.92);
+  antikt_text(0.4,0.3,0.92);
+  et_cut_text(7,0.015,0.96);
+  dijet_cut_text(0.3,0.96);
+  lumican->SaveAs(("../output/plots/"+to_string(bit)+"_nclus_lumi_Ecut.png").c_str());
+    }
+  
   //return 0;
-  if(bit==10) return 0;
- _gotospot2:
+  if(bit==10 || bit == 26) return 0;
+
   TH1D* histsnum[nhistplot];
   TH1D* histsden[nhistplot];
   TH1D* histstrn[nhistplot];
@@ -579,6 +625,9 @@ int plot(int tb)
   TH1D* leadhists[nhistplot];
   for(int i=0; i<nhistplot; ++i)
     {
+      string type = "";
+      if(triggers[i] == 18) type = "jet";
+      if(triggers[i] == 26) type = "phot";
       leadhists[i] = (TH1D*)histfile->Get(("leadhists_"+to_string(triggers[i])+"_"+region[i]).c_str());
       spectra[i] = (TH1D*)histfile->Get(("spectra_"+to_string(triggers[i])+"_"+region[i]).c_str());
       f[i] = new TF1(("f"+to_string(i)).c_str(),"[0]*TMath::Erf((x-[2])/[1])+[0]",0,30);

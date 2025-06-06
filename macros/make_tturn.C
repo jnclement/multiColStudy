@@ -4,7 +4,7 @@ int make_tturn(string tag, vector<int> rns, vector<int> nfiles)
   string region = "";
 
   if(rns[0] < 47894) region = "RegionA";
-  else if(rns[0] < 48660) region = "RegionB";
+  else if(rns[0] < 48800) region = "RegionB";
   else if(rns[0] < 49166 || (rns[0] > 49239 && rns[0] < 49255)) region = "RegionC";
   else region = "RegionD";
   
@@ -17,8 +17,7 @@ int make_tturn(string tag, vector<int> rns, vector<int> nfiles)
   TH1D* num[ntrig];
   TH1D* den[ntrig]; 
 
-  TH1D* em_num_phot[ntrig];
-  TH1D* em_num_jet[ntrig];
+  TH1D* em_num[ntrig];
   TH2D* em_phot_eta_phi[ntrig];
   TH2D* em_jet_eta_phi[ntrig];
 
@@ -41,8 +40,7 @@ int make_tturn(string tag, vector<int> rns, vector<int> nfiles)
       spectra[j] = new TH1D(("spectra_"+to_string(triggers[j])+"_"+region).c_str(),"",50,0,50);
       //trigturn[j] = new TH1D(("trigturn_"+to_string(triggers[j])+"_"+region).c_str(),"",10,0,30);
       num[j] = new TH1D(("num_"+to_string(triggers[j])+"_"+region).c_str(),"",10,0,j==0?30:10);
-      em_num_phot[j] = new TH1D(("em_num_phot_"+to_string(triggers[j])+"_"+region).c_str(),"",10,0,j==0?30:10);
-      em_num_jet[j] = new TH1D(("em_num_jet_"+to_string(triggers[j])+"_"+region).c_str(),"",10,0,j==0?30:10);
+      em_num[j] = new TH1D(("em_num_"+to_string(triggers[j])+"_"+region).c_str(),"",10,0,j==0?30:10);
       em_phot_eta_phi[j] = new TH2D(("em_phot_eta_phi"+to_string(triggers[j])+"_"+region).c_str(),"",96,-0.5,95.5,256,-0.5,255.5);
       em_jet_eta_phi[j] = new TH2D(("em_jet_eta_phi"+to_string(triggers[j])+"_"+region).c_str(),"",96,-0.5,95.5,256,-0.5,255.5);
     }
@@ -160,12 +158,12 @@ int make_tturn(string tag, vector<int> rns, vector<int> nfiles)
 
 	      if((em_gl1_scaledvec>>fixshift[j]) & 1 && triggers[j] < 24)
 		{
-		  em_num_jet[j]->Fill(ETmax);
+		  em_num[j]->Fill(ETmax);
 		  em_phot_eta_phi[j]->Fill(trig_photon_eta,trig_photon_phi);
 		}
 	      else if((em_gl1_scaledvec>>fixshift[j]) &1 && triggers[j] < 32)
 		{
-		  em_num_phot[j]->Fill(ETmax_clus);
+		  em_num[j]->Fill(ETmax_clus);
 		  em_jet_eta_phi[j]->Fill(trig_jet_eta,trig_jet_phi);
 		}
 
@@ -199,8 +197,7 @@ int make_tturn(string tag, vector<int> rns, vector<int> nfiles)
       cout << "Wrote lead spectrum" << endl;
       den[i]->Write();
       cout << "Write den" << endl;
-      em_num_phot[i]->Write();
-      em_num_jet[i]->Write();
+      em_num[i]->Write();
       em_phot_eta_phi[i]->Write();
       em_jet_eta_phi[i]->Write();
     }

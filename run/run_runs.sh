@@ -1,7 +1,7 @@
 #!/bin/bash
 
-if [ $# -lt 3 ]; then
-    echo "Need tag argument (string), evtnum (int), nlist (int)"
+if [ $# -lt 4 ]; then
+    echo "Need tag argument (string), evtnum (int), nlist (int), issim (1 or 0)"
     exit 1
 fi
 
@@ -14,6 +14,12 @@ fi
 echo $evt
 for rn in `cat lists/rns${3}.list`; do #`ls  lists/dst_calofitting_run2pp*.list | awk -F'.' '{print $1}' | awk -F'/' '{print $2}' | awk -F'-' '{print $2}'`; do
     rn=$(expr $rn + 0)
+    #if [ $rn -gt 47514 ]; then
+#	break
+ #   fi
+  #  if [ $rn -ne 47514 ]; then
+#	continue
+ #   fi
     nfile=`wc -l lists/dst_calofitting_run2pp-000${rn}.list | awk '{print $1}'`
     njob=$(( $nfile + 3 ))
     njob=$(( $njob / 4 ))
@@ -30,7 +36,7 @@ for rn in `cat lists/rns${3}.list`; do #`ls  lists/dst_calofitting_run2pp*.list 
 #    mkdir -p /sphenix/tg/tg01/jets/jocl/multiCol/$rn
 #    mkdir -p /sphenix/tg/tg01/jets/jocl/multiCol/$rn
     echo $rn $filecounter
-    bash run_everything.sh $1 $njob $evt 0 $rn
+    bash run_everything.sh $1 $njob $evt $4 $rn
 done
 
 

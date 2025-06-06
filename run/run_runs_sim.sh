@@ -1,7 +1,7 @@
 #!/bin/bash
 
-if [ $# -lt 2 ]; then
-    echo "Need tag argument (string), evtnum (int)"
+if [ $# -lt 3 ]; then
+    echo "Need tag argument (string), evtnum (int), nfile (int)"
     exit 1
 fi
 evt=$2

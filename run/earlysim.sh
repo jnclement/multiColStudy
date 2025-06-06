@@ -1,7 +1,7 @@
 #!/bin/bash
 # file name: firstcondor.sh
 
-source /opt/sphenix/core/bin/sphenix_setup.sh -n ana.468
+source /opt/sphenix/core/bin/sphenix_setup.sh -n ana.490
 source /opt/sphenix/core/bin/setup_local.sh "/sphenix/user/jocl/projects/testinstall"
 export HOME=/sphenix/u/jocl
 if [[ ! -z "$_CONDOR_SCRATCH_DIR" && -d $_CONDOR_SCRATCH_DIR ]]; then
@@ -37,7 +37,13 @@ for i in {0..4}; do
     fi
     G4HITSF=`sed -n "${UPLN}"p ./lists/g4hits.list`
     CALOCLF=`sed -n "${UPLN}"p ./lists/dst_calo_cluster.list`
-    GLOBALF=`sed -n "${UPLN}"p ./lists/dst_global.list`
+    SEGEND=`echo $CALOCLF | awk -F"-" '{print $3}'`
+    GLOBALF=""
+    if [ $ISSIM -eq 0 ]; then
+	GLOBALF="DST_TRIGGERED_EVENT_run2pp_ana462_nocdbtag_v001-000${RN}-${SEGEND}"
+    else
+	GLOBALF=`sed -n "${UPLN}"p ./lists/dst_global.list`
+    fi
     TRTHJET=`sed -n "${UPLN}"p ./lists/dst_truth_jet.list`
     DMBDEPD=`sed -n "${UPLN}"p ./lists/dst_mbd_epd.list`
     FULLTRTH=`psql FileCatalog -t -c "select full_file_path from files where lfn = '${DMBDEPD}';"`
@@ -52,11 +58,14 @@ for i in {0..4}; do
     #getinputfiles.pl $TRTHJET
     #getinputfiles.pl $DMBDEPD
     #getinputfiles.pl $G4HITSF
-    cp $FULLTRTH .
-    cp $FULLMBEP .
     cp $FULLCALO .
-    cp $FULLGLOB .
-    cp $FULLG4HT .
+    
+    if [ $ISSIM -ne 0 ]; then
+	cp $FULLGLOB .
+	cp $FULLTRTH .
+	cp $FULLMBEP .
+	cp $FULLG4HT .
+    fi
     #cp -r $G4HITSF ./dsts/$2/g4hits_${2}.root
     echo ""
     echo "" 
@@ -64,15 +73,16 @@ for i in {0..4}; do
     echo ""
     echo ""
     mv $CALOCLF ./dsts/$SUBDIR/calo_cluster_${SUBDIR}.root
-    mv $GLOBALF ./dsts/$SUBDIR/global_${SUBDIR}.root
+
     if [ $ISSIM -ne 0 ]; then
+	mv $GLOBALF ./dsts/$SUBDIR/global_${SUBDIR}.root
 	mv $G4HITSF ./dsts/$SUBDIR/g4hits_${SUBDIR}.root
 	mv $TRTHJET ./dsts/$SUBDIR/truth_jet_${SUBDIR}.root
 	mv $DMBDEPD ./dsts/$SUBDIR/mbd_epd_${SUBDIR}.root
     fi
     ls ./dsts/$SUBDIR
     #cp -r $TRTHJET ./dsts/$SUBDIR/truth_jet_${SUBDIR}.root
-    root -b -q 'run_earlydata.C("'${1}'",'${SUBDIR}',0,'${3}',".",'${ISSIM}','${RN}')'
+    root -b -q 'run_earlydata.C("'${1}'",'${SUBDIR}',5,'${3}',".",'${ISSIM}','${RN}')'
     ls
     echo " "
     ls $SUBDIR
