@@ -174,14 +174,14 @@ int multiColStudy::Init(PHCompositeNode *topNode)
   _tree->Branch("calo_emfrac",&_calo_emfrac,"calo_emfrac/D");
   _tree->Branch("calo_ohfrac",&_calo_ohfrac,"calo_ohfrac/D");
   _tree->Branch("calo_e",&_calo_e,"calo_e/D");
-
+  /*
   _tree->Branch("trig_jet_phi",&_trig_jet_phi,"trig_jet_phi/I");
   _tree->Branch("trig_jet_eta",&_trig_jet_eta,"trig_jet_eta/I");
   _tree->Branch("trig_photon_phi",&_trig_photon_phi,"trig_photon_phi/I");
   _tree->Branch("trig_photon_eta",&_trig_photon_eta,"trig_photon_eta/I");
 
   _tree->Branch("em_gl1_scaledvec",&_em_gl1_scaledvec,"em_gl1_scaledvec/l");
-  
+  */
   return Fun4AllReturnCodes::EVENT_OK;
 }
 
@@ -265,9 +265,10 @@ int multiColStudy::process_event(PHCompositeNode *topNode)
   //LL1Out* ll1out_jet = findNode::getClass<LL1Out>(topNode, "LL1OUT_JET");
 
   //LL1Out* ll1out_photon = findNode::getClass<LL1Out>(topNode, "LL1OUT_PHOTON");
-
+  /*
   int max_jet = 0;
   int max_photon = 0;
+  */
   if(!std::isnan(zvtx))
     {
 
