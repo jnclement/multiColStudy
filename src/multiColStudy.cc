@@ -262,9 +262,9 @@ int multiColStudy::process_event(PHCompositeNode *topNode)
   _njet = 0;
   _hitsgrone = 0;
   _ncluster = 0;
-  LL1Out* ll1out_jet = findNode::getClass<LL1Out>(topNode, "LL1OUT_JET");
+  //LL1Out* ll1out_jet = findNode::getClass<LL1Out>(topNode, "LL1OUT_JET");
 
-  LL1Out* ll1out_photon = findNode::getClass<LL1Out>(topNode, "LL1OUT_PHOTON");
+  //LL1Out* ll1out_photon = findNode::getClass<LL1Out>(topNode, "LL1OUT_PHOTON");
 
   int max_jet = 0;
   int max_photon = 0;
@@ -273,7 +273,7 @@ int multiColStudy::process_event(PHCompositeNode *topNode)
 
 
 
-      
+      /*
       if (ll1out_photon)
 	{
 	  for (int i = 0; i < 4; i++)
@@ -322,7 +322,7 @@ int multiColStudy::process_event(PHCompositeNode *topNode)
 		}
 	    }
 	}
-
+      */
   TowerInfoContainer *towers[3];
   towers[0] = findNode::getClass<TowerInfoContainerv4>(topNode, "TOWERINFO_CALIB_CEMC");
   if(!towers[0])  towers[0] = findNode::getClass<TowerInfoContainerv2>(topNode, "TOWERINFO_CALIB_CEMC");
