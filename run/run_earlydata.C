@@ -56,7 +56,7 @@ bool file_exists(const char* filename)
 }
 int run_earlydata(string tag = "", int nproc = 0, int debug = 0, int nevt = 0, string dir = ".", int issim = 0, int rn = 0)
 {
-  int verbosity = 1;//debug;
+  int verbosity = 0;//debug;
   string filename = dir+"/"+to_string(nproc)+"_multicol/events_"+tag+(tag==""?"":"_");
   if(!issim) filename += to_string(rn)+"_";
   filename += to_string(nproc)+"_";
