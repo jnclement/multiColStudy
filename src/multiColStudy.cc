@@ -9,6 +9,8 @@
 #include <calobase/TowerInfoContainerv2.h>
 #include <calobase/TowerInfoContainerv3.h>
 #include <calobase/TowerInfoContainerv4.h>
+#include <calobase/TowerInfoContainerSimv1.h>
+#include <calobase/TowerInfoContainerSimv2.h>
 #include <globalvertex/GlobalVertexMap.h>
 #include <globalvertex/GlobalVertexMapv1.h>
 #include <globalvertex/GlobalVertex.h>
@@ -322,17 +324,17 @@ int multiColStudy::process_event(PHCompositeNode *topNode)
   towers[0] = findNode::getClass<TowerInfoContainerv4>(topNode, "TOWERINFO_CALIB_CEMC");
   if(!towers[0])  towers[0] = findNode::getClass<TowerInfoContainerv2>(topNode, "TOWERINFO_CALIB_CEMC");
   towers[1] = findNode::getClass<TowerInfoContainerv4>(topNode, "TOWERINFO_CALIB_HCALIN");
-  if(!towers[1])  towers[1] = findNode::getClass<TowerInfoContainerv2>(topNode, "TOWERINFO_CALIB_HCALIN");  
+  if(!towers[1])  towers[1] = findNode::getClass<TowerInfoContainerSimv1>(topNode, "TOWERINFO_CALIB_HCALIN");  
   towers[2] = findNode::getClass<TowerInfoContainerv4>(topNode, "TOWERINFO_CALIB_HCALOUT");
-  if(!towers[2])  towers[2] = findNode::getClass<TowerInfoContainerv2>(topNode, "TOWERINFO_CALIB_HCALOUT");
+  if(!towers[2])  towers[2] = findNode::getClass<TowerInfoContainerSimv1>(topNode, "TOWERINFO_CALIB_HCALOUT");
 
   TowerInfoContainer *rawtowers[3];
   rawtowers[0] = findNode::getClass<TowerInfoContainerv4>(topNode, "TOWERS_CEMC");
   if(!rawtowers[0])  rawtowers[0] = findNode::getClass<TowerInfoContainerv2>(topNode, "TOWERS_CEMC");
   rawtowers[1] = findNode::getClass<TowerInfoContainerv4>(topNode, "TOWERS_HCALIN");
-  if(!rawtowers[1])  rawtowers[1] = findNode::getClass<TowerInfoContainerv2>(topNode, "TOWERS_HCALIN");
+  if(!rawtowers[1])  rawtowers[1] = findNode::getClass<TowerInfoContainerSimv1>(topNode, "TOWERS_HCALIN");
   rawtowers[2] = findNode::getClass<TowerInfoContainerv4>(topNode, "TOWERS_HCALOUT");
-  if(!rawtowers[2])  rawtowers[2] = findNode::getClass<TowerInfoContainerv2>(topNode, "TOWERS_HCALOUT");
+  if(!rawtowers[2])  rawtowers[2] = findNode::getClass<TowerInfoContainerSimv1>(topNode, "TOWERS_HCALOUT");
 
   RawClusterContainer *clusters = findNode::getClass<RawClusterContainer>(topNode, "CLUSTERINFO_CEMC");
 
