@@ -70,6 +70,14 @@ class multiColStudy : public SubsysReco
   double _dphilead;
   int _isdijet;
 
+
+  int _njet_noz;
+  double _jet_e_noz[_maxjet];
+  double _jet_pt_noz[_maxjet];
+  double _jet_eta_noz[_maxjet];
+  double _jet_phi_noz[_maxjet];
+
+
   double _towgrone[_etow+2*_htow][_gronefield];
 
   double _ohat[_maxjet][64];

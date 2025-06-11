@@ -1,7 +1,7 @@
 #!/bin/bash
 # file name: firstcondor.sh
 
-source /opt/sphenix/core/bin/sphenix_setup.sh -n ana.490
+source /opt/sphenix/core/bin/sphenix_setup.sh new
 source /opt/sphenix/core/bin/setup_local.sh "/sphenix/user/jocl/projects/testinstall"
 export HOME=/sphenix/u/jocl
 if [[ ! -z "$_CONDOR_SCRATCH_DIR" && -d $_CONDOR_SCRATCH_DIR ]]; then
@@ -13,7 +13,7 @@ fi
 STARTN=$(( $2 * 4 ))
 ISSIM=$4
 RN=$5
-for i in {0..4}; do
+for i in {0..3}; do
     SUBDIR=$(( $STARTN + $i ))
     UPLN=$(( $SUBDIR + 1 ))
     mkdir -p $SUBDIR

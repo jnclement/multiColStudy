@@ -174,6 +174,13 @@ int multiColStudy::Init(PHCompositeNode *topNode)
   _tree->Branch("calo_emfrac",&_calo_emfrac,"calo_emfrac/D");
   _tree->Branch("calo_ohfrac",&_calo_ohfrac,"calo_ohfrac/D");
   _tree->Branch("calo_e",&_calo_e,"calo_e/D");
+
+  _tree->Branch("njet_noz",&_njet_noz,"njet_noz/I");
+  _tree->Branch("jet_e_noz",_jet_e_noz,"jet_e_noz[njet]/D");
+  _tree->Branch("jet_eta_noz",_jet_eta_noz,"jet_eta_noz[njet]/D");
+  _tree->Branch("jet_phi_noz",_jet_phi_noz,"jet_phi_noz[njet]/D");
+  _tree->Branch("jet_pt_noz",_jet_pt_noz,"jet_pt_noz[njet]/D");
+  
   /*
   _tree->Branch("trig_jet_phi",&_trig_jet_phi,"trig_jet_phi/I");
   _tree->Branch("trig_jet_eta",&_trig_jet_eta,"trig_jet_eta/I");
@@ -344,6 +351,7 @@ int multiColStudy::process_event(PHCompositeNode *topNode)
 
 
   JetContainer *jets = findNode::getClass<JetContainerv1>(topNode, "AntiKt_Tower_HIRecoSeedsRaw_r04");//"AntiKt_unsubtracted_r04");
+  JetContainer *jets_noz = findNode::getClass<JetContainerv1>(topNode, "AntiKt_Tower_HIRecoSeedsRaw_r04_noz");
   if(!jets) jets = findNode::getClass<JetContainerv1>(topNode, "AntiKt_unsubtracted_r04");
   JetContainer* truthjets = findNode::getClass<JetContainerv1>(topNode,"AntiKt_Truth_r04");
   MbdPmtContainer * mbdtow = findNode::getClass<MbdPmtContainer>(topNode,"MbdPmtContainer");
@@ -594,6 +602,43 @@ int multiColStudy::process_event(PHCompositeNode *topNode)
       //return Fun4AllReturnCodes::ABORTEVENT;
     }
 
+
+  if(jets_noz)
+    {
+      int tocheck = jets->size();
+      if(_debug > 2) cout << "Found " << tocheck << " jets to check..." << endl;
+      for(int i=0; i<tocheck; ++i)
+        {
+          Jet *jet = jets->get_jet(i);
+          if(jet)
+            {
+	      if(_debug > 5) cout << "getting jet E/eta" << endl;
+	      float testJetE = jet->get_e();
+	      float testJetPhi = jet->get_phi();
+	      if(_debug > 5) cout << "jet E/eta: " << testJetE  << " " << jet->get_eta() << endl;
+	      if(testJetE < 4) continue;
+	      if(_debug > 3) cout << "got a candidate jet" << endl;
+	      _jet_eta_noz[_njet_noz] = jet->get_eta();
+	      //if(check_bad_jet_eta(_jet_eta[_njet_noz],_rzvtx[0],0.4)) continue;
+	      _jet_e_noz[_njet_noz] = testJetE;
+	      _jet_pt_noz[_njet_noz] = testJetE/cosh(_jet_eta_noz[_njet_noz]);
+	      _jet_phi_noz[_njet_noz] = testJetPhi;
+	      ++_njet_noz;
+	      if(_njet_noz > _maxjet-1) break;
+	    }
+	  else
+	    {
+	      continue;
+	    }
+	}
+    }
+  else
+    {
+      if(_debug > 0) cout << "no jets noz" << endl;
+    }
+
+
+  
   _tnjet = 0;
   if(truthjets)
     {

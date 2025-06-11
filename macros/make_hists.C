@@ -119,8 +119,8 @@ int make_hists(string tag, vector<int> rns, vector<int> nfiles, int triggerbit =
   TH2D* jet_at_em_frcem_gr20 = new TH2D(("jet_at_em_frcem_gr20_"+region).c_str(),"",60,-6,6,24,-0.1,1.1);
   TH2D* jet_at_oh_frcem = new TH2D(("jet_at_oh_frcem_"+region).c_str(),"",60,-6,6,24,-0.1,1.1);
   TH2D* jet_at_oh_frcem_gr20 = new TH2D(("jet_at_oh_frcem_gr20_"+region).c_str(),"",60,-6,6,24,-0.1,1.1);
-  int upper = 50000;
-  int lower = 47400;
+  int upper = 54000;
+  int lower = 51000;
   TH1D* njet_lumi = new TH1D("njet_lumi","",upper-lower,lower-0.5,upper-0.5);
   TH1D* njet_lumiecut = new TH1D("njet_lumi_Ecut","",upper-lower,lower-0.5,upper-0.5);
   TH1D* nclus_lumi = new TH1D("nclus_lumi","",upper-lower,lower-0.5,upper-0.5);
@@ -179,7 +179,7 @@ int make_hists(string tag, vector<int> rns, vector<int> nfiles, int triggerbit =
   int rnval;
   int rn = rns[0];
   int nfile = nfiles[0];
-  ifstream inlumi("/sphenix/user/jocl/projects/analysis/LuminosityCounterGoodRuns/run/list_forplot_2.list");
+  ifstream inlumi("/sphenix/user/jocl/projects/analysis/LuminosityCounterGoodRuns/run/bit22luminplaceof18.dat");
   while(inlumi >> rnval >> lumi[0] >> lumi[1] >> lumi[2] >> lumi[3] >> lumi[4] >> lumi[5])
     {
       if(rnval == rn) break;
@@ -293,8 +293,8 @@ int make_hists(string tag, vector<int> rns, vector<int> nfiles, int triggerbit =
 		{
 		  if(abs(zvtx[0]) < 30)
 		    {
-		      if(jet_e[j]/cosh(jet_eta[j]) > 20 && lumi[whichlumi] != 0 && triggerbit == 18) njet_lumiecut->Fill(rn,1./lumi[whichlumi]);
-		      if(jet_e[j]/cosh(jet_eta[j]) > 15 && lumi[whichlumi] != 0 && triggerbit == 18) njet_lumi->Fill(rn,1./lumi[whichlumi]);
+		      if(jet_e[j]/cosh(jet_eta[j]) > 15 && lumi[whichlumi] != 0 && triggerbit == 22) njet_lumiecut->Fill(rn,1./lumi[whichlumi]);
+		      if(jet_e[j]/cosh(jet_eta[j]) > 10 && lumi[whichlumi] != 0 && triggerbit == 22) njet_lumi->Fill(rn,1./lumi[whichlumi]);
 		      if(cluster_e[j]/cosh(cluster_eta[j]) > 7 && lumi[whichlumi] != 0 && triggerbit == 26) nclus_lumiecut->Fill(rn,1./lumi[whichlumi]);
 		      if(cluster_e[j]/cosh(cluster_eta[j]) > 5 && lumi[whichlumi] != 0 && triggerbit == 26) nclus_lumi->Fill(rn,1./lumi[whichlumi]);
 		    }

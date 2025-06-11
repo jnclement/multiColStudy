@@ -128,6 +128,28 @@ int run_earlydata(string tag = "", int nproc = 0, int debug = 0, int nevt = 0, s
   te->setHcalinLUTFile("/sphenix/user/dlis/Projects/macros/CDBTest/hcalin_ll1_lut_0.50tr_new.root");
   te->setHcaloutLUTFile("/sphenix/user/dlis/Projects/macros/CDBTest/hcalout_ll1_lut_0.50tr_new.root");
   //se->registerSubsystem(te);
+
+
+  JetReco *towerjetreco_noz = new JetReco();
+  TowerJetInput* emtji_noz = new TowerJetInput(Jet::CEMC_TOWERINFO,"TOWERINFO_CALIB");
+  TowerJetInput* ohtji_noz = new TowerJetInput(Jet::HCALIN_TOWERINFO,"TOWERINFO_CALIB");
+  TowerJetInput* ihtji_noz = new TowerJetInput(Jet::HCALOUT_TOWERINFO,"TOWERINFO_CALIB");
+  //towerjetreco->add_input(new TowerJetInput(Jet::CEMC_TOWER));
+  emtji_noz->set_GlobalVertexType(GlobalVertex::VTXTYPE::MBD);
+  ohtji_noz->set_GlobalVertexType(GlobalVertex::VTXTYPE::MBD);
+  ihtji_noz->set_GlobalVertexType(GlobalVertex::VTXTYPE::MBD);
+      
+  towerjetreco_noz->add_input(emtji_noz);
+  towerjetreco_noz->add_input(ohtji_noz);
+  towerjetreco_noz->add_input(ihtji_noz);
+  towerjetreco_noz->add_algo(new FastJetAlgoSub(Jet::ANTIKT, 0.4), "AntiKt_Tower_HIRecoSeedsRaw_r04_noz");
+  towerjetreco_noz->set_algo_node("ANTIKT");
+  towerjetreco_noz->set_input_node("TOWER");
+  towerjetreco_noz->Verbosity(verbosity);
+  se->registerSubsystem(towerjetreco_noz);
+
+
+
   
   //auto mbddigi = new MbdDigitization();
   auto mbdreco = new MbdReco();
