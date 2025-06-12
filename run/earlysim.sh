@@ -82,7 +82,7 @@ for i in {0..3}; do
     fi
     ls ./dsts/$SUBDIR
     #cp -r $TRTHJET ./dsts/$SUBDIR/truth_jet_${SUBDIR}.root
-    root -b -q 'run_earlydata.C("'${1}'",'${SUBDIR}',10,'${3}',".",'${ISSIM}','${RN}')'
+    root -b -q 'run_earlydata.C("'${1}'",'${SUBDIR}',0,'${3}',".",'${ISSIM}','${RN}')'
     ls
     echo " "
     ls $SUBDIR
