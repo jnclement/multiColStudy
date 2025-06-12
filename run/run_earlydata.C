@@ -130,7 +130,7 @@ int run_earlydata(string tag = "", int nproc = 0, int debug = 0, int nevt = 0, s
   //se->registerSubsystem(te);
 
 
-  JetReco *towerjetreco_noz = new JetReco();
+  JetReco *towerjetreco_noz = new JetReco("jetreco_noz");
   TowerJetInput* emtji_noz = new TowerJetInput(Jet::CEMC_TOWERINFO,"TOWERINFO_CALIB");
   TowerJetInput* ohtji_noz = new TowerJetInput(Jet::HCALIN_TOWERINFO,"TOWERINFO_CALIB");
   TowerJetInput* ihtji_noz = new TowerJetInput(Jet::HCALOUT_TOWERINFO,"TOWERINFO_CALIB");
@@ -176,8 +176,8 @@ int run_earlydata(string tag = "", int nproc = 0, int debug = 0, int nevt = 0, s
   se->registerSubsystem(rcemc);
   cout << "set up retower emcal" << endl;
   */
-  JetReco *truthjetreco = new JetReco();
-  
+  /*
+  JetReco *truthjetreco = new JetReco("tjetreco");
   TruthJetInput *tji = new TruthJetInput(Jet::PARTICLE);
   tji->add_embedding_flag(0);  // changes depending on signal vs. embedded
   truthjetreco->add_input(tji);
@@ -185,9 +185,9 @@ int run_earlydata(string tag = "", int nproc = 0, int debug = 0, int nevt = 0, s
   truthjetreco->set_algo_node("ANTIKT");
   truthjetreco->set_input_node("TRUTH");
   if(issim) se->registerSubsystem(truthjetreco);
-    
+  */
   
-  JetReco *towerjetreco = new JetReco();
+  JetReco *towerjetreco = new JetReco("jetreco");
   TowerJetInput* emtji = new TowerJetInput(Jet::CEMC_TOWERINFO,"TOWERINFO_CALIB");
   TowerJetInput* ohtji = new TowerJetInput(Jet::HCALIN_TOWERINFO,"TOWERINFO_CALIB");
   TowerJetInput* ihtji = new TowerJetInput(Jet::HCALOUT_TOWERINFO,"TOWERINFO_CALIB");

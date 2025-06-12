@@ -46,8 +46,8 @@ for i in {0..3}; do
     fi
     TRTHJET=`sed -n "${UPLN}"p ./lists/dst_truth_jet.list`
     DMBDEPD=`sed -n "${UPLN}"p ./lists/dst_mbd_epd.list`
-    FULLTRTH=`psql FileCatalog -t -c "select full_file_path from files where lfn = '${DMBDEPD}';"`
-    FULLMBEP=`psql FileCatalog -t -c "select full_file_path from files where lfn = '${TRTHJET}';"`
+    FULLTRTH=`psql FileCatalog -t -c "select full_file_path from files where lfn = '${TRTHJET}';"`
+    FULLMBEP=`psql FileCatalog -t -c "select full_file_path from files where lfn = '${DMBDEPD}';"`
     FULLCALO=`psql FileCatalog -t -c "select full_file_path from files where lfn = '${CALOCLF}';"`
     FULLG4HT=`psql FileCatalog -t -c "select full_file_path from files where lfn = '${G4HITSF}';"`
     FULLGLOB=`psql FileCatalog -t -c "select full_file_path from files where lfn = '${GLOBALF}';"`
@@ -82,7 +82,7 @@ for i in {0..3}; do
     fi
     ls ./dsts/$SUBDIR
     #cp -r $TRTHJET ./dsts/$SUBDIR/truth_jet_${SUBDIR}.root
-    root -b -q 'run_earlydata.C("'${1}'",'${SUBDIR}',0,'${3}',".",'${ISSIM}','${RN}')'
+    root -b -q 'run_earlydata.C("'${1}'",'${SUBDIR}',10,'${3}',".",'${ISSIM}','${RN}')'
     ls
     echo " "
     ls $SUBDIR

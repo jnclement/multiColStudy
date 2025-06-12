@@ -5,7 +5,7 @@ if [ $# -lt 3 ]; then
     exit 1
 fi
 
-nmax=20000
+nmax=15000
 evt=$2
 filecounter=0
 if [ $evt -gt 100000 ]; then

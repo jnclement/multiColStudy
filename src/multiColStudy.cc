@@ -25,6 +25,7 @@
 #include <globalvertex/MbdVertexMapv1.h>
 #include <globalvertex/MbdVertex.h>
 #include <g4main/PHG4TruthInfoContainer.h>
+#include <g4main/PHG4VtxPoint.h>
 #include <mbd/MbdPmtHit.h>
 #include <mbd/MbdOut.h>
 #include <calobase/RawTowerv1.h>
@@ -216,6 +217,15 @@ int multiColStudy::process_event(PHCompositeNode *topNode)
   MbdVertexMap* mbdvtxmap = findNode::getClass<MbdVertexMapv1>(topNode, "MbdVertexMap");
 
   float zvtx = NAN;
+
+
+  _tnzvtx = 1;
+  PHG4TruthInfoContainer *truthinfo = findNode::getClass<PHG4TruthInfoContainer>(topNode, "G4TruthInfo");
+  if (truthinfo)
+    {
+      PHG4VtxPoint *gvertex = truthinfo->GetPrimaryVtx(truthinfo->GetPrimaryVertexIndex());
+      _tzvtx[0] = gvertex->get_z();
+    }
 
   if(!_issim)
     {
@@ -642,6 +652,7 @@ int multiColStudy::process_event(PHCompositeNode *topNode)
   _tnjet = 0;
   if(truthjets)
     {
+      if(_debug > 1) cout << "truth jets: " << truthjets->size() << endl;
       for(long unsigned int i=0; i<truthjets->size(); ++i)
 	{
 	  Jet* jet = truthjets->get_jet(i);
@@ -652,7 +663,7 @@ int multiColStudy::process_event(PHCompositeNode *topNode)
 	  if(testJetE < 4) continue;
 	  if(_debug > 3) cout << "got a candidate jet" << endl;
 	  _tjet_eta[_tnjet] = jet->get_eta();
-	  if(check_bad_jet_eta(_tjet_eta[_tnjet],_rzvtx[0],0.4)) continue;
+	  //if(check_bad_jet_eta(_tjet_eta[_tnjet],_rzvtx[0],0.4)) continue;
 	  _tjet_e[_tnjet] = testJetE;
 	  _tjet_et[_tnjet] = testJetE/cosh(_tjet_eta[_tnjet]);
 	  _tjet_phi[_tnjet] = testJetPhi;
