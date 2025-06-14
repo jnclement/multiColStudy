@@ -63,7 +63,7 @@ bool check_bad_jet_eta(float jet_eta, float zertex, float jet_radius) {
   return jet_eta < minlimit || jet_eta > maxlimit;
 }
 
-bool compfirst(const std::vector<int>& a, const std::vector<int>& b) {
+bool compfirst(const std::vector<double>& a, const std::vector<double>& b) {
   return a[0] < b[0];
 }
 
@@ -75,7 +75,7 @@ vector<vector<double>> make_jet_vector(int njet, double* jet_pt, double* jet_eta
       vector<double> jet = {jet_pt[i],jet_eta[i],jet_phi[i]};
       jet_vector.push_back(jet);
     }
-  std::sort(jet_vector.begin,jet_vector.end,compfirst);
+  std::sort(jet_vector.begin(),jet_vector.end(),compfirst);
   return jet_vector;
 }
 
@@ -109,6 +109,8 @@ int comp_zvtx(string tag, int rn)
   
   const int nmaxjet = 100;
   const int nzvtx = 3;
+  TH3D* h3_resp_pT_zvtx = new TH3D("h3_resp_pT_zvtx",";p_{T}^{reco}/p_{T}^{truth};p_{T}^{truth} [GeV];z_{vtx} [cm]",100,0,1,100,0,100,300,-150,150);
+  TH3D* h3_resp_pT_zvtx_noz = new TH3D("h3_resp_pT_zvtx_noz",";p_{T}^{reco}/p_{T}^{truth};p_{T}^{truth} [GeV];z_{vtx} [cm]",100,0,1,100,0,100,300,-150,150);
   for(int h=rn*100; h<rn*100+100; ++h)
     {
       string filename = "/sphenix/tg/tg01/jets/jocl/multiCol/"+to_string(rn)+"/events_"+tag+"_"+to_string(h)+"_0.root";
@@ -116,8 +118,8 @@ int comp_zvtx(string tag, int rn)
       TFile* datfile = TFile::Open(filename.c_str());
       
       if(!datfile) continue;
-      TTree* dattree = (TTree*)datfile->Get("tree");
-      if(!dattree) continue;
+      TTree* tree = (TTree*)datfile->Get("tree");
+      if(!tree) continue;
       int njet, tnjet, njet_noz;
       double jet_pt[nmaxjet], jet_eta[nmaxjet], jet_pt_noz[nmaxjet], jet_eta_noz[nmaxjet], tjet_pt[nmaxjet], tjet_eta[nmaxjet], jet_phi[nmaxjet], tjet_phi[nmaxjet], jet_phi_noz[nmaxjet], tzvtx[3];
       
@@ -135,8 +137,7 @@ int comp_zvtx(string tag, int rn)
       tree->SetBranchAddress("jet_phi_noz",jet_phi_noz);
       tree->SetBranchAddress("tzvtx",tzvtx);
       
-      TH3D* h3_resp_pT_zvtx = new TH3D("h3_resp_pT_zvtx",";p_{T}^{reco}/p_{T}^{truth};p_{T}^{truth} [GeV];z_{vtx} [cm]",100,0,1,100,0,100,300,-150,150);
-      TH3D* h3_resp_pT_zvtx_noz = new TH3D("h3_resp_pT_zvtx_noz",";p_{T}^{reco}/p_{T}^{truth};p_{T}^{truth} [GeV];z_{vtx} [cm]",100,0,1,100,0,100,300,-150,150);
+
       
       for(int i=0; i<tree->GetEntries(); ++i)
 	{
@@ -146,7 +147,7 @@ int comp_zvtx(string tag, int rn)
 	  vector<vector<double>> reco_noz = make_jet_vector(njet_noz, jet_pt_noz, jet_eta_noz, jet_phi_noz);
 	  
 	  vector<vector<double>> matches = truth_match(truthjet, recojets);
-	  vector<vector<double>> match_noz = truth_match(truthjet, reco_noz);
+	  vector<vector<double>> matches_noz = truth_match(truthjet, reco_noz);
 	  
 	  for(int j=0; j<matches.size(); ++j)
 	    {
