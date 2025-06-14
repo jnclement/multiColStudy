@@ -615,11 +615,11 @@ int multiColStudy::process_event(PHCompositeNode *topNode)
 
   if(jets_noz)
     {
-      int tocheck = jets->size();
+      int tocheck = jets_noz->size();
       if(_debug > 2) cout << "Found " << tocheck << " jets to check..." << endl;
       for(int i=0; i<tocheck; ++i)
         {
-          Jet *jet = jets->get_jet(i);
+          Jet *jet = jets_noz->get_jet(i);
           if(jet)
             {
 	      if(_debug > 5) cout << "getting jet E/eta" << endl;
