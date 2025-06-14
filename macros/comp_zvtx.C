@@ -67,12 +67,12 @@ bool compfirst(const std::vector<int>& a, const std::vector<int>& b) {
   return a[0] < b[0];
 }
 
-vector<vector<double>> make_jet_vector(vector<double> jet_pt, vector<double> jet_eta, vector<double> jet_phi)
+vector<vector<double>> make_jet_vector(int njet, double* jet_pt, double* jet_eta, double* jet_phi)
 {
   vector<vector<double>> jet_vector = {};
-  for(int i=0; i<jet_pt.size(); ++i)
+  for(int i=0; i<njet; ++i)
     {
-      vector<double> jet = {jet_pt.at(i),jet_eta.at(i),jet_phi.at(i)};
+      vector<double> jet = {jet_pt[i],jet_eta[i],jet_phi[i]};
       jet_vector.push_back(jet);
     }
   std::sort(jet_vector.begin,jet_vector.end,compfirst);
@@ -97,32 +97,30 @@ vector<vector<double>> truth_match(vector<vector<double>> truth_jets, vector<vec
 	    }
 	}
       match.push_back(truth_jets.at(i).at(0));
-      match.push_back(truth_jets.at(match_index).at(0));
+      match.push_back(reco_jets.at(match_index).at(0));
       matches.push_back(match);
       reco_jets.erase(reco_jets.begin()+match_index);
     }
   return matches;
 }
 
-int comp_zvtx(string tag, vector<int> rns, vector<int> nfiles, int triggerbit = 18, int dodijetcut = 1, int jetcut = 1, int issim = 0)
+int comp_zvtx(string tag, int rn)
 {
-
+  
   const int nmaxjet = 100;
   const int nzvtx = 3;
-  int rn = rns[0];
-  int nfile = nfiles[0];
-  for(int h=0; h<nfile; ++h)
+  for(int h=rn*100; h<rn*100+100; ++h)
     {
-      string filename = "multicoltree/events_"+tag+"_"+to_string(rn)+"_"+to_string(h)+"_0.root";
+      string filename = "/sphenix/tg/tg01/jets/jocl/multiCol/"+to_string(rn)+"/events_"+tag+"_"+to_string(h)+"_0.root";
       cout << "Processing file " << filename << endl;
       TFile* datfile = TFile::Open(filename.c_str());
-
+      
       if(!datfile) continue;
       TTree* dattree = (TTree*)datfile->Get("tree");
       if(!dattree) continue;
       int njet, tnjet, njet_noz;
-      double jet_pt[nmaxjet], jet_eta[nmaxjet], jet_pt_noz[nmaxjet], jet_eta_noz[nmaxjet], tjet_pt[nmaxjet], tjet_eta[nmaxjet], jet_phi[nmaxjet], tjet_phi[nmaxjet], jet_phi_noz[nmaxjet];
-
+      double jet_pt[nmaxjet], jet_eta[nmaxjet], jet_pt_noz[nmaxjet], jet_eta_noz[nmaxjet], tjet_pt[nmaxjet], tjet_eta[nmaxjet], jet_phi[nmaxjet], tjet_phi[nmaxjet], jet_phi_noz[nmaxjet], tzvtx[3];
+      
       tree->SetBranchAddress("njet",&njet);
       tree->SetBranchAddress("tnjet",&tnjet);
       tree->SetBranchAddress("njet_noz",&njet_noz);
@@ -135,8 +133,34 @@ int comp_zvtx(string tag, vector<int> rns, vector<int> nfiles, int triggerbit = 
       tree->SetBranchAddress("jet_phi",jet_phi);
       tree->SetBranchAddress("tjet_phi",tjet_phi);
       tree->SetBranchAddress("jet_phi_noz",jet_phi_noz);
+      tree->SetBranchAddress("tzvtx",tzvtx);
       
+      TH3D* h3_resp_pT_zvtx = new TH3D("h3_resp_pT_zvtx",";p_{T}^{reco}/p_{T}^{truth};p_{T}^{truth} [GeV];z_{vtx} [cm]",100,0,1,100,0,100,300,-150,150);
+      TH3D* h3_resp_pT_zvtx_noz = new TH3D("h3_resp_pT_zvtx_noz",";p_{T}^{reco}/p_{T}^{truth};p_{T}^{truth} [GeV];z_{vtx} [cm]",100,0,1,100,0,100,300,-150,150);
+      
+      for(int i=0; i<tree->GetEntries(); ++i)
+	{
+	  tree->GetEntry(i);
+	  vector<vector<double>> recojets = make_jet_vector(njet, jet_pt, jet_eta, jet_phi);
+	  vector<vector<double>> truthjet = make_jet_vector(tnjet, tjet_pt, tjet_eta, tjet_phi);
+	  vector<vector<double>> reco_noz = make_jet_vector(njet_noz, jet_pt_noz, jet_eta_noz, jet_phi_noz);
+	  
+	  vector<vector<double>> matches = truth_match(truthjet, recojets);
+	  vector<vector<double>> match_noz = truth_match(truthjet, reco_noz);
+	  
+	  for(int j=0; j<matches.size(); ++j)
+	    {
+	      h3_resp_pT_zvtx->Fill(matches.at(j).at(1)/matches.at(j).at(0),matches.at(j).at(0),tzvtx[0]);
+	      h3_resp_pT_zvtx_noz->Fill(matches_noz.at(j).at(1)/matches_noz.at(j).at(0),matches_noz.at(j).at(0),tzvtx[0]);
+	    }
+	}      
       datfile->Close();
     }
+  TFile* outfile = TFile::Open(("./multicolhist/hist_zcomp_"+tag+"_"+to_string(rn)+".root").c_str());
+  h3_resp_pT_zvtx->Write();
+  h3_resp_pT_zvtx_noz->Write();
+  outfile->Write();
+  outfile->Close();
+  
   return 0;
 }
