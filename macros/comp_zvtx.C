@@ -122,7 +122,7 @@ int comp_zvtx(string tag, int rn)
   TH3D* h3_resp_pT_zvtx_noz = new TH3D("h3_resp_pT_zvtx_noz",";p_{T}^{reco}/p_{T}^{truth};p_{T}^{truth} [GeV];z_{vtx} [cm]",100,0,1,100,0,100,300,-150,150);
   for(int h=rn*100; h<rn*100+100; ++h)
     {
-      string filename = "/sphenix/tg/tg01/jets/jocl/multiCol/"+to_string(rn)+"/events_"+tag+"_"+to_string(h)+"_0.root";
+      string filename = "/sphenix/tg/tg01/jets/jocl/multiCol/"+to_string(h)+"/events_"+tag+"_"+to_string(h)+"_0.root";
       cout << "Processing file " << filename << endl;
       TFile* datfile = TFile::Open(filename.c_str());
       
