@@ -177,10 +177,10 @@ int multiColStudy::Init(PHCompositeNode *topNode)
   _tree->Branch("calo_e",&_calo_e,"calo_e/D");
 
   _tree->Branch("njet_noz",&_njet_noz,"njet_noz/I");
-  _tree->Branch("jet_e_noz",_jet_e_noz,"jet_e_noz[njet]/D");
-  _tree->Branch("jet_eta_noz",_jet_eta_noz,"jet_eta_noz[njet]/D");
-  _tree->Branch("jet_phi_noz",_jet_phi_noz,"jet_phi_noz[njet]/D");
-  _tree->Branch("jet_pt_noz",_jet_pt_noz,"jet_pt_noz[njet]/D");
+  _tree->Branch("jet_e_noz",_jet_e_noz,"jet_e_noz[njet_noz]/D");
+  _tree->Branch("jet_eta_noz",_jet_eta_noz,"jet_eta_noz[njet_noz]/D");
+  _tree->Branch("jet_phi_noz",_jet_phi_noz,"jet_phi_noz[njet_noz]/D");
+  _tree->Branch("jet_pt_noz",_jet_pt_noz,"jet_pt_noz[njet_noz]/D");
   
   /*
   _tree->Branch("trig_jet_phi",&_trig_jet_phi,"trig_jet_phi/I");
@@ -277,6 +277,7 @@ int multiColStudy::process_event(PHCompositeNode *topNode)
   zvtx = _rzvtx[0];
   _tnjet = 0;
   _njet = 0;
+  _njet_noz = 0;
   _hitsgrone = 0;
   _ncluster = 0;
   //LL1Out* ll1out_jet = findNode::getClass<LL1Out>(topNode, "LL1OUT_JET");
