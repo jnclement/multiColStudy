@@ -70,15 +70,15 @@ bool compfirst(const std::vector<double>& a, const std::vector<double>& b) {
 vector<vector<double>> make_jet_vector(int njet, double* jet_pt, double* jet_eta, double* jet_phi, int istruth, double zvtx)
 {
   vector<vector<double>> jet_vector = {};
-  cout << endl << endl << "jet pt: " << endl;
+  //cout << endl << endl << "jet pt: " << endl;
   for(int i=0; i<njet; ++i)
     {
-      cout << jet_pt[i] << endl;
+      //cout << jet_pt[i] << endl;
       if(check_bad_jet_eta(jet_eta[i],zvtx,(istruth?0:0.4))) continue;
       vector<double> jet = {jet_pt[i],jet_eta[i],jet_phi[i]};
       jet_vector.push_back(jet);
     }
-  cout << endl << endl;
+  //cout << endl << endl;
   std::sort(jet_vector.begin(),jet_vector.end(),compfirst);
   return jet_vector;
 }
@@ -88,7 +88,7 @@ vector<vector<double>> truth_match(vector<vector<double>> truth_jets, vector<vec
   vector<vector<double>> matches = {};
   for(int i=0; i<truth_jets.size(); ++i)
     {
-      cout << truth_jets.at(i).at(0) << " " << truth_jets.at(i).at(1) << " " << truth_jets.at(i).at(2) << endl;
+      //cout << truth_jets.at(i).at(0) << " " << truth_jets.at(i).at(1) << " " << truth_jets.at(i).at(2) << endl;
 
       int match_index = -1;
       double max_pt = 0;
@@ -96,7 +96,7 @@ vector<vector<double>> truth_match(vector<vector<double>> truth_jets, vector<vec
       for(int j=0; j<reco_jets.size(); ++j)
 	{
 	  double dPhi = abs(truth_jets.at(i).at(2) - reco_jets.at(j).at(2));
-	  cout << "    " << reco_jets.at(j).at(0) << " " << reco_jets.at(j).at(1) << " " << reco_jets.at(j).at(2) << endl;
+	  //cout << "    " << reco_jets.at(j).at(0) << " " << reco_jets.at(j).at(1) << " " << reco_jets.at(j).at(2) << endl;
 	  if(dPhi < 0.3 && reco_jets.at(j).at(0) > max_pt)
 	    {
 	      max_pt = reco_jets.at(j).at(0);
@@ -104,7 +104,7 @@ vector<vector<double>> truth_match(vector<vector<double>> truth_jets, vector<vec
 	    }
 	}
       if(match_index == -1) continue;
-      cout << "here" << endl;
+      //cout << "here" << endl;
       match.push_back(truth_jets.at(i).at(0));
       match.push_back(reco_jets.at(match_index).at(0));
       matches.push_back(match);
@@ -123,7 +123,7 @@ int comp_zvtx(string tag, int rn)
   for(int h=rn*100; h<rn*100+100; ++h)
     {
       string filename = "/sphenix/tg/tg01/jets/jocl/multiCol/"+to_string(h)+"/events_"+tag+"_"+to_string(h)+"_0.root";
-      cout << "Processing file " << filename << endl;
+      //cout << "Processing file " << filename << endl;
       TFile* datfile = TFile::Open(filename.c_str());
       
       if(!datfile) continue;
@@ -152,20 +152,20 @@ int comp_zvtx(string tag, int rn)
       for(int i=0; i<tree->GetEntries(); ++i)
 	{
 	  tree->GetEntry(i);
-	  cout << "make recojets" << endl;
+	  //cout << "make recojets" << endl;
 	  vector<vector<double>> recojets = make_jet_vector(njet, jet_pt, jet_eta, jet_phi,0,rzvtx[0]);
-	  cout << "make truthjets" << endl;
+	  //cout << "make truthjets" << endl;
 	  vector<vector<double>> truthjet = make_jet_vector(tnjet, tjet_pt, tjet_eta, tjet_phi,1,tzvtx[0]);
-	  cout << "make reco noz" << endl;
+	  //cout << "make reco noz" << endl;
 	  vector<vector<double>> reco_noz = make_jet_vector(njet_noz, jet_pt_noz, jet_eta_noz, jet_phi_noz,0,0);
-	  cout << "make matches" << endl;
+	  //cout << "make matches" << endl;
 	  vector<vector<double>> matches = truth_match(truthjet, recojets);
-	  cout << "make matches noz" << endl;
+	  //cout << "make matches noz" << endl;
 	  vector<vector<double>> matches_noz = truth_match(truthjet, reco_noz);
-	  cout << "fill" << endl;
+	  //cout << "fill" << endl;
 	  for(int j=0; j<matches.size(); ++j)
 	    {
-	      cout << "matches j 0 " << matches.at(j).at(0) << " matches j 1 " << matches.at(j).at(1) << endl;
+	      //cout << "matches j 0 " << matches.at(j).at(0) << " matches j 1 " << matches.at(j).at(1) << endl;
 	      h3_resp_pT_zvtx->Fill(matches.at(j).at(1)/matches.at(j).at(0),matches.at(j).at(0),tzvtx[0]);
 
 	    }
@@ -176,7 +176,7 @@ int comp_zvtx(string tag, int rn)
 	}      
       datfile->Close();
     }
-  TFile* outfile = TFile::Open(("./multicolhist/hist_zcomp_"+tag+"_"+to_string(rn)+".root").c_str());
+  TFile* outfile = TFile::Open(("./multicolhist/hist_zcomp_"+tag+"_"+to_string(rn)+".root").c_str(),"RECREATE");
   h3_resp_pT_zvtx->Write();
   h3_resp_pT_zvtx_noz->Write();
   outfile->Write();

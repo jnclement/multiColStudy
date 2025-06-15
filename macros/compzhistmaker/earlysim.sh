@@ -13,7 +13,7 @@ echo "got into condor scratch dir"
 RN=$1
 TAG=20250612sim
 #mkdir -p multicoltree
-mkdir -p multicolhist
+mkdir -p ./multicolhist
 echo "copy file from tg to here"
 #cp /sphenix/tg/tg01/jets/jocl/multiCol/$RN/*$TAG* multicoltree
 mkdir -p /sphenix/user/jocl/projects/multiColStudy/output/hists
