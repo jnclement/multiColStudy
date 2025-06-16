@@ -19,3 +19,4 @@ run/run_temp.C
 temp/
 rootfiles/
 macros/condorhist/*.sub
+macros/compzhistmaker/*.sub
