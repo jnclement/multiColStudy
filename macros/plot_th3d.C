@@ -15,7 +15,7 @@ int get_bin_number_for_axis(TH3D* h, int axis, double value, int getlo)
   int bin = -1;
   if(axis==0) bin = h->GetXaxis()->FindBin(value);
   else if(axis==1) bin = h->GetYaxis()->FindBin(value);
-  else if(axis==1) bin = h->GetZaxis()->FindBin(value);
+  else if(axis==2) bin = h->GetZaxis()->FindBin(value);
   else return bin;
   bin += (getlo?0:1);
   return bin;
@@ -27,9 +27,9 @@ vector<TObject*> make_projections(TH3D* h, int axis, double from, double to)
   vector<TObject*> outhists = {};
 
   
-  if(axis==0) projdir = "yzo";
-  else if(axis==1) projdir = "xzo";
-  else if(axis==2) projdir = "xyo";
+  if(axis==0) projdir = "yz";
+  else if(axis==1) projdir = "xz";
+  else if(axis==2) projdir = "xy";
   else return {};
 
   TH2D* proj1;
@@ -38,24 +38,26 @@ vector<TObject*> make_projections(TH3D* h, int axis, double from, double to)
   if(to > from)
     {
       set_axis_range_based_on_axis(h, axis, get_bin_number_for_axis(h, axis, from, 1), get_bin_number_for_axis(h, axis, to, 0));
-      proj1 = (TH2D*)(h->Project3D(projdir.c_str()));
+      proj1 = (TH2D*)(h->Project3D(("proj1_"+projdir).c_str()));
     }
   else
     {
       set_axis_range_based_on_axis(h, axis, 0, get_bin_number_for_axis(h, axis, to, 0));
-      proj1 = (TH2D*)(h->Project3D(projdir.c_str()));
-
+      proj1 = (TH2D*)(h->Project3D(("proj1_"+projdir).c_str()));
+      //proj1->Draw("COLZ");
       set_axis_range_based_on_axis(h, axis, get_bin_number_for_axis(h, axis, from, 1), 9999999);
-      proj2 = (TH2D*)(h->Project3D(projdir.c_str()));
+      proj2 = (TH2D*)(h->Project3D(("proj1_"+projdir).c_str()));
       proj1->Add(proj2);
     }
 
   proj1->GetZaxis()->SetTitle("Counts");
 
   
-  outhists.push_back(proj1);
-  outhists.push_back(proj1->ProjectionX());
-  outhists.push_back(proj1->ProjectionY());
+  outhists.push_back(proj1->Clone());
+  ((TH2D*)outhists.at(0))->GetXaxis()->SetRange(1,((TH2D*)outhists.at(0))->GetNbinsX());
+  ((TH2D*)outhists.at(0))->GetYaxis()->SetRange(1,((TH2D*)outhists.at(0))->GetNbinsY());
+  outhists.push_back(((TH2D*)outhists.at(0))->ProjectionX());  
+  outhists.push_back(((TH2D*)outhists.at(0))->ProjectionY());
   
   return outhists;
 }
@@ -74,18 +76,18 @@ TGraphErrors* get_th2d_mean_tgraph(TH2D* h)
   for(int i=1; i<=nx; ++i)
     {
       TH1D* projy = h->ProjectionY("_py",i,i);
-      if(projy->GetEntries() < 5) continue;
+      
       TF1* gaus = new TF1("gaus","gaus",projy->GetXaxis()->GetXmin(),projy->GetXaxis()->GetXmax());
       projy->Fit(gaus,"QNR");
       double x = h->GetXaxis()->GetBinCenter(i);
       double mean = gaus->GetParameter(1);
       double err = gaus->GetParameter(2);
       means->AddPoint(x,mean);
-      means->SetPointError(0,err);
+      means->SetPointError(i-1,0,err);
       //means->AddPointError(x,mean,0,err);
 
-      delete gaus;
-      delete projy;
+      //delete gaus;
+      //delete projy;
     }
   return means;
 }
@@ -181,19 +183,20 @@ int overlay_w_ratio_tgraph(TGraphErrors* wz, TGraphErrors* nz, TCanvas* can, TLe
   wz->Draw("PE");
   nz->Draw("SAME PE");
   can->cd(2);
+  ratio->GetYaxis()->SetRangeUser(0,2);
   ratio->Draw("PE");
   can->cd(0);
   alltext(-1, etcuttext, zcuttext);
   can->cd(1);
   leg->Draw();
-  TLine* oneline = new TLine(wz->GetXaxis()->GetXmin(),1,nz->GetXaxis()->GetXmax(),1);
+  TLine* oneline = new TLine(wz->GetXaxis()->GetXmin(),1,wz->GetXaxis()->GetXmax(),1);
   can->cd(2);
   oneline->Draw();
 
   can->SaveAs(("../output/plots/"+histtype + "_"+xy+".png").c_str());
 
-  delete oneline;
-  delete ratio;
+  //delete oneline;
+  //delete ratio;
   
   return 0;
 }
@@ -202,6 +205,8 @@ int overlay_w_ratio_th1d(TH1D* wz, TH1D* nz, TCanvas* can, TLegend* leg, string 
 {
   can->cd(1);
   TH1D* ratio = (TH1D*)wz->Clone();
+  cout << ratio->GetNbinsX() << " " << ratio->GetBinLowEdge(201) << endl;
+  
   ratio->Divide(wz,nz,1,1,"B");
   ratio->GetYaxis()->SetTitle("Ratio Reco z / Zero z");
   
@@ -215,6 +220,7 @@ int overlay_w_ratio_th1d(TH1D* wz, TH1D* nz, TCanvas* can, TLegend* leg, string 
   wz->Draw("PE");
   nz->Draw("SAME PE");
   can->cd(2);
+  ratio->GetYaxis()->SetRangeUser(0,2);
   ratio->Draw("PE");
   can->cd(0);
   alltext(-1, etcuttext, zcuttext);
@@ -226,7 +232,7 @@ int overlay_w_ratio_th1d(TH1D* wz, TH1D* nz, TCanvas* can, TLegend* leg, string 
 
   can->SaveAs(("../output/plots/"+histtype + "_"+xy+".png").c_str());
 
-  delete oneline;
+  //delete oneline;
 
   return 0;
 }
@@ -242,6 +248,8 @@ int draw_all(string histtype, vector<TObject*> wz, vector<TObject*> nz, string e
   TH1D* nzx = (TH1D*)nz.at(1);
   TH1D* nzy = (TH1D*)nz.at(2);
 
+  //cout << wzy->GetNbinsX() << " " << wzy->GetBinLowEdge(200) << " " << nzy->GetNbinsX() << " " << nzy->GetBinLowEdge(200) << endl;
+  
   format_th2d(wz2);
   format_th2d(nz2);
   format_th1d(wzx,kBlack);
@@ -269,7 +277,7 @@ int draw_all(string histtype, vector<TObject*> wz, vector<TObject*> nz, string e
   alltext(0,etcuttext,zcuttext);
   can->SaveAs(("../output/plots/"+histtype + "_nz.png").c_str());
 
-  delete can;
+  //delete can;
   can = new TCanvas("","",1000,1500);
   ratioPanelCanvas(can,0.3);
 
@@ -281,12 +289,12 @@ int draw_all(string histtype, vector<TObject*> wz, vector<TObject*> nz, string e
 
   overlay_w_ratio_th1d(wzx, nzx, can, leg, etcuttext, zcuttext, histtype, "x");
   overlay_w_ratio_th1d(wzy, nzy, can, leg, etcuttext, zcuttext, histtype, "y");
-  overlay_w_ratio_tgraph(wzg, nzg, can, leg, etcuttext, zcuttext, histtype, "mean");
+  //overlay_w_ratio_tgraph(wzg, nzg, can, leg, etcuttext, zcuttext, histtype, "mean");
 
-  delete leg;
-  delete can;
-  delete wzg;
-  delete nzg;
+  //delete leg;
+  //delete can;
+  //delete wzg;
+  //delete nzg;
   
   return 0;
 }
@@ -325,11 +333,8 @@ int plot_th3d(string filename)
   TH3D* hw = (TH3D*)file->Get("h3_resp_pT_zvtx");
   TH3D* hn = (TH3D*)file->Get("h3_resp_pT_zvtx_noz");
   if(!hw || !hn) return 2;
-  
-  get_and_draw(hw, hn, 1, 20, 100, "E_{T}^{jet} > 20 GeV","All z_{vtx}");
-  get_and_draw(hw, hn, 2, -30, 30, "E_{T}^{jet} > 15 GeV","|z_{vtx}|<30 cm");
-  get_and_draw(hw, hn, 2, 60, -60, "E_{T}^{jet} > 15 GeV","|z_{vtx}|>60 cm");
-  
+
+  get_and_draw(hw, hn, 2, 60, -60, "E_{T}^{jet} > 15 GeV","|z_{vtx}|>60 cm");  
   
   return 0;
 }
