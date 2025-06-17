@@ -73,6 +73,7 @@ vector<vector<double>> make_jet_vector(int njet, double* jet_pt, double* jet_eta
   //cout << endl << endl << "jet pt: " << endl;
   for(int i=0; i<njet; ++i)
     {
+      if(istruth && jet_pt[i] < 15) continue;
       //cout << jet_pt[i] << endl;
       if(check_bad_jet_eta(jet_eta[i],zvtx,(istruth?0:0.4))) continue;
       vector<double> jet = {jet_pt[i],jet_eta[i],jet_phi[i]};
