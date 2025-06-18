@@ -98,7 +98,7 @@ vector<vector<double>> truth_match(vector<vector<double>> truth_jets, vector<vec
 	{
 	  double dPhi = abs(truth_jets.at(i).at(2) - reco_jets.at(j).at(2));
 	  //cout << "    " << reco_jets.at(j).at(0) << " " << reco_jets.at(j).at(1) << " " << reco_jets.at(j).at(2) << endl;
-	  if(dPhi < 0.3 && reco_jets.at(j).at(0) > max_pt)
+	  if((abs(dPhi) < 0.3 || 2*M_PI - abs(dPhi) < 0.3) && reco_jets.at(j).at(0) > max_pt)
 	    {
 	      max_pt = reco_jets.at(j).at(0);
 	      match_index = j;
