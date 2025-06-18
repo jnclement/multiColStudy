@@ -448,20 +448,20 @@ double smart_hist_max(TH1D* h)
 double smart_hist_min(TH1D* h)
 {
   int nbins = h->GetNbinsX();
-
+  cout << "test" << endl;
   std::vector<double> contents;
   for (int i = 1; i <= nbins; ++i) {
     double val = h->GetBinContent(i);
     if(val>0) contents.push_back(val);
   }
-  
+  cout << "test2" << endl;
   // Sort in descending order
   std::sort(contents.begin(), contents.end(), std::less<double>());
-  
+  cout << "test3" << endl;
   // Use, for example, the 95th percentile as the effective maximum
   int index = contents.size() * 0.05;  // ignore top 5%
   double smart_min = contents[index];
-  
+  cout << "test4" << endl;
   return smart_min;
 }
 
@@ -522,7 +522,7 @@ int get_and_draw_th2d(string histbasename, string* region, TFile* histfile, stri
 int plot_njl(int tb)
 {
   cout << "test" << endl;
-  gROOT->ProcessLine( "gErrorIgnoreLevel = 1001;");
+  //gROOT->ProcessLine( "gErrorIgnoreLevel = 1001;");
   bit = tb;
   gStyle->SetOptStat(0);
   gStyle->SetOptTitle(0);
@@ -532,7 +532,7 @@ int plot_njl(int tb)
   histfile = TFile::Open(("../output/hists/hadded"+to_string(bit)+".root").c_str());
 
   TCanvas* lumican = new TCanvas("","",2000,1000);
-
+  
   string histname1 = "njet_lumi";
   string histname2 = "njet_lumi_Ecut";
 
@@ -543,11 +543,14 @@ int plot_njl(int tb)
     }
   
   TH1D* njet_lumi = (TH1D*)histfile->Get(histname1.c_str());
-
+  cout << "here2" <<njet_lumi <<endl;
   double njlsmin = smart_hist_min(njet_lumi);
+  cout << "here3" << endl;
   double njlsmax = smart_hist_max(njet_lumi);
-  njet_lumi->GetYaxis()->SetRangeUser(0.75*njlsmin,1.25*njlsmax);
-
+  cout << "here4" << endl;
+  //njet_lumi->GetYaxis()->SetRangeUser(0.75*njlsmin,1.25*njlsmax);
+  njet_lumi->GetYaxis()->SetRangeUser(50000,90000);
+  cout << "here" << endl;
   
   //njet_lumi->GetYaxis()->SetRangeUser(0,7e4);
   njet_lumi->SetMarkerSize(1);
@@ -555,11 +558,22 @@ int plot_njl(int tb)
   lumican->cd();
   njet_lumi->GetYaxis()->SetTitle(("N_{jet}/\\mathscr{L}_{int,corr}^{trig"+to_string(tb)+"}").c_str());
   njet_lumi->GetXaxis()->SetTitle("Run Number");
+  njet_lumi->GetXaxis()->SetRangeUser(51800,52100);
   njet_lumi->Draw("PE");
+
+  vector<int> fillchange = {51834,51863,51903,51912,52039,52054,52063,52072,52080};
+
+  for(int i=0; i<fillchange.size(); ++i)
+    {
+      TLine* fline = new TLine(fillchange[i],50000,fillchange[i],90000);
+      fline->SetLineColor(kRed);
+      fline->Draw();
+    }
+  
   sphenixtext(0.65,0.96);
   sqrt_s_text(0.65,0.92);
   if(bit!=26) antikt_text(0.4,0.3,0.92);
-  if(bit!=26) et_cut_text(10,0.015,0.96);
+  if(bit!=26) et_cut_text(15,0.015,0.96);
   if(bit!=26) dijet_cut_text(0.3,0.96);
   lumican->SaveAs(("../output/plots/"+to_string(bit)+"_njet_lumi.png").c_str());
 
@@ -567,7 +581,8 @@ int plot_njl(int tb)
 
   njlsmin = smart_hist_min(njet_lumi_Ecut);
   njlsmax = smart_hist_max(njet_lumi_Ecut);
-  njet_lumi_Ecut->GetYaxis()->SetRangeUser(0.75*njlsmin,1.25*njlsmax);
+  //njet_lumi_Ecut->GetYaxis()->SetRangeUser(0.75*njlsmin,1.25*njlsmax);
+  njet_lumi_Ecut->GetYaxis()->SetRangeUser(50000,90000);
   
   //njet_lumi_Ecut->GetYaxis()->SetRangeUser(0,1.5e4);
   njet_lumi_Ecut->SetMarkerSize(1);
@@ -575,11 +590,20 @@ int plot_njl(int tb)
   lumican->cd();
   njet_lumi_Ecut->GetYaxis()->SetTitle(("N_{jet}/\\mathscr{L}_{int,corr}^{trig"+to_string(tb)+"}").c_str());
   njet_lumi_Ecut->GetXaxis()->SetTitle("Run Number");
+  njet_lumi_Ecut->GetXaxis()->SetRangeUser(51800,52100);
   njet_lumi_Ecut->Draw("PE");
+
+  for(int i=0; i<fillchange.size(); ++i)
+    {
+      TLine* fline = new TLine(fillchange[i],50000,fillchange[i],90000);
+      fline->SetLineColor(kRed);
+      fline->Draw();
+    }
+
   sphenixtext(0.65,0.96);
   sqrt_s_text(0.65,0.92);
   if(bit!=26) antikt_text(0.4,0.3,0.92);
-  if(bit!=26) et_cut_text(15,0.015,0.96);
+  if(bit!=26) drawText("15 GeV<E_{T}^{jet}<25 GeV",0.1,0.96);//et_cut_text(15,0.015,0.96);
   if(bit!=26) dijet_cut_text(0.3,0.96);
   lumican->SaveAs(("../output/plots/"+to_string(bit)+"_njet_lumi_Ecut.png").c_str());
 

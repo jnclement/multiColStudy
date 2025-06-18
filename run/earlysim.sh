@@ -61,7 +61,7 @@ for i in {0..3}; do
     cp $FULLCALO .
     
     if [ $ISSIM -ne 0 ]; then
-	cp $FULLGLOB .
+	#cp $FULLGLOB .
 	cp $FULLTRTH .
 	cp $FULLMBEP .
 	cp $FULLG4HT .
@@ -75,7 +75,7 @@ for i in {0..3}; do
     mv $CALOCLF ./dsts/$SUBDIR/calo_cluster_${SUBDIR}.root
 
     if [ $ISSIM -ne 0 ]; then
-	mv $GLOBALF ./dsts/$SUBDIR/global_${SUBDIR}.root
+	#mv $GLOBALF ./dsts/$SUBDIR/global_${SUBDIR}.root
 	mv $G4HITSF ./dsts/$SUBDIR/g4hits_${SUBDIR}.root
 	mv $TRTHJET ./dsts/$SUBDIR/truth_jet_${SUBDIR}.root
 	mv $DMBDEPD ./dsts/$SUBDIR/mbd_epd_${SUBDIR}.root

@@ -7,7 +7,6 @@ fi
 
 REG=$1
 
-echo $evt
 for rn in `cat ../../run/lists/rns${REG}.list`; do
     echo $rn
     bash run_everything.sh $rn

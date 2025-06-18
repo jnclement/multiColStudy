@@ -11,7 +11,7 @@ else
 fi
 echo "got into condor scratch dir"
 RN=$1
-TAG=20250606opf
+TAG=20250616
 mkdir -p multicoltree
 mkdir -p multicolhist
 echo "copy file from tg to here"
@@ -22,7 +22,7 @@ cp -r /sphenix/user/jocl/projects/multiColStudy/macros/make_hists.C .
 cp -r /sphenix/user/jocl/projects/multiColStudy/macros/make_tturn.C .
 echo "got all files, run code"
 bash make_all_dc.sh 22 $TAG $RN
-#bash make_all_dc.sh 10 $TAG $RN
+#bash make_all_dc.sh 18 $TAG $RN
 #bash make_all_dc.sh 26 $TAG $RN
 echo "copy file back"
 cp multicolhist/* /sphenix/user/jocl/projects/multiColStudy/output/hists

@@ -106,7 +106,7 @@ int run_earlydata(string tag = "", int nproc = 0, int debug = 0, int nevt = 0, s
       in_3->AddFile(line3);
       in_4->AddFile(line4);
       in_5->AddFile(line5);
-      se->registerInputManager( in_2 );
+      //se->registerInputManager( in_2 );
       se->registerInputManager( in_3 );
       se->registerInputManager(in_4);
       se->registerInputManager(in_5);

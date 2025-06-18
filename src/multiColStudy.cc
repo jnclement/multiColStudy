@@ -240,11 +240,9 @@ int multiColStudy::process_event(PHCompositeNode *topNode)
       _trigvec[0] = gl1->getLiveVector(); //raw must be identical to live if event was taken
     }
   _nzvtx = 0;
-  _tnzvtx = 0;
   for(int i=0; i<_maxzvtx; ++i)
     {
       _rzvtx[i] = NAN;
-      _tzvtx[i] = NAN;
     }
   if(mbdvtxmap)
     {

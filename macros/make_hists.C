@@ -293,8 +293,8 @@ int make_hists(string tag, vector<int> rns, vector<int> nfiles, int triggerbit =
 		{
 		  if(abs(zvtx[0]) < 30)
 		    {
-		      if(jet_e[j]/cosh(jet_eta[j]) > 15 && lumi[whichlumi] != 0 && triggerbit == 22) njet_lumiecut->Fill(rn,1./lumi[whichlumi]);
-		      if(jet_e[j]/cosh(jet_eta[j]) > 10 && lumi[whichlumi] != 0 && triggerbit == 22) njet_lumi->Fill(rn,1./lumi[whichlumi]);
+		      if(jet_e[j]/cosh(jet_eta[j]) > 15 && lumi[whichlumi] != 0 && triggerbit == 22 && jet_e[j]/cosh(jet_eta[j]) < 25) njet_lumiecut->Fill(rn,1./lumi[whichlumi]);
+		      if(jet_e[j]/cosh(jet_eta[j]) > 15 && lumi[whichlumi] != 0 && triggerbit == 22) njet_lumi->Fill(rn,1./lumi[whichlumi]);
 		      if(cluster_e[j]/cosh(cluster_eta[j]) > 7 && lumi[whichlumi] != 0 && triggerbit == 26) nclus_lumiecut->Fill(rn,1./lumi[whichlumi]);
 		      if(cluster_e[j]/cosh(cluster_eta[j]) > 5 && lumi[whichlumi] != 0 && triggerbit == 26) nclus_lumi->Fill(rn,1./lumi[whichlumi]);
 		    }

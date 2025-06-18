@@ -334,7 +334,7 @@ int plot_th3d(string filename)
   TH3D* hn = (TH3D*)file->Get("h3_resp_pT_zvtx_noz");
   if(!hw || !hn) return 2;
 
-  get_and_draw(hw, hn, 2, 60, -60, "E_{T}^{jet} > 15 GeV","|z_{vtx}|>60 cm");  
+  get_and_draw(hw, hn, 0, 0, 2, "E_{T}^{jet} > 15 GeV","|z_{vtx}|<150 cm");  
   
   return 0;
 }

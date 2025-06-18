@@ -67,14 +67,14 @@ bool compfirst(const std::vector<double>& a, const std::vector<double>& b) {
   return a[0] < b[0];
 }
 
-vector<vector<double>> make_jet_vector(int njet, double* jet_pt, double* jet_eta, double* jet_phi, int istruth, double zvtx)
+vector<vector<double>> make_jet_vector(int njet, double* jet_pt, double* jet_eta, double* jet_phi, int istruth, double zvtx, int sampletype)
 {
   vector<vector<double>> jet_vector = {};
   //cout << endl << endl << "jet pt: " << endl;
   for(int i=0; i<njet; ++i)
     {
-      if(istruth && jet_pt[i] < 15) continue;
-      //cout << jet_pt[i] << endl;
+      if(istruth && jet_pt[i] < (sampletype==1?30:15)) continue;
+      if(istruth && sampletype != 1 && jet_pt[i] > 30) continue;
       if(check_bad_jet_eta(jet_eta[i],zvtx,(istruth?0:0.4))) continue;
       vector<double> jet = {jet_pt[i],jet_eta[i],jet_phi[i]};
       jet_vector.push_back(jet);
@@ -114,9 +114,10 @@ vector<vector<double>> truth_match(vector<vector<double>> truth_jets, vector<vec
   return matches;
 }
 
-int comp_zvtx(string tag, int rn)
+int comp_zvtx(string tag, int rn, int sampletype = 0)
 {
-  
+  double scalefactor = 1;
+  if(sampletype == 1) scalefactor = 2.505e-9 / 3.646e-6;
   const int nmaxjet = 100;
   const int nzvtx = 3;
   TH3D* h3_resp_pT_zvtx = new TH3D("h3_resp_pT_zvtx",";p_{T}^{reco}/p_{T}^{truth};p_{T}^{truth} [GeV];z_{vtx} [cm]",200,0,2,100,0,100,300,-150,150);
@@ -154,11 +155,11 @@ int comp_zvtx(string tag, int rn)
 	{
 	  tree->GetEntry(i);
 	  //cout << "make recojets" << endl;
-	  vector<vector<double>> recojets = make_jet_vector(njet, jet_pt, jet_eta, jet_phi,0,rzvtx[0]);
+	  vector<vector<double>> recojets = make_jet_vector(njet, jet_pt, jet_eta, jet_phi,0,rzvtx[0],sampletype);
 	  //cout << "make truthjets" << endl;
-	  vector<vector<double>> truthjet = make_jet_vector(tnjet, tjet_pt, tjet_eta, tjet_phi,1,tzvtx[0]);
+	  vector<vector<double>> truthjet = make_jet_vector(tnjet, tjet_pt, tjet_eta, tjet_phi,1,tzvtx[0],sampletype);
 	  //cout << "make reco noz" << endl;
-	  vector<vector<double>> reco_noz = make_jet_vector(njet_noz, jet_pt_noz, jet_eta_noz, jet_phi_noz,0,0);
+	  vector<vector<double>> reco_noz = make_jet_vector(njet_noz, jet_pt_noz, jet_eta_noz, jet_phi_noz,0,0,sampletype);
 	  //cout << "make matches" << endl;
 	  vector<vector<double>> matches = truth_match(truthjet, recojets);
 	  //cout << "make matches noz" << endl;
