@@ -62,9 +62,11 @@ vector<TObject*> make_projections(TH3D* h, int axis, double from, double to)
   return outhists;
 }
 
-TGraphErrors* get_th2d_mean_tgraph(TH2D* h)
+vector<TGraphErrors*> get_th2d_mean_tgraph(TH2D* h)
 {
   TGraphErrors* means = new TGraphErrors();
+  TGraphErrors* jes = new TGraphErrors();
+  TGraphErrors* jer = new TGraphErrors();
   means->SetMarkerStyle(20);
   means->SetMarkerColor(kBlack);
   means->SetLineColor(kBlack);
@@ -72,7 +74,7 @@ TGraphErrors* get_th2d_mean_tgraph(TH2D* h)
   means->SetLineWidth(2);
   
   int nx = h->GetNbinsX();
-
+  int npoints = 0;
   for(int i=1; i<=nx; ++i)
     {
       TH1D* projy = h->ProjectionY("_py",i,i);
@@ -82,14 +84,21 @@ TGraphErrors* get_th2d_mean_tgraph(TH2D* h)
       double x = h->GetXaxis()->GetBinCenter(i);
       double mean = gaus->GetParameter(1);
       double err = gaus->GetParameter(2);
+      if(mean == 0 || err == 0) continue;
+      cout << x << " " <<  mean << " " << err << " " << gaus->GetParError(1) << " " << gaus->GetParError(2) << endl;
+      jes->AddPoint(x,mean);
+      jes->SetPointError(npoints,0,gaus->GetParError(1));
+      jer->AddPoint(x,err/mean);
+      jer->SetPointError(npoints,0,gaus->GetParError(2)/mean);
       means->AddPoint(x,mean);
-      means->SetPointError(i-1,0,err);
+      means->SetPointError(npoints,0,err);
+      ++npoints;
       //means->AddPointError(x,mean,0,err);
-
+      
       //delete gaus;
       //delete projy;
     }
-  return means;
+  return {means,jes,jer};
 }
 
 int format_th1d(TH1D* hist, int color)
@@ -121,17 +130,63 @@ int format_th2d(TH2D* hist)
 
 int alltext(int hasz, string etcuttext = "", string zcuttext = "")
 {
-  sphenixtext(0.85,0.96);
-  sqrt_s_text(0.85,0.92);
-  antikt_text(0.4,0.6,0.92);
+  sphenixtext(0.65,0.97);
+  sqrt_s_text(0.65,0.94);
+  antikt_text(0.4,0.3,0.94);
   //dijet_cut_text(0.6,0.96);
-  drawText(etcuttext.c_str(),0.4,0.96);
-  drawText(zcuttext.c_str(),0.4,0.92);
+  drawText(etcuttext.c_str(),0.05,0.97);
+  drawText(zcuttext.c_str(),0.05,0.94);
   string hasztext = "";
-  if(hasz == 0) hasztext = "z_{vtx} assumed 0";
-  else if(hasz == 1) hasztext = "Reco z_{vtx} must exist";
-  drawText(hasztext.c_str(),0.6,0.96);
+  if(hasz == 0) hasztext = "z_{vtx} assumed 0 for jet reco";
+  else if(hasz == 1) hasztext = "Reco z_{vtx} used for jet reco";
+  drawText(hasztext.c_str(),0.4,0.97);
   return 0;
+}
+
+TH1D* GraphToHist(const TGraphErrors* graph, const TString& name = "hFromGraph") {
+    const int n = graph->GetN();
+    if (n == 0) return nullptr;
+
+    // Allocate bin edges based on the x-points
+    std::vector<double> edges;
+    edges.reserve(n + 1);
+
+    // Compute bin edges between points (midpoints), extrapolate edges for first/last
+    for (int i = 0; i < n; ++i) {
+        double x, y;
+        graph->GetPoint(i, x, y);
+        if (i == 0) {
+            double xNext;
+            graph->GetPoint(i + 1, xNext, y);
+            double width = xNext - x;
+            edges.push_back(x - width / 2.0);
+        } else {
+            double xPrev;
+            graph->GetPoint(i - 1, xPrev, y);
+            double width = x - xPrev;
+            edges.push_back(xPrev + width / 2.0);
+        }
+        if (i == n - 1) {
+            double xPrev;
+            graph->GetPoint(i - 1, xPrev, y);
+            double width = x - xPrev;
+            edges.push_back(x + width / 2.0);
+        }
+    }
+
+    // Convert vector to ROOT-style array
+    TH1D* h = new TH1D(name, graph->GetTitle(), n, &edges[0]);
+
+    // Fill bin contents and errors
+    for (int i = 0; i < n; ++i) {
+        double x, y;
+        graph->GetPoint(i, x, y);
+        double ey = graph->GetErrorY(i);
+        h->SetBinContent(i + 1, y);
+        h->SetBinError(i + 1, ey);
+    }
+
+    return h;
 }
 
 TGraphErrors* getRatioGraphBinomial(TGraphErrors* gNum, TGraphErrors* gDen)
@@ -154,7 +209,7 @@ TGraphErrors* getRatioGraphBinomial(TGraphErrors* gNum, TGraphErrors* gDen)
     double ratio = y1 / y2;
     double binomError = sqrt(ratio * (1 - ratio) / y2);
     
-    gRatio->SetPoint(i, x1, ratio);
+    gRatio->AddPoint(x1, ratio);
     gRatio->SetPointError(i, 0, binomError);  // x error = 0
   }
   
@@ -166,30 +221,104 @@ TGraphErrors* getRatioGraphBinomial(TGraphErrors* gNum, TGraphErrors* gDen)
   return gRatio;
 }
 
+TGraphErrors* DivideGraphsMatchingX(TGraphErrors* gNum, TGraphErrors* gDen, bool useBinomialError = false) {
+    TGraphErrors* gRatio = new TGraphErrors();
+    int iRatio = 0;
+
+    for (int i = 0; i < gNum->GetN(); ++i) {
+        double x1, y1;
+        gNum->GetPoint(i, x1, y1);
+        double ey1 = gNum->GetErrorY(i);
+
+        // Try to find matching x in denominator graph
+        bool foundMatch = false;
+        for (int j = 0; j < gDen->GetN(); ++j) {
+            double x2, y2;
+            gDen->GetPoint(j, x2, y2);
+
+            if (std::abs(x1 - x2) < 1e-8) {  // Matching x with tolerance
+                if (y2 == 0) break;  // Skip division by zero
+
+                double ey2 = gDen->GetErrorY(j);
+                double r = y1 / y2;
+                double er;
+
+                if (useBinomialError) {
+                    er = sqrt(r * (1 - r) / y2);  // binomial
+                } else {
+                    // propagated error
+                    er = r * sqrt((ey1 / y1) * (ey1 / y1) + (ey2 / y2) * (ey2 / y2));
+                }
+
+                gRatio->SetPoint(iRatio, x1, r);
+                gRatio->SetPointError(iRatio, 0.0, er);
+                ++iRatio;
+                foundMatch = true;
+                break;
+            }
+        }
+
+        if (!foundMatch) {
+            std::cerr << "No matching x for numerator point x = " << x1 << std::endl;
+        }
+    }
+
+    return gRatio;
+}
+
 int overlay_w_ratio_tgraph(TGraphErrors* wz, TGraphErrors* nz, TCanvas* can, TLegend* leg, string etcuttext, string zcuttext, string histtype, string xy)
 {
   can->cd(1);
-  TGraphErrors* ratio = getRatioGraphBinomial(wz,nz);
-  ratio->GetYaxis()->SetTitle("Ratio Reco z / Zero z");
+  TGraphErrors* ratio = DivideGraphsMatchingX(nz,wz);
+  ratio->GetYaxis()->SetTitle("Ratio no-z / with-z");
+  ratio->GetXaxis()->SetTitle(wz->GetXaxis()->GetTitle());
+  ratio->GetXaxis()->SetTitleSize(0.075);
+  ratio->GetYaxis()->SetTitleSize(0.075);
+  ratio->GetXaxis()->SetLabelSize(0.075);
+  ratio->GetYaxis()->SetLabelSize(0.075);
   //ratio->Divide(wz,nz,1,1,"B");
-  
-  double ymax = wz->GetMaximum();
-  double nzmax = nz->GetMaximum();
-  if(nzmax > ymax) ymax = nzmax;
-  ymax *= 1.5; 
-  wz->GetYaxis()->SetRangeUser(0,ymax);
-  nz->GetYaxis()->SetRangeUser(0,ymax);
 
-  wz->Draw("PE");
+  wz->SetMarkerStyle(20);
+  wz->SetMarkerColor(kBlack);
+  wz->SetLineColor(kBlack);
+  wz->SetMarkerSize(1.5);
+  nz->SetMarkerStyle(20);
+  nz->SetMarkerColor(kRed);
+  nz->SetLineColor(kRed);
+  nz->SetMarkerSize(1.5);
+
+  ratio->SetMarkerStyle(20);
+  ratio->SetMarkerColor(kRed);
+  ratio->SetLineColor(kRed);
+  ratio->SetMarkerSize(1.5);
+  
+  double ymax = wz->GetHistogram()->GetMaximum();
+  double nzmax = nz->GetHistogram()->GetMaximum();
+  if(nzmax > ymax) ymax = nzmax;
+  ymax *= 1.5;
+  wz->GetHistogram()->GetYaxis()->SetRangeUser(0,ymax);
+  nz->GetHistogram()->GetYaxis()->SetRangeUser(0,ymax);
+  //cout << wz->GetMaximum() << endl;
+  //cout << ratio->GetXaxis()->GetXmin()<< " " << ratio->GetXaxis()->GetXmax() << endl;
+
+  wz->Draw("APE");
   nz->Draw("SAME PE");
+  wz->GetHistogram()->GetXaxis()->SetRangeUser(wz->GetHistogram()->GetXaxis()->GetXmin(),wz->GetHistogram()->GetXaxis()->GetXmax());
+  nz->GetHistogram()->GetXaxis()->SetRangeUser(wz->GetHistogram()->GetXaxis()->GetXmin(),wz->GetHistogram()->GetXaxis()->GetXmax());  
+
+  gPad->Update();
+  
   can->cd(2);
+  ratio->Draw("APE");
   ratio->GetYaxis()->SetRangeUser(0,2);
-  ratio->Draw("PE");
+  ratio->GetHistogram()->GetXaxis()->SetRangeUser(wz->GetHistogram()->GetXaxis()->GetXmin(),wz->GetHistogram()->GetXaxis()->GetXmax());
+
+  gPad->Update();
   can->cd(0);
   alltext(-1, etcuttext, zcuttext);
   can->cd(1);
   leg->Draw();
-  TLine* oneline = new TLine(wz->GetXaxis()->GetXmin(),1,wz->GetXaxis()->GetXmax(),1);
+  TLine* oneline = new TLine(wz->GetHistogram()->GetXaxis()->GetXmin(),1,wz->GetHistogram()->GetXaxis()->GetXmax(),1);
   can->cd(2);
   oneline->Draw();
 
@@ -257,8 +386,22 @@ int draw_all(string histtype, vector<TObject*> wz, vector<TObject*> nz, string e
   format_th1d(nzx,kRed);
   format_th1d(nzy,kRed);
 
-  TGraphErrors* wzg = get_th2d_mean_tgraph(wz2);
-  TGraphErrors* nzg = get_th2d_mean_tgraph(nz2);
+  vector<TGraphErrors*> wzgs = get_th2d_mean_tgraph(wz2);
+  vector<TGraphErrors*> nzgs = get_th2d_mean_tgraph(nz2);
+  TGraphErrors* wzg = wzgs.at(0);
+  TGraphErrors* nzg = nzgs.at(0);
+  //wzg->Draw("PE");
+  TGraphErrors* jsw = wzgs.at(1);
+  TGraphErrors* jsn = nzgs.at(1);
+  TGraphErrors* jrw = wzgs.at(2);
+  TGraphErrors* jrn = nzgs.at(2);
+
+  for(int i=0; i<jsw->GetN(); ++i)
+    {
+      double x, y;
+      jsn->GetPoint(i, x, y);
+      cout << x << " " << y << endl;
+    }
 
   TCanvas* can = new TCanvas("","",1000,1000);
   can->cd();
@@ -281,14 +424,16 @@ int draw_all(string histtype, vector<TObject*> wz, vector<TObject*> nz, string e
   can = new TCanvas("","",1000,1500);
   ratioPanelCanvas(can,0.3);
 
-  TLegend* leg = new TLegend(0.6,0.65,0.8,0.85);
-  leg->AddEntry(wzx,"With Reco z_{vtx}","p");
+  TLegend* leg = new TLegend(0.4,0.65,0.8,0.85);
+  leg->AddEntry(wzx,"Reco z_{vtx} used for jets","p");
   leg->AddEntry(nzx,"z_{vtx} Assumed 0","p");
   leg->SetBorderSize(0);
   leg->SetFillStyle(0);
 
   overlay_w_ratio_th1d(wzx, nzx, can, leg, etcuttext, zcuttext, histtype, "x");
   overlay_w_ratio_th1d(wzy, nzy, can, leg, etcuttext, zcuttext, histtype, "y");
+  overlay_w_ratio_tgraph(jsw, jsn, can, leg, etcuttext, zcuttext, histtype, "jes");
+  overlay_w_ratio_tgraph(jrw, jrn, can, leg, etcuttext, zcuttext, histtype, "jer");
   //overlay_w_ratio_tgraph(wzg, nzg, can, leg, etcuttext, zcuttext, histtype, "mean");
 
   //delete leg;
@@ -333,8 +478,10 @@ int plot_th3d(string filename)
   TH3D* hw = (TH3D*)file->Get("h3_resp_pT_zvtx");
   TH3D* hn = (TH3D*)file->Get("h3_resp_pT_zvtx_noz");
   if(!hw || !hn) return 2;
-
-  get_and_draw(hw, hn, 0, 0, 2, "E_{T}^{jet} > 15 GeV","|z_{vtx}|<150 cm");  
+  hw->Scale(1./hw->Integral());
+  hn->Scale(1./hn->Integral());
+  get_and_draw(hw, hn, 2, 60, -60, "E_{T}^{jet} > 15 GeV","|z_{vtx}^{truth}|>60 cm");
+  get_and_draw(hw, hn, 2, -30, 30, "E_{T}^{jet} > 15 GeV","|z_{vtx}^{truth}|<30 cm");  
   
   return 0;
 }

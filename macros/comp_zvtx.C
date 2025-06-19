@@ -84,7 +84,7 @@ vector<vector<double>> make_jet_vector(int njet, double* jet_pt, double* jet_eta
   return jet_vector;
 }
 
-vector<vector<double>> truth_match(vector<vector<double>> truth_jets, vector<vector<double>> reco_jets)
+vector<vector<double>> truth_match(vector<vector<double>> truth_jets, vector<vector<double>> reco_jets, TEfficiency* eff)
 {
   vector<vector<double>> matches = {};
   for(int i=0; i<truth_jets.size(); ++i)
@@ -104,7 +104,12 @@ vector<vector<double>> truth_match(vector<vector<double>> truth_jets, vector<vec
 	      match_index = j;
 	    }
 	}
-      if(match_index == -1) continue;
+      if(match_index == -1)
+	{
+	  eff->Fill(false,truth_jets.at(i).at(0));
+	  continue;
+	}
+      eff->Fill(true,truth_jets.at(i).at(0));
       //cout << "here" << endl;
       match.push_back(truth_jets.at(i).at(0));
       match.push_back(reco_jets.at(match_index).at(0));
@@ -122,6 +127,8 @@ int comp_zvtx(string tag, int rn, int sampletype = 0)
   const int nzvtx = 3;
   TH3D* h3_resp_pT_zvtx = new TH3D("h3_resp_pT_zvtx",";p_{T}^{reco}/p_{T}^{truth};p_{T}^{truth} [GeV];z_{vtx} [cm]",200,0,2,100,0,100,300,-150,150);
   TH3D* h3_resp_pT_zvtx_noz = new TH3D("h3_resp_pT_zvtx_noz",";p_{T}^{reco}/p_{T}^{truth};p_{T}^{truth} [GeV];z_{vtx} [cm]",200,0,2,100,0,100,300,-150,150);
+  TEfficiency* eff_wz = new TEfficiency("eff_wz",";p_{T} [GeV];Matching Efficiency",100,0,100);
+  TEfficiency* eff_nz = new TEfficiency("eff_nz",";p_{T} [GeV];Matching Efficiency",100,0,100);
   for(int h=rn*100; h<rn*100+100; ++h)
     {
       string filename = "/sphenix/tg/tg01/jets/jocl/multiCol/"+to_string(h)+"/events_"+tag+"_"+to_string(h)+"_0.root";
@@ -161,9 +168,9 @@ int comp_zvtx(string tag, int rn, int sampletype = 0)
 	  //cout << "make reco noz" << endl;
 	  vector<vector<double>> reco_noz = make_jet_vector(njet_noz, jet_pt_noz, jet_eta_noz, jet_phi_noz,0,0,sampletype);
 	  //cout << "make matches" << endl;
-	  vector<vector<double>> matches = truth_match(truthjet, recojets);
+	  vector<vector<double>> matches = truth_match(truthjet, recojets, eff_wz);
 	  //cout << "make matches noz" << endl;
-	  vector<vector<double>> matches_noz = truth_match(truthjet, reco_noz);
+	  vector<vector<double>> matches_noz = truth_match(truthjet, reco_noz, eff_nz);
 	  //cout << "fill" << endl;
 	  for(int j=0; j<matches.size(); ++j)
 	    {
@@ -181,6 +188,8 @@ int comp_zvtx(string tag, int rn, int sampletype = 0)
   TFile* outfile = TFile::Open(("./multicolhist/hist_zcomp_"+tag+"_"+to_string(rn)+".root").c_str(),"RECREATE");
   h3_resp_pT_zvtx->Write();
   h3_resp_pT_zvtx_noz->Write();
+  eff_nz->Write();
+  eff_wz->Write();
   outfile->Write();
   outfile->Close();
   
