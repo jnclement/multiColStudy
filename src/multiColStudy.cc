@@ -659,7 +659,7 @@ int multiColStudy::process_event(PHCompositeNode *topNode)
 	  float testJetE = jet->get_e();
 	  float testJetPhi = jet->get_phi();
 	  if(_debug > 5) cout << "jet E/eta: " << testJetE  << " " << jet->get_eta() << endl;
-	  if(testJetE < 4) continue;
+	  if(testJetE/cosh(jet->get_eta()) < 4) continue;
 	  if(_debug > 3) cout << "got a candidate jet" << endl;
 	  _tjet_eta[_tnjet] = jet->get_eta();
 	  //if(check_bad_jet_eta(_tjet_eta[_tnjet],_rzvtx[0],0.4)) continue;

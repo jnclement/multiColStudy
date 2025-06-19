@@ -136,10 +136,11 @@ int alltext(int hasz, string etcuttext = "", string zcuttext = "")
   //dijet_cut_text(0.6,0.96);
   drawText(etcuttext.c_str(),0.05,0.97);
   drawText(zcuttext.c_str(),0.05,0.94);
+  drawText("MB,Jet10,Jet30 PYTHIA",0.22,0.9);
   string hasztext = "";
-  if(hasz == 0) hasztext = "z_{vtx} assumed 0 for jet reco";
-  else if(hasz == 1) hasztext = "Reco z_{vtx} used for jet reco";
-  drawText(hasztext.c_str(),0.4,0.97);
+  if(hasz == 0) hasztext = "z_{vtx} assumed 0";
+  else if(hasz == 1) hasztext = "Reco z_{vtx} used";
+  drawText(hasztext.c_str(),0.3,0.97);
   return 0;
 }
 
@@ -296,13 +297,14 @@ int overlay_w_ratio_tgraph(TGraphErrors* wz, TGraphErrors* nz, TCanvas* can, TLe
   double nzmax = nz->GetHistogram()->GetMaximum();
   if(nzmax > ymax) ymax = nzmax;
   ymax *= 1.5;
-  wz->GetHistogram()->GetYaxis()->SetRangeUser(0,ymax);
-  nz->GetHistogram()->GetYaxis()->SetRangeUser(0,ymax);
+
   //cout << wz->GetMaximum() << endl;
   //cout << ratio->GetXaxis()->GetXmin()<< " " << ratio->GetXaxis()->GetXmax() << endl;
 
   wz->Draw("APE");
   nz->Draw("SAME PE");
+  wz->GetHistogram()->GetYaxis()->SetRangeUser(0,1.5);
+  nz->GetHistogram()->GetYaxis()->SetRangeUser(0,1.5);
   wz->GetHistogram()->GetXaxis()->SetRangeUser(wz->GetHistogram()->GetXaxis()->GetXmin(),wz->GetHistogram()->GetXaxis()->GetXmax());
   nz->GetHistogram()->GetXaxis()->SetRangeUser(wz->GetHistogram()->GetXaxis()->GetXmin(),wz->GetHistogram()->GetXaxis()->GetXmax());  
 
@@ -366,6 +368,62 @@ int overlay_w_ratio_th1d(TH1D* wz, TH1D* nz, TCanvas* can, TLegend* leg, string 
   return 0;
 }
 
+int FindLastBinAboveX(TH2D* h, double threshold) {
+    int nx = h->GetNbinsX();
+    int ny = h->GetNbinsY();
+
+    for (int i = nx; i >= 1; --i) {  // loop backward
+        double sum = 0.0;
+        for (int j = 1; j <= ny; ++j) {
+            sum += h->GetBinContent(i, j);
+        }
+        if (sum > threshold) return i;
+    }
+    return -1;  // none found
+}
+
+int FindFirstBinAboveX(TH2D* h, double threshold) {
+    int nx = h->GetNbinsX();
+    int ny = h->GetNbinsY();
+
+    for (int i = 1; i <= nx; ++i) {  // loop backward
+        double sum = 0.0;
+        for (int j = 1; j <= ny; ++j) {
+            sum += h->GetBinContent(i, j);
+        }
+        if (sum > threshold) return i;
+    }
+    return -1;  // none found
+}
+
+int FindLastBinAboveY(TH2D* h, double threshold) {
+    int nx = h->GetNbinsX();
+    int ny = h->GetNbinsY();
+
+    for (int j = ny; j >= 1; --j) {
+        double sum = 0.0;
+        for (int i = 1; i <= nx; ++i) {
+            sum += h->GetBinContent(i, j);
+        }
+        if (sum > threshold) return j;
+    }
+    return -1;
+}
+
+int FindFirstBinAboveY(TH2D* h, double threshold) {
+    int nx = h->GetNbinsX();
+    int ny = h->GetNbinsY();
+
+    for (int j = 1; j <= ny; ++j) {
+        double sum = 0.0;
+        for (int i = 1; i <= nx; ++i) {
+            sum += h->GetBinContent(i, j);
+        }
+        if (sum > threshold) return j;
+    }
+    return -1;
+}
+
 int draw_all(string histtype, vector<TObject*> wz, vector<TObject*> nz, string etcuttext = "", string zcuttext = "")
 {
 
@@ -410,16 +468,24 @@ int draw_all(string histtype, vector<TObject*> wz, vector<TObject*> nz, string e
   gPad->SetLeftMargin(0.15);
   gPad->SetRightMargin(0.2);
 
+  wz2->GetXaxis()->SetRangeUser(wz2->GetXaxis()->GetBinLowEdge(FindFirstBinAboveX(wz2,0)),wz2->GetXaxis()->GetBinLowEdge(FindLastBinAboveX(wz2,0)+1));
+  wz2->GetYaxis()->SetRangeUser(wz2->GetYaxis()->GetBinLowEdge(FindFirstBinAboveY(wz2,0)),wz2->GetYaxis()->GetBinLowEdge(FindLastBinAboveY(wz2,0)+1));
+
+  nz2->GetXaxis()->SetRangeUser(nz2->GetXaxis()->GetBinLowEdge(FindFirstBinAboveX(nz2,0)),nz2->GetXaxis()->GetBinLowEdge(FindLastBinAboveX(nz2,0)+1));
+  nz2->GetYaxis()->SetRangeUser(nz2->GetYaxis()->GetBinLowEdge(FindFirstBinAboveY(nz2,0)),nz2->GetYaxis()->GetBinLowEdge(FindLastBinAboveY(nz2,0)+1));
+
+  gPad->SetLogz();
+  wz2->GetZaxis()->SetRangeUser(1e-12,wz2->GetMaximum()*2);
   wz2->Draw("COLZ");
   wzg->Draw("SAME PE");
   alltext(1,etcuttext,zcuttext);
   can->SaveAs(("../output/plots/"+histtype + "_wz.png").c_str());
-
+  nz2->GetZaxis()->SetRangeUser(1e-12,nz2->GetMaximum()*2);
   nz2->Draw("COLZ");
   nzg->Draw("SAME PE");
   alltext(0,etcuttext,zcuttext);
   can->SaveAs(("../output/plots/"+histtype + "_nz.png").c_str());
-
+  gPad->SetLogz(0);
   //delete can;
   can = new TCanvas("","",1000,1500);
   ratioPanelCanvas(can,0.3);
@@ -480,8 +546,8 @@ int plot_th3d(string filename)
   if(!hw || !hn) return 2;
   hw->Scale(1./hw->Integral());
   hn->Scale(1./hn->Integral());
-  get_and_draw(hw, hn, 2, 60, -60, "E_{T}^{jet} > 15 GeV","|z_{vtx}^{truth}|>60 cm");
-  get_and_draw(hw, hn, 2, -30, 30, "E_{T}^{jet} > 15 GeV","|z_{vtx}^{truth}|<30 cm");  
+  get_and_draw(hw, hn, 2, 60, -60, "","|z_{vtx}^{truth}|>60 cm");
+  get_and_draw(hw, hn, 2, -30, 30, "","|z_{vtx}^{truth}|<30 cm");  
   
   return 0;
 }

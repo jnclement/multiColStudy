@@ -19,6 +19,10 @@ echo "copy file from tg to here"
 mkdir -p /sphenix/user/jocl/projects/multiColStudy/output/hists
 cp -r /sphenix/user/jocl/projects/multiColStudy/macros/comp_zvtx.C .
 echo "got all files, run code"
-root -b -q -l 'comp_zvtx.C("'${TAG}'",'$RN')'
+root -b -q -l 'comp_zvtx.C("'${TAG}'",'$RN',1)'
+TAG=20250615sim30
+root -b -q -l 'comp_zvtx.C("'${TAG}'",'$RN',2)'
 echo "copy file back"
+TAG=20250619simmb
+#root -b -q -l 'comp_zvtx.C("'${TAG}'",'$RN',0)'
 cp multicolhist/* /sphenix/user/jocl/projects/multiColStudy/output/hists

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-for rn in {0..99}; do
+for rn in 100; do
     echo $rn
     bash run_everything.sh $rn
 done
