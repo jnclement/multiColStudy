@@ -64,7 +64,7 @@ bool check_bad_jet_eta(float jet_eta, float zertex, float jet_radius) {
 }
 
 bool compfirst(const std::vector<double>& a, const std::vector<double>& b) {
-  return a[0] < b[0];
+  return a[0] > b[0];
 }
 
 vector<vector<double>> make_jet_vector(int njet, double* jet_pt, double* jet_eta, double* jet_phi, int istruth, double zvtx, int sampletype)
@@ -80,18 +80,23 @@ vector<vector<double>> make_jet_vector(int njet, double* jet_pt, double* jet_eta
       jet_vector.push_back(jet);
     }
   //cout << endl << endl;
+  if(jet_vector.size() < 1) return {};
   std::sort(jet_vector.begin(),jet_vector.end(),compfirst);
+  if(istruth && sampletype == 3)
+    {
+      if(jet_vector.at(0).at(0) < 35) return {};
+    }
   if(istruth && sampletype == 2)
     {
-      if(jet_vector.at(0).at(0) < 30) return {};
+      if(jet_vector.at(0).at(0) < 22 || jet_vector.at(0).at(0) > 35) return {};
     }
   if(istruth && sampletype == 1)
     {
-      if(jet_vector.at(0).at(0) > 30 || jet_vector.at(0).at(0) < 12) return {};
+      if(jet_vector.at(0).at(0) > 22 || jet_vector.at(0).at(0) < 14) return {};
     }
   if(istruth && sampletype == 0)
     {
-      if(jet_vector.at(0).at(0) > 12) return {};
+      if(jet_vector.at(0).at(0) > 14) return {};
     }
 
   return jet_vector;
@@ -135,8 +140,9 @@ vector<vector<double>> truth_match(vector<vector<double>> truth_jets, vector<vec
 int comp_zvtx(string tag, int rn, int sampletype = 0)
 {
   double scalefactor = 4.197e-3;
-  if(sampletype == 1) scalefactor = 3.646e-6;
-  if(sampletype == 2) scalefactor = 2.505e-9;
+  if(sampletype == 1) scalefactor = 3.997e-6;
+  if(sampletype == 2) scalefactor = 6.218e-8; //PLACEHOLDER - get real value asap
+  if(sampletype == 3) scalefactor = 2.502e-9;
   const int nmaxjet = 100;
   const int nzvtx = 3;
   TH3D* h3_resp_pT_zvtx = new TH3D("h3_resp_pT_zvtx",";p_{T}^{reco}/p_{T}^{truth};p_{T}^{truth} [GeV];z_{vtx} [cm]",200,0,2,100,0,100,300,-150,150);
@@ -228,7 +234,7 @@ int comp_zvtx(string tag, int rn, int sampletype = 0)
 	  //cout << "make matches" << endl;
 	  vector<vector<double>> matches_e = truth_match(truthjet_e, recojets_e, eff_wz_e);
 	  //cout << "make matches noz" << endl;
-	  vector<vector<double>> matches_noz_e = truth_match(truthjet, reco_noz, eff_nz_e);
+	  vector<vector<double>> matches_noz_e = truth_match(truthjet_e, reco_noz_e, eff_nz_e);
 	  //cout << "fill" << endl;
 	  for(int j=0; j<matches_e.size(); ++j)
 	    {

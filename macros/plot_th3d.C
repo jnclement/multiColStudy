@@ -75,12 +75,15 @@ vector<TGraphErrors*> get_th2d_mean_tgraph(TH2D* h)
   
   int nx = h->GetNbinsX();
   int npoints = 0;
+  //  TCanvas* newcan = new TCanvas("newcan","",1000,1000);
   for(int i=1; i<=nx; ++i)
     {
       TH1D* projy = h->ProjectionY("_py",i,i);
       
-      TF1* gaus = new TF1("gaus","gaus",projy->GetXaxis()->GetXmin(),projy->GetXaxis()->GetXmax());
-      projy->Fit(gaus,"QNR");
+      TF1* gaus = new TF1("gaus","gaus",projy->GetXaxis()->GetXmin(),projy->GetXaxis()->GetXmax());//projy->GetMean()-projy->GetStdDev(),projy->GetMean()+projy->GetStdDev());//
+      projy->Fit(gaus,"QRIN");
+      //projy->Draw("PE");
+      //gPad->SaveAs(("../output/plots/"+std::string(h->GetName())+"_"+to_string(i)+".png").c_str());
       double x = h->GetXaxis()->GetBinCenter(i);
       double mean = gaus->GetParameter(1);
       double err = gaus->GetParameter(2);
@@ -510,10 +513,10 @@ int draw_all(string histtype, vector<TObject*> wz, vector<TObject*> nz, string e
   return 0;
 }
 
-int get_and_draw(TH3D* hw, TH3D* hn, int axis, double from, double to, string etcuttext = "", string zcuttext = "")
+int get_and_draw(TH3D* hw, TH3D* hn, int axis, double from, double to, string etcuttext = "", string zcuttext = "", string histbase = "")
 {
 
-  string histtype = "proj";
+  string histtype = histbase+"_proj";
   if(axis == 0) histtype += "x";
   else if(axis==1) histtype += "y";
   else if(axis==2) histtype += "z";
@@ -543,11 +546,21 @@ int plot_th3d(string filename)
   if(!file) return 1;
   TH3D* hw = (TH3D*)file->Get("h3_resp_pT_zvtx");
   TH3D* hn = (TH3D*)file->Get("h3_resp_pT_zvtx_noz");
+
+  TH3D* hwe = (TH3D*)file->Get("h3_resp_E_zvtx");
+  TH3D* hne = (TH3D*)file->Get("h3_resp_E_zvtx_noz");
+
+  TH2D* corre = (TH2D*)file->Get("noz_recoz_corret");
+  corre->Draw("COLZ");
+  gPad->SaveAs("../output/plots/corre.pdf");
+  
   if(!hw || !hn) return 2;
   hw->Scale(1./hw->Integral());
   hn->Scale(1./hn->Integral());
-  get_and_draw(hw, hn, 2, 60, -60, "","|z_{vtx}^{truth}|>60 cm");
-  get_and_draw(hw, hn, 2, -30, 30, "","|z_{vtx}^{truth}|<30 cm");  
+  get_and_draw(hw, hn, 2, 60, -60, "","|z_{vtx}^{truth}|>60 cm","gt60");
+  get_and_draw(hw, hn, 2, -30, 30, "","|z_{vtx}^{truth}|<30 cm","lt30");
+  get_and_draw(hwe, hne, 2, 60, -60, "","|z_{vtx}^{truth}|>60 cm","gr60e");
+  get_and_draw(hwe, hne, 2, -30, 30, "","|z_{vtx}^{truth}|<30 cm","lt30e");  
   
   return 0;
 }
