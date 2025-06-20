@@ -67,6 +67,12 @@ vector<TGraphErrors*> get_th2d_mean_tgraph(TH2D* h)
   TGraphErrors* means = new TGraphErrors();
   TGraphErrors* jes = new TGraphErrors();
   TGraphErrors* jer = new TGraphErrors();
+  TGraphErrors* getrms = new TGraphErrors();
+  getrms->SetMarkerStyle(20);
+  getrms->SetMarkerColor(kRed);
+  getrms->SetLineColor(kRed);
+  getrms->SetMarkerSize(1);
+  
   means->SetMarkerStyle(20);
   means->SetMarkerColor(kBlack);
   means->SetLineColor(kBlack);
@@ -75,15 +81,18 @@ vector<TGraphErrors*> get_th2d_mean_tgraph(TH2D* h)
   
   int nx = h->GetNbinsX();
   int npoints = 0;
-  //  TCanvas* newcan = new TCanvas("newcan","",1000,1000);
+  //TCanvas* newcan = new TCanvas("newcan","",1000,1000);
   for(int i=1; i<=nx; ++i)
     {
       TH1D* projy = h->ProjectionY("_py",i,i);
       
-      TF1* gaus = new TF1("gaus","gaus",projy->GetXaxis()->GetXmin(),projy->GetXaxis()->GetXmax());//projy->GetMean()-projy->GetStdDev(),projy->GetMean()+projy->GetStdDev());//
+      TF1* gaus = new TF1("gaus","gaus",0.3,projy->GetXaxis()->GetXmax());//projy->GetMean()-projy->GetStdDev(),projy->GetMean()+2*projy->GetStdDev());//
       projy->Fit(gaus,"QRIN");
+      //projy->GetYaxis()->SetRangeUser(1e-12,1);
       //projy->Draw("PE");
+      //gPad->SetLogy();
       //gPad->SaveAs(("../output/plots/"+std::string(h->GetName())+"_"+to_string(i)+".png").c_str());
+      //gPad->SetLogy(0);
       double x = h->GetXaxis()->GetBinCenter(i);
       double mean = gaus->GetParameter(1);
       double err = gaus->GetParameter(2);
@@ -95,13 +104,19 @@ vector<TGraphErrors*> get_th2d_mean_tgraph(TH2D* h)
       jer->SetPointError(npoints,0,gaus->GetParError(2)/mean);
       means->AddPoint(x,mean);
       means->SetPointError(npoints,0,err);
+      getrms->AddPoint(x,projy->GetMean());
+      getrms->SetPointError(npoints,0,projy->GetStdDev());
       ++npoints;
       //means->AddPointError(x,mean,0,err);
       
       //delete gaus;
       //delete projy;
     }
-  return {means,jes,jer};
+  means->GetXaxis()->SetTitle(h->GetXaxis()->GetTitle());
+  jes->GetXaxis()->SetTitle(h->GetXaxis()->GetTitle());
+  jer->GetXaxis()->SetTitle(h->GetXaxis()->GetTitle());
+  getrms->GetXaxis()->SetTitle(h->GetXaxis()->GetTitle());
+  return {means,jes,jer,getrms};
 }
 
 int format_th1d(TH1D* hist, int color)
@@ -134,12 +149,12 @@ int format_th2d(TH2D* hist)
 int alltext(int hasz, string etcuttext = "", string zcuttext = "")
 {
   sphenixtext(0.65,0.97);
-  sqrt_s_text(0.65,0.94);
-  antikt_text(0.4,0.3,0.94);
+  sqrt_s_text(0.65,0.93);
+  antikt_text(0.4,0.3,0.93);
   //dijet_cut_text(0.6,0.96);
   drawText(etcuttext.c_str(),0.05,0.97);
-  drawText(zcuttext.c_str(),0.05,0.94);
-  drawText("MB,Jet10,Jet30 PYTHIA",0.22,0.9);
+  drawText(zcuttext.c_str(),0.05,0.93);
+  drawText("MB,Jet10,Jet20,Jet30 PYTHIA",0.3,0.87);
   string hasztext = "";
   if(hasz == 0) hasztext = "z_{vtx} assumed 0";
   else if(hasz == 1) hasztext = "Reco z_{vtx} used";
@@ -227,6 +242,7 @@ TGraphErrors* getRatioGraphBinomial(TGraphErrors* gNum, TGraphErrors* gDen)
 
 TGraphErrors* DivideGraphsMatchingX(TGraphErrors* gNum, TGraphErrors* gDen, bool useBinomialError = false) {
     TGraphErrors* gRatio = new TGraphErrors();
+    gRatio->GetXaxis()->SetTitle(gNum->GetXaxis()->GetTitle());
     int iRatio = 0;
 
     for (int i = 0; i < gNum->GetN(); ++i) {
@@ -315,7 +331,7 @@ int overlay_w_ratio_tgraph(TGraphErrors* wz, TGraphErrors* nz, TCanvas* can, TLe
   
   can->cd(2);
   ratio->Draw("APE");
-  ratio->GetYaxis()->SetRangeUser(0,2);
+  ratio->GetYaxis()->SetRangeUser(0.5,1.5);
   ratio->GetHistogram()->GetXaxis()->SetRangeUser(wz->GetHistogram()->GetXaxis()->GetXmin(),wz->GetHistogram()->GetXaxis()->GetXmax());
 
   gPad->Update();
@@ -466,7 +482,7 @@ int draw_all(string histtype, vector<TObject*> wz, vector<TObject*> nz, string e
 
   TCanvas* can = new TCanvas("","",1000,1000);
   can->cd();
-  gPad->SetTopMargin(0.1);
+  gPad->SetTopMargin(0.15);
   gPad->SetBottomMargin(0.15);
   gPad->SetLeftMargin(0.15);
   gPad->SetRightMargin(0.2);
@@ -481,19 +497,22 @@ int draw_all(string histtype, vector<TObject*> wz, vector<TObject*> nz, string e
   wz2->GetZaxis()->SetRangeUser(1e-12,wz2->GetMaximum()*2);
   wz2->Draw("COLZ");
   wzg->Draw("SAME PE");
+  //wzgs.at(3)->Draw("SAME PE");
   alltext(1,etcuttext,zcuttext);
   can->SaveAs(("../output/plots/"+histtype + "_wz.png").c_str());
   nz2->GetZaxis()->SetRangeUser(1e-12,nz2->GetMaximum()*2);
   nz2->Draw("COLZ");
   nzg->Draw("SAME PE");
+  //nzgs.at(3)->Draw("SAME PE");
   alltext(0,etcuttext,zcuttext);
   can->SaveAs(("../output/plots/"+histtype + "_nz.png").c_str());
   gPad->SetLogz(0);
   //delete can;
   can = new TCanvas("","",1000,1500);
   ratioPanelCanvas(can,0.3);
-
-  TLegend* leg = new TLegend(0.4,0.65,0.8,0.85);
+  can->cd(1);
+  gPad->SetTopMargin(0.15);
+  TLegend* leg = new TLegend(0.3,0.6,0.8,0.75);
   leg->AddEntry(wzx,"Reco z_{vtx} used for jets","p");
   leg->AddEntry(nzx,"z_{vtx} Assumed 0","p");
   leg->SetBorderSize(0);
@@ -550,10 +569,18 @@ int plot_th3d(string filename)
   TH3D* hwe = (TH3D*)file->Get("h3_resp_E_zvtx");
   TH3D* hne = (TH3D*)file->Get("h3_resp_E_zvtx_noz");
 
-  TH2D* corre = (TH2D*)file->Get("noz_recoz_corret");
-  corre->Draw("COLZ");
-  gPad->SaveAs("../output/plots/corre.pdf");
+  hw->Rebin(4,1,1);
+  hn->Rebin(4,1,1);
+  hwe->Rebin(4,1,1);
+  hwn->Rebin(4,1,1);
   
+  TH2D* corre = (TH2D*)file->Get("noz_recoz_corret");
+
+  corre->Draw("COLZ");
+  gPad->SetLogz();
+  gPad->Update();
+  gPad->SaveAs("../output/plots/corre.png");
+  gPad->SetLogz(0);
   if(!hw || !hn) return 2;
   hw->Scale(1./hw->Integral());
   hn->Scale(1./hn->Integral());

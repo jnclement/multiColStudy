@@ -67,7 +67,7 @@ bool compfirst(const std::vector<double>& a, const std::vector<double>& b) {
   return a[0] > b[0];
 }
 
-vector<vector<double>> make_jet_vector(int njet, double* jet_pt, double* jet_eta, double* jet_phi, int istruth, double zvtx, int sampletype)
+vector<vector<double>> make_jet_vector(int njet, double* jet_pt, double* jet_eta, double* jet_phi, int istruth, double zvtx, int sampletype, double* jet_e)
 {
   vector<vector<double>> jet_vector = {};
   //cout << endl << endl << "jet pt: " << endl;
@@ -76,7 +76,7 @@ vector<vector<double>> make_jet_vector(int njet, double* jet_pt, double* jet_eta
       //if(istruth && jet_pt[i] < (sampletype==1?30:15)) continue;
       //if(istruth && sampletype != 1 && jet_pt[i] > 30) continue;
       if(check_bad_jet_eta(jet_eta[i],zvtx,(istruth?0:0.4))) continue;
-      vector<double> jet = {jet_pt[i],jet_eta[i],jet_phi[i]};
+      vector<double> jet = {jet_pt[i],jet_eta[i],jet_phi[i],jet_e[i]};
       jet_vector.push_back(jet);
     }
   //cout << endl << endl;
@@ -131,6 +131,8 @@ vector<vector<double>> truth_match(vector<vector<double>> truth_jets, vector<vec
       //cout << "here" << endl;
       match.push_back(truth_jets.at(i).at(0));
       match.push_back(reco_jets.at(match_index).at(0));
+      match.push_back(truth_jets.at(i).at(3));
+      match.push_back(reco_jets.at(match_index).at(3));
       matches.push_back(match);
       reco_jets.erase(reco_jets.begin()+match_index);
     }
@@ -139,7 +141,7 @@ vector<vector<double>> truth_match(vector<vector<double>> truth_jets, vector<vec
 
 int comp_zvtx(string tag, int rn, int sampletype = 0)
 {
-  double scalefactor = 4.197e-3;
+  double scalefactor = 4.197e-2;
   if(sampletype == 1) scalefactor = 3.997e-6;
   if(sampletype == 2) scalefactor = 6.218e-8; //PLACEHOLDER - get real value asap
   if(sampletype == 3) scalefactor = 2.502e-9;
@@ -153,8 +155,6 @@ int comp_zvtx(string tag, int rn, int sampletype = 0)
   
   TEfficiency* eff_wz = new TEfficiency("eff_wz",";p_{T} [GeV];Matching Efficiency",100,0,100);
   TEfficiency* eff_nz = new TEfficiency("eff_nz",";p_{T} [GeV];Matching Efficiency",100,0,100);
-  TEfficiency* eff_wz_e = new TEfficiency("eff_wz_e",";E [GeV];Matching Efficiency",100,0,100);
-  TEfficiency* eff_nz_e = new TEfficiency("eff_nz_e",";E [GeV];Matching Efficiency",100,0,100);
   TH2D* noz_recoz_corrET = new TH2D("noz_recoz_corret",";p_{T}^{w/z} [GeV];p_{T}^{noz};Counts",100,0,100,100,0,100);
   for(int h=rn*100; h<rn*100+100; ++h)
     {
@@ -190,14 +190,25 @@ int comp_zvtx(string tag, int rn, int sampletype = 0)
       for(int i=0; i<tree->GetEntries(); ++i)
 	{
 	  tree->GetEntry(i);
-	  vector<vector<double>> truthjet = make_jet_vector(tnjet, tjet_pt, tjet_eta, tjet_phi,1,tzvtx[0],sampletype);
+	  vector<vector<double>> truthjet = make_jet_vector(tnjet, tjet_pt, tjet_eta, tjet_phi,1,tzvtx[0],sampletype,tjet_e);
 	  if(truthjet.size() == 0) continue;
 	  //cout << "make recojets" << endl;
-	  vector<vector<double>> recojets = make_jet_vector(njet, jet_pt, jet_eta, jet_phi,0,rzvtx[0],sampletype);
+	  vector<vector<double>> recojets = make_jet_vector(njet, jet_pt, jet_eta, jet_phi,0,rzvtx[0],sampletype,jet_e);
+	  cout << endl<<endl<< "tz/z: " << tzvtx[0] <<" " << rzvtx[0] << endl;
+	  cout <<"recojets:" << endl;
+	  for(int j=0; j<recojets.size(); ++j)
+	    {
+	      cout << recojets.at(j).at(0) << " " << recojets.at(j).at(1) << endl;
+	    }
 	  //cout << "make truthjets" << endl;
 
 	  //cout << "make reco noz" << endl;
-	  vector<vector<double>> reco_noz = make_jet_vector(njet_noz, jet_pt_noz, jet_eta_noz, jet_phi_noz,0,0,sampletype);
+	  vector<vector<double>> reco_noz = make_jet_vector(njet_noz, jet_pt_noz, jet_eta_noz, jet_phi_noz,0,0,sampletype,jet_e_noz);
+	  cout << "recojets noz:" << endl;
+	  for(int j=0; j<reco_noz.size(); ++j)
+	    {
+	      cout << reco_noz.at(j).at(0) << " " << reco_noz.at(j).at(1) << endl;
+	    }
 	  //cout << "make matches" << endl;
 	  vector<vector<double>> matches = truth_match(truthjet, recojets, eff_wz);
 	  //cout << "make matches noz" << endl;
@@ -205,46 +216,26 @@ int comp_zvtx(string tag, int rn, int sampletype = 0)
 	  //cout << "fill" << endl;
 	  for(int j=0; j<matches.size(); ++j)
 	    {
+	      cout << "enter matches"<< endl;
 	      for(int k=0; k<matches_noz.size(); ++k)
 		{
 		  if(abs(matches.at(j).at(0) - matches_noz.at(k).at(0)) < 1e-6)
 		    {
+		      cout << matches.at(j).at(0) << " " << matches.at(j).at(1) << " " << matches_noz.at(k).at(1) << endl;
 		      noz_recoz_corrET->Fill(matches.at(j).at(1),matches_noz.at(k).at(1));
 		    }
 		}
 	      //cout << "matches j 0 " << matches.at(j).at(0) << " matches j 1 " << matches.at(j).at(1) << endl;
 	      h3_resp_pT_zvtx->Fill(matches.at(j).at(1)/matches.at(j).at(0),matches.at(j).at(0),tzvtx[0],scalefactor);
-
+	      h3_resp_E_zvtx->Fill(matches.at(j).at(3)/matches.at(j).at(2),matches.at(j).at(2),tzvtx[0],scalefactor);
 	    }
 	  for(int j=0; j<matches_noz.size(); ++j)
 	    {
 	      h3_resp_pT_zvtx_noz->Fill(matches_noz.at(j).at(1)/matches_noz.at(j).at(0),matches_noz.at(j).at(0),tzvtx[0],scalefactor);
+	      h3_resp_E_zvtx_noz->Fill(matches_noz.at(j).at(3)/matches_noz.at(j).at(2),matches_noz.at(j).at(2),tzvtx[0],scalefactor);
 	    }
+	  cout << "done with event" << endl;
 
-
-
-	  vector<vector<double>> truthjet_e = make_jet_vector(tnjet, tjet_e, tjet_eta, tjet_phi,1,tzvtx[0],sampletype);
-	  if(truthjet_e.size() == 0) continue;
-	  //cout << "make recojets" << endl;
-	  vector<vector<double>> recojets_e = make_jet_vector(njet, jet_e, jet_eta, jet_phi,0,rzvtx[0],sampletype);
-	  //cout << "make truthjets" << endl;
-
-	  //cout << "make reco noz" << endl;
-	  vector<vector<double>> reco_noz_e = make_jet_vector(njet_noz, jet_e_noz, jet_eta_noz, jet_phi_noz,0,0,sampletype);
-	  //cout << "make matches" << endl;
-	  vector<vector<double>> matches_e = truth_match(truthjet_e, recojets_e, eff_wz_e);
-	  //cout << "make matches noz" << endl;
-	  vector<vector<double>> matches_noz_e = truth_match(truthjet_e, reco_noz_e, eff_nz_e);
-	  //cout << "fill" << endl;
-	  for(int j=0; j<matches_e.size(); ++j)
-	    {
-	      h3_resp_E_zvtx->Fill(matches_e.at(j).at(1)/matches_e.at(j).at(0),matches_e.at(j).at(0),tzvtx[0],scalefactor);
-
-	    }
-	  for(int j=0; j<matches_noz_e.size(); ++j)
-	    {
-	      h3_resp_E_zvtx_noz->Fill(matches_noz_e.at(j).at(1)/matches_noz_e.at(j).at(0),matches_noz_e.at(j).at(0),tzvtx[0],scalefactor);
-	    }
 	}      
       datfile->Close();
     }
@@ -254,8 +245,6 @@ int comp_zvtx(string tag, int rn, int sampletype = 0)
   eff_nz->Write();
   eff_wz->Write();
   noz_recoz_corrET->Write();
-  eff_nz_e->Write();
-  eff_wz_e->Write();
   h3_resp_E_zvtx->Write();
   h3_resp_E_zvtx_noz->Write();
   outfile->Write();

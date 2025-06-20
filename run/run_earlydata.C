@@ -162,7 +162,7 @@ int run_earlydata(string tag = "", int nproc = 0, int debug = 0, int nevt = 0, s
   
   gblvertex->Verbosity(verbosity);
   se->registerSubsystem(gblvertex);
-  Process_Calo_Calib();    
+  //Process_Calo_Calib();    
   se->Print("NODETREE");
 
   

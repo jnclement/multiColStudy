@@ -244,13 +244,17 @@ int multiColStudy::process_event(PHCompositeNode *topNode)
     {
       _rzvtx[i] = NAN;
     }
+  cout << "mbdvtxmap: " << mbdvtxmap << endl;
   if(mbdvtxmap)
     {
+      cout << "mbdvtx below:" << endl;
       for(auto iter = mbdvtxmap->begin(); iter != mbdvtxmap->end(); ++iter)
         {
           MbdVertex* mbdvtx = iter->second;
+	  cout << mbdvtx << endl;
           if(mbdvtx)
 	    {
+	      cout << "and the mbd vertex is: " <<mbdvtx->get_z() << endl;
 	      _rzvtx[_nzvtx] = mbdvtx->get_z();
 	      ++_nzvtx;
 	      if(_nzvtx > _maxzvtx) break;
@@ -267,11 +271,13 @@ int multiColStudy::process_event(PHCompositeNode *topNode)
       cout << "zvtx: " << _rzvtx[0] << endl;
       cout << ((_trigvec[2]>>22)&1) << " " << ((_trigvec[1]>>22)&1) << endl;
     }
+  /*
   if(std::isnan(_rzvtx[0]))
     {
       if(_debug > 2) cout << endl << endl << endl << "multiColStudy::process_event: ZVTX NAN - SET IDENTICALLY 0 ZVTX!" << endl << endl << endl;
       _rzvtx[0] = 0;
     }
+  */
   zvtx = _rzvtx[0];
   _tnjet = 0;
   _njet = 0;
