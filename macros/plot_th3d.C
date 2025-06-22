@@ -81,18 +81,18 @@ vector<TGraphErrors*> get_th2d_mean_tgraph(TH2D* h)
   
   int nx = h->GetNbinsX();
   int npoints = 0;
-  //TCanvas* newcan = new TCanvas("newcan","",1000,1000);
+  TCanvas* newcan = new TCanvas("newcan2","",1000,1000);
   for(int i=1; i<=nx; ++i)
     {
       TH1D* projy = h->ProjectionY("_py",i,i);
       
       TF1* gaus = new TF1("gaus","gaus",0.3,projy->GetXaxis()->GetXmax());//projy->GetMean()-projy->GetStdDev(),projy->GetMean()+2*projy->GetStdDev());//
       projy->Fit(gaus,"QRIN");
-      //projy->GetYaxis()->SetRangeUser(1e-12,1);
-      //projy->Draw("PE");
-      //gPad->SetLogy();
-      //gPad->SaveAs(("../output/plots/"+std::string(h->GetName())+"_"+to_string(i)+".png").c_str());
-      //gPad->SetLogy(0);
+      projy->GetYaxis()->SetRangeUser(1e-12,1);
+      projy->Draw("PE");
+      gPad->SetLogy();
+      gPad->SaveAs(("../output/plots/"+std::string(h->GetName())+"_"+to_string(i)+".png").c_str());
+      gPad->SetLogy(0);
       double x = h->GetXaxis()->GetBinCenter(i);
       double mean = gaus->GetParameter(1);
       double err = gaus->GetParameter(2);
@@ -331,7 +331,7 @@ int overlay_w_ratio_tgraph(TGraphErrors* wz, TGraphErrors* nz, TCanvas* can, TLe
   
   can->cd(2);
   ratio->Draw("APE");
-  ratio->GetYaxis()->SetRangeUser(0.5,1.5);
+  ratio->GetYaxis()->SetRangeUser(0.8,1.2);
   ratio->GetHistogram()->GetXaxis()->SetRangeUser(wz->GetHistogram()->GetXaxis()->GetXmin(),wz->GetHistogram()->GetXaxis()->GetXmax());
 
   gPad->Update();
@@ -569,18 +569,46 @@ int plot_th3d(string filename)
   TH3D* hwe = (TH3D*)file->Get("h3_resp_E_zvtx");
   TH3D* hne = (TH3D*)file->Get("h3_resp_E_zvtx_noz");
 
-  hw->Rebin(4,1,1);
-  hn->Rebin(4,1,1);
-  hwe->Rebin(4,1,1);
-  hwn->Rebin(4,1,1);
+  hw->Rebin3D(1,4,1);
+  hn->Rebin3D(1,4,1);
+  hwe->Rebin3D(1,4,1);
+  hne->Rebin3D(1,4,1);
   
   TH2D* corre = (TH2D*)file->Get("noz_recoz_corret");
 
+  TEfficiency* eff_w = (TEfficiency*)file->Get("eff_wz");
+  TEfficiency* eff_n = (TEfficiency*)file->Get("eff_nz");
+
+  TCanvas* newcan = new TCanvas("newcan","newcan",1000,1000);
+  newcan->cd();
+
+  gPad->SetLeftMargin(0.15);
+  gPad->SetBottomMargin(0.15);
+  gPad->SetRightMargin(0.15);
+  gPad->SetTopMargin(0.15);
+  corre->GetZaxis()->SetTitle("");
+  
   corre->Draw("COLZ");
   gPad->SetLogz();
   gPad->Update();
   gPad->SaveAs("../output/plots/corre.png");
   gPad->SetLogz(0);
+
+  eff_w->SetMarkerColor(kRed);
+  eff_w->SetMarkerStyle(20);
+  eff_w->SetLineColor(kRed);
+  eff_w->SetMarkerSize(1.5);
+
+  eff_n->SetMarkerColor(kBlack);
+  eff_n->SetMarkerStyle(20);
+  eff_n->SetLineColor(kBlack);
+  eff_n->SetMarkerSize(1.5);
+
+  eff_w->Draw("PE");
+  eff_n->Draw("SAME PE");
+
+  gPad->SaveAs("../output/plots/eff_plot.png");
+
   if(!hw || !hn) return 2;
   hw->Scale(1./hw->Integral());
   hn->Scale(1./hn->Integral());
@@ -588,6 +616,7 @@ int plot_th3d(string filename)
   get_and_draw(hw, hn, 2, -30, 30, "","|z_{vtx}^{truth}|<30 cm","lt30");
   get_and_draw(hwe, hne, 2, 60, -60, "","|z_{vtx}^{truth}|>60 cm","gr60e");
   get_and_draw(hwe, hne, 2, -30, 30, "","|z_{vtx}^{truth}|<30 cm","lt30e");  
+  get_and_draw(hw, hn, 2, -150, 150, "","|z_{vtx}^{truth}|<150 cm","gr150");
   
   return 0;
 }

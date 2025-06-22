@@ -130,6 +130,110 @@ int run_earlydata(string tag = "", int nproc = 0, int debug = 0, int nevt = 0, s
   //se->registerSubsystem(te);
 
 
+
+
+
+
+
+
+
+
+
+  bool isSim = true;
+  int data_sim_runnumber_thres = 1000;
+  if (rc->get_uint64Flag("TIMESTAMP") > data_sim_runnumber_thres)
+  {
+    isSim = false;
+  }
+  std::cout << "Calo Calib uses runnumber " << rc->get_uint64Flag("TIMESTAMP") << std::endl;
+
+  //////////////////////
+  // Input geometry node
+  std::cout << "Adding Geometry file" << std::endl;
+  Fun4AllInputManager *ingeo = new Fun4AllRunNodeInputManager("DST_GEO");
+  std::string geoLocation = CDBInterface::instance()->getUrl("calo_geo");
+  ingeo->AddFile(geoLocation);
+  se->registerInputManager(ingeo);
+
+  //////////////////////////////
+  // set statuses on raw towers
+  std::cout << "status setters" << std::endl;
+  CaloTowerStatus *statusEMC = new CaloTowerStatus("CEMCSTATUS");
+  statusEMC->set_detector_type(CaloTowerDefs::CEMC);
+  statusEMC->set_time_cut(1);
+  // MC Towers Status
+  if(isSim) {
+    // Uses threshold of 50% for towers be considered frequently bad.
+    std::string calibName_hotMap = "CEMC_hotTowers_status";
+    /* Systematic options (to be used as needed). */
+    /* Uses threshold of 40% for towers be considered frequently bad. */
+    // std::string calibName_hotMap = "CEMC_hotTowers_status_40";
+
+    /* Uses threshold of 60% for towers be considered frequently bad. */
+    // std::string calibName_hotMap = "CEMC_hotTowers_status_60";
+
+    std::string calibdir = CDBInterface::instance()->getUrl(calibName_hotMap);
+    statusEMC->set_directURL_hotMap(calibdir);
+  }
+  se->registerSubsystem(statusEMC);
+
+  CaloTowerStatus *statusHCalIn = new CaloTowerStatus("HCALINSTATUS");
+  statusHCalIn->set_detector_type(CaloTowerDefs::HCALIN);
+  statusHCalIn->set_time_cut(2);
+  se->registerSubsystem(statusHCalIn);
+
+  CaloTowerStatus *statusHCALOUT = new CaloTowerStatus("HCALOUTSTATUS");
+  statusHCALOUT->set_detector_type(CaloTowerDefs::HCALOUT);
+  statusHCALOUT->set_time_cut(2);
+  se->registerSubsystem(statusHCALOUT);
+
+  ////////////////////
+  // Calibrate towers
+  std::cout << "Calibrating EMCal" << std::endl;
+  CaloTowerCalib *calibEMC = new CaloTowerCalib("CEMCCALIB");
+  calibEMC->set_detector_type(CaloTowerDefs::CEMC);
+  se->registerSubsystem(calibEMC);
+
+  std::cout << "Calibrating OHcal" << std::endl;
+  CaloTowerCalib *calibOHCal = new CaloTowerCalib("HCALOUT");
+  calibOHCal->set_detector_type(CaloTowerDefs::HCALOUT);
+  se->registerSubsystem(calibOHCal);
+
+  std::cout << "Calibrating IHcal" << std::endl;
+  CaloTowerCalib *calibIHCal = new CaloTowerCalib("HCALIN");
+  calibIHCal->set_detector_type(CaloTowerDefs::HCALIN);
+  se->registerSubsystem(calibIHCal);
+
+  ////////////////
+  // MC Calibration
+  if (isSim)
+  {
+    std::string MC_Calib = CDBInterface::instance()->getUrl("CEMC_MC_RECALIB");
+    if (MC_Calib.empty())
+    {
+      std::cout << "No MC calibration found :( )" << std::endl;
+      gSystem->Exit(0);
+    }
+    CaloTowerCalib *calibEMC_MC = new CaloTowerCalib("CEMCCALIB_MC");
+    calibEMC_MC->set_detector_type(CaloTowerDefs::CEMC);
+    calibEMC_MC->set_inputNodePrefix("TOWERINFO_CALIB_");
+    calibEMC_MC->set_outputNodePrefix("TOWERINFO_CALIB_");
+    calibEMC_MC->set_directURL(MC_Calib);
+    calibEMC_MC->set_doCalibOnly(true);
+    se->registerSubsystem(calibEMC_MC);
+  }
+
+
+
+
+
+
+
+
+
+
+  
+
   JetReco *towerjetreco_noz = new JetReco("jetreco_noz");
   TowerJetInput* emtji_noz = new TowerJetInput(Jet::CEMC_TOWERINFO,"TOWERINFO_CALIB");
   TowerJetInput* ohtji_noz = new TowerJetInput(Jet::HCALIN_TOWERINFO,"TOWERINFO_CALIB");

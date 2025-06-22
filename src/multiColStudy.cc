@@ -244,17 +244,17 @@ int multiColStudy::process_event(PHCompositeNode *topNode)
     {
       _rzvtx[i] = NAN;
     }
-  cout << "mbdvtxmap: " << mbdvtxmap << endl;
+  //cout << "mbdvtxmap: " << mbdvtxmap << endl;
   if(mbdvtxmap)
     {
-      cout << "mbdvtx below:" << endl;
+      //cout << "mbdvtx below:" << endl;
       for(auto iter = mbdvtxmap->begin(); iter != mbdvtxmap->end(); ++iter)
         {
           MbdVertex* mbdvtx = iter->second;
-	  cout << mbdvtx << endl;
+	  //cout << mbdvtx << endl;
           if(mbdvtx)
 	    {
-	      cout << "and the mbd vertex is: " <<mbdvtx->get_z() << endl;
+	      //cout << "and the mbd vertex is: " <<mbdvtx->get_z() << endl;
 	      _rzvtx[_nzvtx] = mbdvtx->get_z();
 	      ++_nzvtx;
 	      if(_nzvtx > _maxzvtx) break;

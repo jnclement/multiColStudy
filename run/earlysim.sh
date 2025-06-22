@@ -26,11 +26,11 @@ for i in {0..3}; do
     ls -larth
     cp -r /sphenix/user/jocl/projects/multiColStudy/run/run_earlydata.C .
     if [ $ISSIM -ne 0 ]; then
-	cp -r /sphenix/user/jocl/projects/multiColStudy/run/lists/g4hits.list ./lists/g4hits.list
-	cp -r /sphenix/user/jocl/projects/multiColStudy/run/lists/dst_truth_jet.list ./lists/dst_truth_jet.list
-	cp -r /sphenix/user/jocl/projects/multiColStudy/run/lists/dst_calo_cluster.list ./lists/dst_calo_cluster.list
-	cp -r /sphenix/user/jocl/projects/multiColStudy/run/lists/dst_global.list ./lists/dst_global.list
-	cp -r /sphenix/user/jocl/projects/multiColStudy/run/lists/dst_mbd_epd.list ./lists/dst_mbd_epd.list
+	cp -r /sphenix/user/jocl/projects/multiColStudy/run/lists${1}/g4hits.list ./lists/g4hits.list
+	cp -r /sphenix/user/jocl/projects/multiColStudy/run/lists${1}/dst_truth_jet.list ./lists/dst_truth_jet.list
+	cp -r /sphenix/user/jocl/projects/multiColStudy/run/lists${1}/dst_calo_cluster.list ./lists/dst_calo_cluster.list
+	cp -r /sphenix/user/jocl/projects/multiColStudy/run/lists${1}/dst_global.list ./lists/dst_global.list
+	cp -r /sphenix/user/jocl/projects/multiColStudy/run/lists${1}/dst_mbd_epd.list ./lists/dst_mbd_epd.list
     else
 	cp -r /sphenix/user/jocl/projects/multiColStudy/run/lists/dst_calofitting_run2pp-000${RN}.list ./lists/dst_calo_cluster.list
 	cp -r /sphenix/user/jocl/projects/multiColStudy/run/lists/dst_triggered_event_run2pp-000${RN}.list ./lists/dst_global.list
