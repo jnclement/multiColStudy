@@ -155,12 +155,14 @@ int comp_zvtx(string tag, int rn, int sampletype = 0)
   TH3D* h3_resp_pT_zvtx = new TH3D("h3_resp_pT_zvtx",";p_{T}^{reco}/p_{T}^{truth};p_{T}^{truth} [GeV];z_{vtx} [cm]",200,0,2,100,0,100,300,-150,150);
   TH3D* h3_resp_pT_zvtx_noz = new TH3D("h3_resp_pT_zvtx_noz",";p_{T}^{reco}/p_{T}^{truth};p_{T}^{truth} [GeV];z_{vtx} [cm]",200,0,2,100,0,100,300,-150,150);
 
+  TH2D* etapt = new TH2D("etapt",";p_{T}^{truth};Jet #eta",15,10,85,30,-1.5,1.5);
+  
   TH3D* h3_resp_E_zvtx = new TH3D("h3_resp_E_zvtx",";E^{reco}/E^{truth};E^{truth} [GeV];z_{vtx} [cm]",200,0,2,100,0,100,300,-150,150);
   TH3D* h3_resp_E_zvtx_noz = new TH3D("h3_resp_E_zvtx_noz",";E^{reco}/E^{truth};E^{truth} [GeV];z_{vtx} [cm]",200,0,2,100,0,100,300,-150,150);
   
   TEfficiency* eff_wz = new TEfficiency("eff_wz",";p_{T} [GeV];Matching Efficiency",25,0,100);
   TEfficiency* eff_nz = new TEfficiency("eff_nz",";p_{T} [GeV];Matching Efficiency",25,0,100);
-  TH2D* noz_recoz_corrET = new TH2D("noz_recoz_corret",";p_{T}^{w/z} [GeV];p_{T}^{noz} [GeV];Counts",100,0,100,100,0,100);
+  TH2D* noz_recoz_corrET = new TH2D(";(p_{T,noz}^{reco} + p_{T,w/z}^{reco})/2 [GeV];p_{T,noz}^{reco} - p_{T,w/z}^{reco} [GeV]",20,0,100,100,-50,50);
   for(int h=rn*100; h<rn*100+100; ++h)
     {
       string filename = "/sphenix/tg/tg01/jets/jocl/multiCol/"+to_string(h)+"/events_"+tag+"_"+to_string(h)+"_0.root";
@@ -197,6 +199,10 @@ int comp_zvtx(string tag, int rn, int sampletype = 0)
 	  tree->GetEntry(i);
 	  vector<vector<double>> truthjet = make_jet_vector(tnjet, tjet_pt, tjet_eta, tjet_phi,1,tzvtx[0],sampletype,tjet_e);
 	  if(truthjet.size() == 0) continue;
+	  for(int j=0; j<truthjet.size(); ++j)
+	    {
+	      etapt->Fill(truthjet.at(j).at(0),truthjet.at(j).at(1),scalefactor);
+	    }
 	  //cout << "make recojets" << endl;
 	  vector<vector<double>> recojets = make_jet_vector(njet, jet_pt, jet_eta, jet_phi,0,rzvtx[0],sampletype,jet_e);
 	  cout << endl<<endl<< "tz/z: " << tzvtx[0] <<" " << rzvtx[0] << endl;
@@ -226,7 +232,7 @@ int comp_zvtx(string tag, int rn, int sampletype = 0)
 		{
 		  if(abs(matches.at(j).at(0) - matches_noz.at(k).at(0)) < 1e-6)
 		    {
-		      noz_recoz_corrET->Fill((matches.at(j).at(1)+matches_noz.at(k).at(1))/2,matches.at(k).at(1)-matches_noz.at(j).at(1));
+		      noz_recoz_corrET->Fill((matches.at(j).at(1)+matches_noz.at(k).at(1))/2,matches_noz.at(k).at(1)-matches.at(j).at(1),scalefactor);
 		    }
 		}
 	      //cout << "matches j 0 " << matches.at(j).at(0) << " matches j 1 " << matches.at(j).at(1) << endl;
@@ -251,6 +257,7 @@ int comp_zvtx(string tag, int rn, int sampletype = 0)
   noz_recoz_corrET->Write();
   h3_resp_E_zvtx->Write();
   h3_resp_E_zvtx_noz->Write();
+  etapt->Write();
   outfile->Write();
   outfile->Close();
   

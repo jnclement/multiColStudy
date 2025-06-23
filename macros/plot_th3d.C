@@ -86,9 +86,9 @@ vector<TGraphErrors*> get_th2d_mean_tgraph(TH2D* h)
     {
       TH1D* projy = h->ProjectionY("_py",i,i);
       
-      TF1* gaus = new TF1("gaus","gaus",0.3,projy->GetXaxis()->GetXmax());//projy->GetMean()-projy->GetStdDev(),projy->GetMean()+2*projy->GetStdDev());//
-      projy->Fit(gaus,"QRIN");
-      projy->GetYaxis()->SetRangeUser(1e-12,1);
+      TF1* gaus = new TF1("gaus","gaus",projy->GetXaxis()->GetXmin(),projy->GetXaxis()->GetXmax());//projy->GetMean()-projy->GetStdDev(),projy->GetMean()+2*projy->GetStdDev());//
+      projy->Fit(gaus,"QRI");
+      projy->GetYaxis()->SetRangeUser(1e-15,1);
       projy->Draw("PE");
       gPad->SetLogy();
       gPad->SaveAs(("../output/plots/"+std::string(h->GetName())+"_"+to_string(i)+".png").c_str());
@@ -575,23 +575,43 @@ int plot_th3d(string filename)
   hne->Rebin3D(1,4,1);
   
   TH2D* corre = (TH2D*)file->Get("noz_recoz_corret");
-
+  corre->Scale(1./corre->Integral());
+  corre->GetXaxis()->SetRangeUser(10,85);
+  TH2D* etapt = (TH2D*)file->Get("etapt");
+  etapt->Scale(1./etapt->Integral());
   TEfficiency* eff_w = (TEfficiency*)file->Get("eff_wz");
   TEfficiency* eff_n = (TEfficiency*)file->Get("eff_nz");
 
   TCanvas* newcan = new TCanvas("newcan","newcan",1000,1000);
-  newcan->cd();
+  newcan->cd(0);
 
+  gPad->SetLogz();
   gPad->SetLeftMargin(0.15);
   gPad->SetBottomMargin(0.15);
   gPad->SetRightMargin(0.15);
   gPad->SetTopMargin(0.15);
   corre->GetZaxis()->SetTitle("");
+  corre->GetZaxis()->SetRangeUser(1e-15,1);
+
+  vector<TGraphErrors*> corgraph = get_th2d_mean_tgraph(corre);
+  gPad->SetLogz();
   
   corre->Draw("COLZ");
-  gPad->SetLogz();
-  gPad->Update();
+  corgraph[0]->SetMarkerStyle(20);
+  corgraph[0]->SetLineWidth(2);
+  corgraph[0]->Draw("SAME PE");
   gPad->SaveAs("../output/plots/corre.png");
+
+
+  vector<TGraphErrors*> eptgraph = get_th2d_mean_tgraph(etapt);
+  etapt->GetZaxis()->SetRangeUser(1e-15,1);
+  gPad->SetLogz();
+  etapt->Draw("COLZ");
+  eptgraph[0]->SetMarkerStyle(20);
+  eptgraph[0]->SetLineWidth(2);
+  eptgraph[0]->Draw("SAME PE");
+  gPad->SaveAs("../output/plots/etapt.png");
+  
   gPad->SetLogz(0);
 
   eff_w->SetMarkerColor(kRed);

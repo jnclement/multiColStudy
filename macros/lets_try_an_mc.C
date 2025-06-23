@@ -137,6 +137,8 @@ int lets_try_an_mc()
 		    {
 		      cout<<g<<h<<i<<j<<k<<endl;
 		      TH2D* hist = new TH2D(("hist"+to_string(g)+to_string(h)+to_string(i)+to_string(j)+to_string(k)).c_str(),";(p_{T,noz}^{reco} + p_{T,w/z}^{reco})/2 [GeV];p_{T,noz}^{reco} - p_{T,w/z}^{reco} [GeV]",15,10,85,100,-50,50);
+		      TH2D* etapt = new TH2D(("etapt"+to_string(g)+to_string(h)+to_string(i)+to_string(j)+to_string(k)).c_str(),";p_{T}^{truth};Jet #eta",15,10,85,30,-1.5,1.5);
+		      //TH2D* etaz0pt = new TH2D(("etaz0pt"+to_string(g)+to_string(h)+to_string(i)+to_string(j)+to_string(k)).c_str(),";p_{T}^{truth};Jet #eta_{z=0}",15,10,85,30,-1.5,1.5);
 		      for(int l=0; l<1000000; ++l)
 			{
 			  float pt = get_truth_pt(rand);
@@ -148,18 +150,34 @@ int lets_try_an_mc()
 			      eta = get_real_eta(rand, pt, w[g]);
 			      z0eta = get_z0_eta(z, eta, r[h]);
 			    }
+			  etapt->Fill(pt,eta);
+			  //etaz0pt->Fill(pt,z0eta);
 			  float recoE = get_reco_E(rand, get_truth_E(pt, eta), a[i], b[j], scale[k]);
 			  float recoPt = get_reco_pt(recoE, eta);
 			  float recoPtZ0 = get_reco_pt_z0(recoE, z0eta);
 			  hist->Fill((recoPt + recoPtZ0)/2,recoPt - recoPtZ0);
 			}
 		      vector<TGraphErrors*> graphs = get_th2d_mean_tgraph(hist);
+		      vector<TGraphErrors*> graphseta = get_th2d_mean_tgraph(etapt);
+		      //vector<TGraphErrors*> graphsz0eta = get_th2d_mean_tgraph(etaz0pt);
+		      
 		      graphs[0]->SetMarkerStyle(20);
 		      graphs[0]->SetLineWidth(2);
 		      gPad->SetLogz();
 		      hist->Draw("COLZ");
 		      graphs[0]->Draw("SAME PE");
 		      gPad->SaveAs(("../output/plots/mctest"+to_string(g)+to_string(h)+to_string(i)+to_string(j)+to_string(k)+".png").c_str());
+
+		      etapt->Draw("COLZ");
+		      graphseta[0]->SetMarkerStyle(20);
+		      graphseta[0]->SetLineWidth(2);
+		      graphseta[0]->Draw("SAME PE");
+		      gPad->SaveAs(("../output/plots/etapt"+to_string(g)+to_string(h)+to_string(i)+to_string(j)+to_string(k)+".png").c_str());
+		      /*
+		      etaz0pt->Draw("COLZ");
+		      graphsz0eta[0]->Draw("SAME PE");
+		      gPad->SaveAs(("../output/plots/etaz0pt"+to_string(g)+to_string(h)+to_string(i)+to_string(j)+to_string(k)+".png").c_str());
+		      */
 		      //goto end;
 		    }
 		}
