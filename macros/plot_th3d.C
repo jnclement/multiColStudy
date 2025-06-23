@@ -62,8 +62,9 @@ vector<TObject*> make_projections(TH3D* h, int axis, double from, double to)
   return outhists;
 }
 
-vector<TGraphErrors*> get_th2d_mean_tgraph(TH2D* h)
+vector<TGraphErrors*> get_th2d_mean_tgraph(TH2D* h, float fit_lower, float fit_upper)
 {
+
   TGraphErrors* means = new TGraphErrors();
   TGraphErrors* jes = new TGraphErrors();
   TGraphErrors* jer = new TGraphErrors();
@@ -82,11 +83,15 @@ vector<TGraphErrors*> get_th2d_mean_tgraph(TH2D* h)
   int nx = h->GetNbinsX();
   int npoints = 0;
   TCanvas* newcan = new TCanvas("newcan2","",1000,1000);
+  bool wasnan_lower = std::isnan(fit_lower);
+  bool wasnan_upper = std::isnan(fit_upper);
   for(int i=1; i<=nx; ++i)
     {
       TH1D* projy = h->ProjectionY("_py",i,i);
-      
-      TF1* gaus = new TF1("gaus","gaus",projy->GetXaxis()->GetXmin(),projy->GetXaxis()->GetXmax());//projy->GetMean()-projy->GetStdDev(),projy->GetMean()+2*projy->GetStdDev());//
+      if(std::isnan(fit_lower)) fit_lower = projy->GetXaxis()->GetBinLowEdge(projy->FindFirstBinAbove(projy->GetMaximum()/1e2,1));
+      if(std::isnan(fit_upper)) fit_upper = projy->GetXaxis()->GetBinLowEdge(projy->FindLastBinAbove(projy->GetMaximum()/1e2,1)+1);
+      cout << projy->Integral() << " " << projy->GetMaximum() << " " << fit_lower << " " << fit_upper << endl;
+      TF1* gaus = new TF1("gaus","gaus",fit_lower,fit_upper);//projy->GetMean()-projy->GetStdDev(),projy->GetMean()+2*projy->GetStdDev());//
       projy->Fit(gaus,"QRI");
       projy->GetYaxis()->SetRangeUser(1e-15,1);
       projy->Draw("PE");
@@ -108,7 +113,9 @@ vector<TGraphErrors*> get_th2d_mean_tgraph(TH2D* h)
       getrms->SetPointError(npoints,0,projy->GetStdDev());
       ++npoints;
       //means->AddPointError(x,mean,0,err);
-      
+      if(wasnan_lower) fit_lower = NAN;
+      if(wasnan_upper) fit_upper = NAN;
+      delete projy;
       //delete gaus;
       //delete projy;
     }
@@ -463,8 +470,8 @@ int draw_all(string histtype, vector<TObject*> wz, vector<TObject*> nz, string e
   format_th1d(nzx,kRed);
   format_th1d(nzy,kRed);
 
-  vector<TGraphErrors*> wzgs = get_th2d_mean_tgraph(wz2);
-  vector<TGraphErrors*> nzgs = get_th2d_mean_tgraph(nz2);
+  vector<TGraphErrors*> wzgs = get_th2d_mean_tgraph(wz2,0.3,wz2->GetYaxis()->GetXmax());
+  vector<TGraphErrors*> nzgs = get_th2d_mean_tgraph(nz2,0.3,nz2->GetYaxis()->GetXmax());
   TGraphErrors* wzg = wzgs.at(0);
   TGraphErrors* nzg = nzgs.at(0);
   //wzg->Draw("PE");
@@ -593,7 +600,7 @@ int plot_th3d(string filename)
   corre->GetZaxis()->SetTitle("");
   corre->GetZaxis()->SetRangeUser(1e-15,1);
 
-  vector<TGraphErrors*> corgraph = get_th2d_mean_tgraph(corre);
+  vector<TGraphErrors*> corgraph = get_th2d_mean_tgraph(corre,NAN,NAN);
   gPad->SetLogz();
   
   corre->Draw("COLZ");
@@ -603,7 +610,7 @@ int plot_th3d(string filename)
   gPad->SaveAs("../output/plots/corre.png");
 
 
-  vector<TGraphErrors*> eptgraph = get_th2d_mean_tgraph(etapt);
+  vector<TGraphErrors*> eptgraph = get_th2d_mean_tgraph(etapt,-50,50);
   etapt->GetZaxis()->SetRangeUser(1e-15,1);
   gPad->SetLogz();
   etapt->Draw("COLZ");

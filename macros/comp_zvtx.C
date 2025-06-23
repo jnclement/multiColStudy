@@ -232,7 +232,7 @@ int comp_zvtx(string tag, int rn, int sampletype = 0)
 		{
 		  if(abs(matches.at(j).at(0) - matches_noz.at(k).at(0)) < 1e-6)
 		    {
-		      noz_recoz_corrET->Fill((matches.at(j).at(1)+matches_noz.at(k).at(1))/2,matches_noz.at(k).at(1)-matches.at(j).at(1),scalefactor);
+		      noz_recoz_corrET->Fill((matches.at(j).at(1)+matches_noz.at(k).at(1))/2,matches.at(j).at(1)-matches_noz.at(k).at(1),scalefactor);
 		    }
 		}
 	      //cout << "matches j 0 " << matches.at(j).at(0) << " matches j 1 " << matches.at(j).at(1) << endl;
