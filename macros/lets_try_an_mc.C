@@ -118,6 +118,10 @@ int lets_try_an_mc()
 {
   gStyle->SetOptStat(0);
   TCanvas* can = new TCanvas("","",1000,1000);
+  can->cd();
+  gPad->SetLeftMargin(0.15);
+  gPad->SetRightMargin(0.15);
+  gPad->SetBottomMargin(0.15);
   const int ntype = 3;
   float r[ntype] = {125,150,175};
   float w[ntype] = {17.5,20,22.5};
@@ -136,7 +140,7 @@ int lets_try_an_mc()
 		  for(int k=0; k<ntype; ++k)
 		    {
 		      cout<<g<<h<<i<<j<<k<<endl;
-		      TH2D* hist = new TH2D(("hist"+to_string(g)+to_string(h)+to_string(i)+to_string(j)+to_string(k)).c_str(),";(p_{T,noz}^{reco} + p_{T,w/z}^{reco})/2 [GeV];p_{T,noz}^{reco} - p_{T,w/z}^{reco} [GeV]",15,10,85,100,-50,50);
+		      TH2D* hist = new TH2D(("hist"+to_string(g)+to_string(h)+to_string(i)+to_string(j)+to_string(k)).c_str(),";(p_{T,noz}^{reco} + p_{T,w/z}^{reco})/2 [GeV];p_{T,w/z}^{reco} - p_{T,noz}^{reco} [GeV]",15,10,85,100,-50,50);
 		      TH2D* etapt = new TH2D(("etapt"+to_string(g)+to_string(h)+to_string(i)+to_string(j)+to_string(k)).c_str(),";p_{T}^{truth};Jet #eta",15,10,85,30,-1.5,1.5);
 		      //TH2D* etaz0pt = new TH2D(("etaz0pt"+to_string(g)+to_string(h)+to_string(i)+to_string(j)+to_string(k)).c_str(),";p_{T}^{truth};Jet #eta_{z=0}",15,10,85,30,-1.5,1.5);
 		      for(int l=0; l<1000000; ++l)

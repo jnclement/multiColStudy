@@ -161,7 +161,7 @@ int alltext(int hasz, string etcuttext = "", string zcuttext = "")
   //dijet_cut_text(0.6,0.96);
   drawText(etcuttext.c_str(),0.05,0.97);
   drawText(zcuttext.c_str(),0.05,0.93);
-  drawText("MB,Jet10,Jet20,Jet30 PYTHIA",0.3,0.87);
+  drawText("MB,Jet10,Jet20,Jet30,Jet50 PYTHIA",0.3,0.87);
   string hasztext = "";
   if(hasz == 0) hasztext = "z_{vtx} assumed 0";
   else if(hasz == 1) hasztext = "Reco z_{vtx} used";
@@ -338,7 +338,7 @@ int overlay_w_ratio_tgraph(TGraphErrors* wz, TGraphErrors* nz, TCanvas* can, TLe
   
   can->cd(2);
   ratio->Draw("APE");
-  ratio->GetYaxis()->SetRangeUser(0.8,1.2);
+  ratio->GetYaxis()->SetRangeUser(0.6,1.4);
   ratio->GetHistogram()->GetXaxis()->SetRangeUser(wz->GetHistogram()->GetXaxis()->GetXmin(),wz->GetHistogram()->GetXaxis()->GetXmax());
 
   gPad->Update();
@@ -470,8 +470,8 @@ int draw_all(string histtype, vector<TObject*> wz, vector<TObject*> nz, string e
   format_th1d(nzx,kRed);
   format_th1d(nzy,kRed);
 
-  vector<TGraphErrors*> wzgs = get_th2d_mean_tgraph(wz2,0.3,wz2->GetYaxis()->GetXmax());
-  vector<TGraphErrors*> nzgs = get_th2d_mean_tgraph(nz2,0.3,nz2->GetYaxis()->GetXmax());
+  vector<TGraphErrors*> wzgs = get_th2d_mean_tgraph(wz2,0.5,1.1);//wz2->GetYaxis()->GetXmax());
+  vector<TGraphErrors*> nzgs = get_th2d_mean_tgraph(nz2,0.5,1.1);//nz2->GetYaxis()->GetXmax());
   TGraphErrors* wzg = wzgs.at(0);
   TGraphErrors* nzg = nzgs.at(0);
   //wzg->Draw("PE");
@@ -501,13 +501,13 @@ int draw_all(string histtype, vector<TObject*> wz, vector<TObject*> nz, string e
   nz2->GetYaxis()->SetRangeUser(nz2->GetYaxis()->GetBinLowEdge(FindFirstBinAboveY(nz2,0)),nz2->GetYaxis()->GetBinLowEdge(FindLastBinAboveY(nz2,0)+1));
 
   gPad->SetLogz();
-  wz2->GetZaxis()->SetRangeUser(1e-12,wz2->GetMaximum()*2);
+  wz2->GetZaxis()->SetRangeUser(1e-15,wz2->GetMaximum()*2);
   wz2->Draw("COLZ");
   wzg->Draw("SAME PE");
   //wzgs.at(3)->Draw("SAME PE");
   alltext(1,etcuttext,zcuttext);
   can->SaveAs(("../output/plots/"+histtype + "_wz.png").c_str());
-  nz2->GetZaxis()->SetRangeUser(1e-12,nz2->GetMaximum()*2);
+  nz2->GetZaxis()->SetRangeUser(1e-15,nz2->GetMaximum()*2);
   nz2->Draw("COLZ");
   nzg->Draw("SAME PE");
   //nzgs.at(3)->Draw("SAME PE");
@@ -581,7 +581,7 @@ int plot_th3d(string filename)
   hwe->Rebin3D(1,4,1);
   hne->Rebin3D(1,4,1);
   
-  TH2D* corre = (TH2D*)file->Get("noz_recoz_corret");
+  TH2D* corre = (TH2D*)file->Get("noz_recoz_corrEt");
   corre->Scale(1./corre->Integral());
   corre->GetXaxis()->SetRangeUser(10,85);
   TH2D* etapt = (TH2D*)file->Get("etapt");
@@ -589,18 +589,19 @@ int plot_th3d(string filename)
   TEfficiency* eff_w = (TEfficiency*)file->Get("eff_wz");
   TEfficiency* eff_n = (TEfficiency*)file->Get("eff_nz");
 
-  TCanvas* newcan = new TCanvas("newcan","newcan",1000,1000);
+  TCanvas* newcan = new TCanvas("1can","1can",1000,1000);
   newcan->cd(0);
 
   gPad->SetLogz();
   gPad->SetLeftMargin(0.15);
   gPad->SetBottomMargin(0.15);
   gPad->SetRightMargin(0.15);
-  gPad->SetTopMargin(0.15);
+  gPad->SetTopMargin(0.1);
   corre->GetZaxis()->SetTitle("");
   corre->GetZaxis()->SetRangeUser(1e-15,1);
 
   vector<TGraphErrors*> corgraph = get_th2d_mean_tgraph(corre,NAN,NAN);
+  newcan->cd();
   gPad->SetLogz();
   
   corre->Draw("COLZ");
@@ -611,6 +612,7 @@ int plot_th3d(string filename)
 
 
   vector<TGraphErrors*> eptgraph = get_th2d_mean_tgraph(etapt,-50,50);
+  newcan->cd();
   etapt->GetZaxis()->SetRangeUser(1e-15,1);
   gPad->SetLogz();
   etapt->Draw("COLZ");

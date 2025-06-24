@@ -162,7 +162,7 @@ int comp_zvtx(string tag, int rn, int sampletype = 0)
   
   TEfficiency* eff_wz = new TEfficiency("eff_wz",";p_{T} [GeV];Matching Efficiency",25,0,100);
   TEfficiency* eff_nz = new TEfficiency("eff_nz",";p_{T} [GeV];Matching Efficiency",25,0,100);
-  TH2D* noz_recoz_corrET = new TH2D(";(p_{T,noz}^{reco} + p_{T,w/z}^{reco})/2 [GeV];p_{T,noz}^{reco} - p_{T,w/z}^{reco} [GeV]",20,0,100,100,-50,50);
+  TH2D* noz_recoz_corrET = new TH2D("noz_recoz_corrEt",";(p_{T,noz}^{reco} + p_{T,w/z}^{reco})/2 [GeV];p_{T,w/z}^{reco} - p_{T,noz}^{reco} [GeV]",20,0,100,100,-50,50);
   for(int h=rn*100; h<rn*100+100; ++h)
     {
       string filename = "/sphenix/tg/tg01/jets/jocl/multiCol/"+to_string(h)+"/events_"+tag+"_"+to_string(h)+"_0.root";
@@ -205,20 +205,20 @@ int comp_zvtx(string tag, int rn, int sampletype = 0)
 	    }
 	  //cout << "make recojets" << endl;
 	  vector<vector<double>> recojets = make_jet_vector(njet, jet_pt, jet_eta, jet_phi,0,rzvtx[0],sampletype,jet_e);
-	  cout << endl<<endl<< "tz/z: " << tzvtx[0] <<" " << rzvtx[0] << endl;
-	  cout <<"recojets:" << endl;
+	  //cout << endl<<endl<< "tz/z: " << tzvtx[0] <<" " << rzvtx[0] << endl;
+	  //cout <<"recojets:" << endl;
 	  for(int j=0; j<recojets.size(); ++j)
 	    {
-	      cout << recojets.at(j).at(0) << " " << recojets.at(j).at(1) << endl;
+	      //cout << recojets.at(j).at(0) << " " << recojets.at(j).at(1) << endl;
 	    }
 	  //cout << "make truthjets" << endl;
 
 	  //cout << "make reco noz" << endl;
 	  vector<vector<double>> reco_noz = make_jet_vector(njet_noz, jet_pt_noz, jet_eta_noz, jet_phi_noz,0,0,sampletype,jet_e_noz);
-	  cout << "recojets noz:" << endl;
+	  //cout << "recojets noz:" << endl;
 	  for(int j=0; j<reco_noz.size(); ++j)
 	    {
-	      cout << reco_noz.at(j).at(0) << " " << reco_noz.at(j).at(1) << endl;
+	      //cout << reco_noz.at(j).at(0) << " " << reco_noz.at(j).at(1) << endl;
 	    }
 	  //cout << "make matches" << endl;
 	  vector<vector<double>> matches = truth_match(truthjet, recojets, eff_wz);
@@ -227,7 +227,7 @@ int comp_zvtx(string tag, int rn, int sampletype = 0)
 	  //cout << "fill" << endl;
 	  for(int j=0; j<matches.size(); ++j)
 	    {
-	      cout << "enter matches"<< endl;
+	      //	      cout << "enter matches"<< endl;
 	      for(int k=0; k<matches_noz.size(); ++k)
 		{
 		  if(abs(matches.at(j).at(0) - matches_noz.at(k).at(0)) < 1e-6)
@@ -244,7 +244,7 @@ int comp_zvtx(string tag, int rn, int sampletype = 0)
 	      h3_resp_pT_zvtx_noz->Fill(matches_noz.at(j).at(1)/matches_noz.at(j).at(0),matches_noz.at(j).at(0),tzvtx[0],scalefactor);
 	      h3_resp_E_zvtx_noz->Fill(matches_noz.at(j).at(3)/matches_noz.at(j).at(2),matches_noz.at(j).at(2),tzvtx[0],scalefactor);
 	    }
-	  cout << "done with event" << endl;
+	  //cout << "done with event" << endl;
 
 	}      
       datfile->Close();
