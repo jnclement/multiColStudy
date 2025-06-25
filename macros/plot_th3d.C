@@ -539,7 +539,7 @@ int draw_all(string histtype, vector<TObject*> wz, vector<TObject*> nz, string e
   return 0;
 }
 
-int get_and_draw(TH3D* hw, TH3D* hn, int axis, double from, double to, string etcuttext = "", string zcuttext = "", string histbase = "")
+int get_and_draw(TH3D* hw, TH3D* hn, int axis, double from, double to, string etcuttext = "", string zcuttext = "", string histbase = "", double from2 = NAN, double to2 = NAN)
 {
 
   string histtype = histbase+"_proj";
@@ -555,6 +555,20 @@ int get_and_draw(TH3D* hw, TH3D* hn, int axis, double from, double to, string et
   
   vector<TObject*> wz = make_projections(hw, axis, from, to);
   vector<TObject*> nz = make_projections(hn, axis, from, to);
+  vector<TObject*> wz2 = {};
+  vector<TObject*> nz2 = {};
+
+  if(!std::isnan(from2) && !std::isnan(to2))
+    {
+      wz2 = make_projections(hw, axis, from2, to2);
+      nz2 = make_projections(hn, axis, from2, to2);
+      ((TH2D*)wz.at(0))->Add((TH2D*)wz2.at(0));
+      ((TH1D*)wz.at(1))->Add((TH1D*)wz2.at(1));
+      ((TH1D*)wz.at(2))->Add((TH1D*)wz2.at(2));
+      ((TH2D*)nz.at(0))->Add((TH2D*)nz2.at(0));
+      ((TH1D*)nz.at(1))->Add((TH1D*)nz2.at(1));
+      ((TH1D*)nz.at(2))->Add((TH1D*)nz2.at(2));
+    }
   
   draw_all(histtype,wz,nz,etcuttext,zcuttext);
 
@@ -641,11 +655,11 @@ int plot_th3d(string filename)
   if(!hw || !hn) return 2;
   hw->Scale(1./hw->Integral());
   hn->Scale(1./hn->Integral());
-  get_and_draw(hw, hn, 2, 60, -60, "","|z_{vtx}^{truth}|>60 cm","gt60");
-  get_and_draw(hw, hn, 2, -30, 30, "","|z_{vtx}^{truth}|<30 cm","lt30");
-  get_and_draw(hwe, hne, 2, 60, -60, "","|z_{vtx}^{truth}|>60 cm","gr60e");
-  get_and_draw(hwe, hne, 2, -30, 30, "","|z_{vtx}^{truth}|<30 cm","lt30e");  
-  get_and_draw(hw, hn, 2, -150, 150, "","|z_{vtx}^{truth}|<150 cm","gr150");
-  
+  //get_and_draw(hw, hn, 2, 60, -60, "","|z_{vtx}^{truth}|>60 cm","gt60");
+  //get_and_draw(hw, hn, 2, -30, 30, "","|z_{vtx}^{truth}|<30 cm","lt30");
+  //get_and_draw(hwe, hne, 2, 60, -60, "","|z_{vtx}^{truth}|>60 cm","gr60e");
+  //get_and_draw(hwe, hne, 2, -30, 30, "","|z_{vtx}^{truth}|<30 cm","lt30e");  
+  //get_and_draw(hw, hn, 2, -150, 150, "","|z_{vtx}^{truth}|<150 cm","gr150");
+  get_and_draw(hw,hn,2,-60,-30,"","30cm<|z_{vtx}^{truth}|<60cm","30t60",30,60);
   return 0;
 }
