@@ -75,7 +75,7 @@ vector<vector<double>> make_jet_vector(int njet, double* jet_pt, double* jet_eta
     {
       //if(istruth && jet_pt[i] < (sampletype==1?30:15)) continue;
       //if(istruth && sampletype != 1 && jet_pt[i] > 30) continue;
-      if(check_bad_jet_eta(jet_eta[i],zvtx,(istruth?0:0.4))) continue;
+      if(check_bad_jet_eta(jet_eta[i],zvtx,(istruth?0.4:0.4))) continue;
       vector<double> jet = {jet_pt[i],jet_eta[i],jet_phi[i],jet_e[i]};
       jet_vector.push_back(jet);
     }
@@ -137,13 +137,15 @@ vector<vector<double>> truth_match(vector<vector<double>> truth_jets, vector<vec
       match.push_back(reco_jets.at(match_index).at(0));
       match.push_back(truth_jets.at(i).at(3));
       match.push_back(reco_jets.at(match_index).at(3));
+      match.push_back(truth_jets.at(i).at(1));
+      match.push_back(reco_jets.at(match_index).at(1));
       matches.push_back(match);
       reco_jets.erase(reco_jets.begin()+match_index);
     }
   return matches;
 }
 
-int comp_zvtx(string tag, int rn, int sampletype = 0, float corrsel = 1000)
+int comp_zvtx(string tag, int rn, int sampletype = 0)
 {
   double scalefactor = 4.197e-3;
   if(sampletype == 1) scalefactor = 3.997e-6;
@@ -154,7 +156,7 @@ int comp_zvtx(string tag, int rn, int sampletype = 0, float corrsel = 1000)
   const int nzvtx = 3;
   TH3D* h3_resp_pT_zvtx = new TH3D("h3_resp_pT_zvtx",";p_{T}^{reco}/p_{T}^{truth};p_{T}^{truth} [GeV];z_{vtx} [cm]",200,0,2,100,0,100,300,-150,150);
   TH3D* h3_resp_pT_zvtx_noz = new TH3D("h3_resp_pT_zvtx_noz",";p_{T}^{reco}/p_{T}^{truth};p_{T}^{truth} [GeV];z_{vtx} [cm]",200,0,2,100,0,100,300,-150,150);
-
+  TH3D* h3_teta_ptd_tz = new TH3D("h3_teta_ptd_tz",";#eta_{jet}^{truth};p_{T,w/z}^{reco} - p_{T,noz}^{reco} [GeV];z_{vtx}^{truth} [cm]",40,-2,2,100,-50,50,300,-150,150);
   TH2D* etapt = new TH2D("etapt",";p_{T}^{truth};Jet #eta",15,10,85,30,-1.5,1.5);
   
   TH3D* h3_resp_E_zvtx = new TH3D("h3_resp_E_zvtx",";E^{reco}/E^{truth};E^{truth} [GeV];z_{vtx} [cm]",200,0,2,100,0,100,300,-150,150);
@@ -162,7 +164,8 @@ int comp_zvtx(string tag, int rn, int sampletype = 0, float corrsel = 1000)
   
   TEfficiency* eff_wz = new TEfficiency("eff_wz",";p_{T} [GeV];Matching Efficiency",25,0,100);
   TEfficiency* eff_nz = new TEfficiency("eff_nz",";p_{T} [GeV];Matching Efficiency",25,0,100);
-  TH2D* noz_recoz_corrET = new TH2D("noz_recoz_corrEt",";(p_{T,noz}^{reco} + p_{T,w/z}^{reco})/2 [GeV];p_{T,w/z}^{reco} - p_{T,noz}^{reco} [GeV]",20,0,100,100,-50,50);
+  TH3D* noz_recoz_corrET = new TH3D("noz_recoz_corrEt",";p_{T,w/z}^{reco} - p_{T,noz}^{reco} [GeV];(p_{T,noz}^{reco} + p_{T,w/z}^{reco})/2 [GeV];z_{vtx} cm",100,-50,50,20,0,100,300,-150,150);
+  TH2D* temp2 = new TH2D("temp2",";(p_{T,noz}^{reco} + p_{T,w/z}^{reco})/2 [GeV];p_{T,w/z}^{reco} - p_{T,noz}^{reco} [GeV]",20,0,100,100,-50,50);
   for(int h=rn*100; h<rn*100+100; ++h)
     {
       string filename = "/sphenix/tg/tg01/jets/jocl/multiCol/"+to_string(h)+"/events_"+tag+"_"+to_string(h)+"_0.root";
@@ -228,14 +231,14 @@ int comp_zvtx(string tag, int rn, int sampletype = 0, float corrsel = 1000)
 	  for(int j=0; j<matches.size(); ++j)
 	    {
 	      //	      cout << "enter matches"<< endl;
-	      if(abs(tzvtx[0]) < corrsel)
+	      for(int k=0; k<matches_noz.size(); ++k)
 		{
-		  for(int k=0; k<matches_noz.size(); ++k)
+		  if(abs(matches.at(j).at(0) - matches_noz.at(k).at(0)) < 1e-6)
 		    {
-		      if(abs(matches.at(j).at(0) - matches_noz.at(k).at(0)) < 1e-6)
-			{
-			  noz_recoz_corrET->Fill((matches.at(j).at(1)+matches_noz.at(k).at(1))/2,matches.at(j).at(1)-matches_noz.at(k).at(1),scalefactor);
-			}
+		      noz_recoz_corrET->Fill(matches.at(j).at(1)-matches_noz.at(k).at(1),(matches.at(j).at(1)+matches_noz.at(k).at(1))/2,tzvtx[0],scalefactor);
+		      temp2->Fill((matches.at(j).at(1)+matches_noz.at(k).at(1))/2,matches.at(j).at(1)-matches_noz.at(k).at(1),scalefactor);
+		      h3_teta_ptd_tz->Fill(matches.at(j).at(4),matches.at(j).at(1)-matches_noz.at(k).at(1),tzvtx[0],scalefactor);
+		      if((matches.at(j).at(1)+matches_noz.at(k).at(1))/2 > 25 && (matches.at(j).at(1)+matches_noz.at(k).at(1))/2 < 30 && abs(matches.at(j).at(1)-matches_noz.at(k).at(1))>5 && abs(tzvtx[0]) >75) cout << "myinfo: " << matches.at(j).at(1) << " " << matches.at(j).at(5) << " " << matches_noz.at(k).at(1) << " " << matches_noz.at(k).at(5) << " " << rzvtx[0] << " " << matches.at(j).at(0) << endl;
 		    }
 		}
 	      //cout << "matches j 0 " << matches.at(j).at(0) << " matches j 1 " << matches.at(j).at(1) << endl;
@@ -260,7 +263,9 @@ int comp_zvtx(string tag, int rn, int sampletype = 0, float corrsel = 1000)
   noz_recoz_corrET->Write();
   h3_resp_E_zvtx->Write();
   h3_resp_E_zvtx_noz->Write();
+  h3_teta_ptd_tz->Write();
   etapt->Write();
+  temp2->Write();
   outfile->Write();
   outfile->Close();
   

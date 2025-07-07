@@ -11,7 +11,6 @@ else
 fi
 echo "got into condor scratch dir"
 RN=$1
-CS=30
 TAG=20250620sim10
 #TAG=20250612sim
 #mkdir -p multicoltree
@@ -22,22 +21,22 @@ mkdir -p /sphenix/user/jocl/projects/multiColStudy/output/hists
 cp -r /sphenix/user/jocl/projects/multiColStudy/macros/comp_zvtx.C .
 echo "got all files, run code"
 if [ $RN -lt 100 ]; then
-    root -b -q -l 'comp_zvtx.C("'${TAG}'",'$RN',1,'$CS')'
+    root -b -q -l 'comp_zvtx.C("'${TAG}'",'$RN',1)'
 fi
 TAG=20250620sim30
 if [ $RN -lt 100 ]; then
-    root -b -q -l 'comp_zvtx.C("'${TAG}'",'$RN',3,'$CS')'
+    root -b -q -l 'comp_zvtx.C("'${TAG}'",'$RN',3)'
 fi
 TAG=20250620sim20
 if [ $RN -lt 100 ]; then
-    root -b -q -l 'comp_zvtx.C("'${TAG}'",'$RN',2,'$CS')'
+    root -b -q -l 'comp_zvtx.C("'${TAG}'",'$RN',2)'
 fi
 TAG=20250620sim50
 if [ $RN -lt 100 ]; then
-    root -b -q -l 'comp_zvtx.C("'${TAG}'",'$RN',4,'$CS')'
+    root -b -q -l 'comp_zvtx.C("'${TAG}'",'$RN',4)'
 fi
 TAG=20250620simmb
-root -b -q -l 'comp_zvtx.C("'${TAG}'",'$RN',0,'$CS')'
+root -b -q -l 'comp_zvtx.C("'${TAG}'",'$RN',0)'
 
 echo "copy file back"
 cp multicolhist/* /sphenix/user/jocl/projects/multiColStudy/output/hists

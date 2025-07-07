@@ -46,7 +46,7 @@ vector<TObject*> make_projections(TH3D* h, int axis, double from, double to)
       proj1 = (TH2D*)(h->Project3D(("proj1_"+projdir).c_str()));
       //proj1->Draw("COLZ");
       set_axis_range_based_on_axis(h, axis, get_bin_number_for_axis(h, axis, from, 1), 9999999);
-      proj2 = (TH2D*)(h->Project3D(("proj1_"+projdir).c_str()));
+      proj2 = (TH2D*)(h->Project3D(("proj2_"+projdir).c_str()));
       proj1->Add(proj2);
     }
 
@@ -62,7 +62,7 @@ vector<TObject*> make_projections(TH3D* h, int axis, double from, double to)
   return outhists;
 }
 
-vector<TGraphErrors*> get_th2d_mean_tgraph(TH2D* h, float fit_lower, float fit_upper)
+vector<TGraphErrors*> get_th2d_mean_tgraph(TH2D* h, float fit_lower, float fit_upper, string histtype)
 {
 
   TGraphErrors* means = new TGraphErrors();
@@ -88,15 +88,17 @@ vector<TGraphErrors*> get_th2d_mean_tgraph(TH2D* h, float fit_lower, float fit_u
   for(int i=1; i<=nx; ++i)
     {
       TH1D* projy = h->ProjectionY("_py",i,i);
-      if(std::isnan(fit_lower)) fit_lower = projy->GetXaxis()->GetBinLowEdge(projy->FindFirstBinAbove(projy->GetMaximum()/1e2,1));
-      if(std::isnan(fit_upper)) fit_upper = projy->GetXaxis()->GetBinLowEdge(projy->FindLastBinAbove(projy->GetMaximum()/1e2,1)+1);
+      if(std::isnan(fit_lower)) fit_lower = projy->GetXaxis()->GetBinLowEdge(projy->FindFirstBinAbove(projy->GetMaximum()/1e3,1));
+      if(std::isnan(fit_upper)) fit_upper = projy->GetXaxis()->GetBinLowEdge(projy->FindLastBinAbove(projy->GetMaximum()/1e3,1)+1);
       cout << projy->Integral() << " " << projy->GetMaximum() << " " << fit_lower << " " << fit_upper << endl;
       TF1* gaus = new TF1("gaus","gaus",fit_lower,fit_upper);//projy->GetMean()-projy->GetStdDev(),projy->GetMean()+2*projy->GetStdDev());//
       projy->Fit(gaus,"QRI");
-      projy->GetYaxis()->SetRangeUser(1e-15,1);
+      projy->GetYaxis()->SetRangeUser(projy->GetMinimum()>0?projy->GetMinimum()/2:projy->GetBinContent(projy->FindFirstBinAbove(0)),projy->GetMaximum()*2);
+      projy->SetMarkerStyle(20);
+      projy->SetMarkerColor(kBlack);
       projy->Draw("PE");
       gPad->SetLogy();
-      gPad->SaveAs(("../output/plots/"+std::string(h->GetName())+"_"+to_string(i)+".png").c_str());
+      gPad->SaveAs(("../output/plots/"+std::string(h->GetName())+"_"+to_string(i)+"_"+histtype+".png").c_str());
       gPad->SetLogy(0);
       double x = h->GetXaxis()->GetBinCenter(i);
       double mean = gaus->GetParameter(1);
@@ -116,7 +118,7 @@ vector<TGraphErrors*> get_th2d_mean_tgraph(TH2D* h, float fit_lower, float fit_u
       if(wasnan_lower) fit_lower = NAN;
       if(wasnan_upper) fit_upper = NAN;
       delete projy;
-      //delete gaus;
+      delete gaus;
       //delete projy;
     }
   means->GetXaxis()->SetTitle(h->GetXaxis()->GetTitle());
@@ -160,7 +162,7 @@ int alltext(int hasz, string etcuttext = "", string zcuttext = "")
   antikt_text(0.4,0.3,0.93);
   //dijet_cut_text(0.6,0.96);
   drawText(etcuttext.c_str(),0.05,0.97);
-  drawText(zcuttext.c_str(),0.05,0.93);
+  drawText(zcuttext.c_str(),0.05,0.9);
   drawText("MB,Jet10,Jet20,Jet30,Jet50 PYTHIA",0.3,0.87);
   string hasztext = "";
   if(hasz == 0) hasztext = "z_{vtx} assumed 0";
@@ -296,31 +298,39 @@ TGraphErrors* DivideGraphsMatchingX(TGraphErrors* gNum, TGraphErrors* gDen, bool
 int overlay_w_ratio_tgraph(TGraphErrors* wz, TGraphErrors* nz, TCanvas* can, TLegend* leg, string etcuttext, string zcuttext, string histtype, string xy)
 {
   can->cd(1);
-  TGraphErrors* ratio = DivideGraphsMatchingX(nz,wz);
-  ratio->GetYaxis()->SetTitle("Ratio no-z / with-z");
-  ratio->GetXaxis()->SetTitle(wz->GetXaxis()->GetTitle());
-  ratio->GetXaxis()->SetTitleSize(0.075);
-  ratio->GetYaxis()->SetTitleSize(0.075);
-  ratio->GetXaxis()->SetLabelSize(0.075);
-  ratio->GetYaxis()->SetLabelSize(0.075);
+  TGraphErrors* ratio = nz?DivideGraphsMatchingX(nz,wz):NULL;
+  if(ratio)
+    {
+      ratio->GetYaxis()->SetTitle("Ratio no-z / with-z");
+      ratio->GetXaxis()->SetTitle(wz->GetXaxis()->GetTitle());
+      ratio->GetXaxis()->SetTitleSize(0.075);
+      ratio->GetYaxis()->SetTitleSize(0.075);
+      ratio->GetXaxis()->SetLabelSize(0.075);
+      ratio->GetYaxis()->SetLabelSize(0.075);
+    }
   //ratio->Divide(wz,nz,1,1,"B");
 
   wz->SetMarkerStyle(20);
   wz->SetMarkerColor(kBlack);
   wz->SetLineColor(kBlack);
   wz->SetMarkerSize(1.5);
-  nz->SetMarkerStyle(20);
-  nz->SetMarkerColor(kRed);
-  nz->SetLineColor(kRed);
-  nz->SetMarkerSize(1.5);
-
-  ratio->SetMarkerStyle(20);
-  ratio->SetMarkerColor(kRed);
-  ratio->SetLineColor(kRed);
-  ratio->SetMarkerSize(1.5);
+  if(nz)
+    {
+      nz->SetMarkerStyle(20);
+      nz->SetMarkerColor(kRed);
+      nz->SetLineColor(kRed);
+      nz->SetMarkerSize(1.5);
+    }
+  if(ratio)
+    {
+      ratio->SetMarkerStyle(20);
+      ratio->SetMarkerColor(kRed);
+      ratio->SetLineColor(kRed);
+      ratio->SetMarkerSize(1.5);
+    }
   
   double ymax = wz->GetHistogram()->GetMaximum();
-  double nzmax = nz->GetHistogram()->GetMaximum();
+  double nzmax = nz?nz->GetHistogram()->GetMaximum():-1e9;
   if(nzmax > ymax) ymax = nzmax;
   ymax *= 1.5;
 
@@ -328,18 +338,21 @@ int overlay_w_ratio_tgraph(TGraphErrors* wz, TGraphErrors* nz, TCanvas* can, TLe
   //cout << ratio->GetXaxis()->GetXmin()<< " " << ratio->GetXaxis()->GetXmax() << endl;
 
   wz->Draw("APE");
-  nz->Draw("SAME PE");
+  if(nz)nz->Draw("SAME PE");
   wz->GetHistogram()->GetYaxis()->SetRangeUser(0,1.5);
-  nz->GetHistogram()->GetYaxis()->SetRangeUser(0,1.5);
+  if(nz)nz->GetHistogram()->GetYaxis()->SetRangeUser(0,1.5);
   wz->GetHistogram()->GetXaxis()->SetRangeUser(wz->GetHistogram()->GetXaxis()->GetXmin(),wz->GetHistogram()->GetXaxis()->GetXmax());
-  nz->GetHistogram()->GetXaxis()->SetRangeUser(wz->GetHistogram()->GetXaxis()->GetXmin(),wz->GetHistogram()->GetXaxis()->GetXmax());  
+  if(nz)nz->GetHistogram()->GetXaxis()->SetRangeUser(wz->GetHistogram()->GetXaxis()->GetXmin(),wz->GetHistogram()->GetXaxis()->GetXmax());  
 
   gPad->Update();
-  
-  can->cd(2);
-  ratio->Draw("APE");
-  ratio->GetYaxis()->SetRangeUser(0.6,1.4);
-  ratio->GetHistogram()->GetXaxis()->SetRangeUser(wz->GetHistogram()->GetXaxis()->GetXmin(),wz->GetHistogram()->GetXaxis()->GetXmax());
+
+  if(ratio)
+    {
+      can->cd(2);
+      ratio->Draw("APE");
+      ratio->GetYaxis()->SetRangeUser(0.9,1.1);
+      ratio->GetHistogram()->GetXaxis()->SetRangeUser(wz->GetHistogram()->GetXaxis()->GetXmin(),wz->GetHistogram()->GetXaxis()->GetXmax());
+    }
 
   gPad->Update();
   can->cd(0);
@@ -364,26 +377,30 @@ int overlay_w_ratio_th1d(TH1D* wz, TH1D* nz, TCanvas* can, TLegend* leg, string 
   TH1D* ratio = (TH1D*)wz->Clone();
   cout << ratio->GetNbinsX() << " " << ratio->GetBinLowEdge(201) << endl;
   
-  ratio->Divide(wz,nz,1,1,"B");
-  ratio->GetYaxis()->SetTitle("Ratio Reco z / Zero z");
+  if(nz)ratio->Divide(wz,nz,1,1,"B");
+  else ratio = NULL;
+  if(ratio)ratio->GetYaxis()->SetTitle("Ratio Reco z / Zero z");
   
   double ymax = wz->GetMaximum();
-  double nzmax = nz->GetMaximum();
+  double nzmax = nz?nz->GetMaximum():-99999;
   if(nzmax > ymax) ymax = nzmax;
   ymax *= 1.5; 
   wz->GetYaxis()->SetRangeUser(0,ymax);
-  nz->GetYaxis()->SetRangeUser(0,ymax);
+  if(nz)nz->GetYaxis()->SetRangeUser(0,ymax);
 
   wz->Draw("PE");
-  nz->Draw("SAME PE");
-  can->cd(2);
-  ratio->GetYaxis()->SetRangeUser(0,2);
-  ratio->Draw("PE");
+  if(nz)nz->Draw("SAME PE");
+  if(ratio)
+    {
+      can->cd(2);
+      ratio->GetYaxis()->SetRangeUser(0,2);
+      ratio->Draw("PE");
+    }
   can->cd(0);
   alltext(-1, etcuttext, zcuttext);
   can->cd(1);
   leg->Draw();
-  TLine* oneline = new TLine(wz->GetXaxis()->GetXmin(),1,nz->GetXaxis()->GetXmax(),1);
+  TLine* oneline = new TLine(wz->GetXaxis()->GetXmin(),1,wz->GetXaxis()->GetXmax(),1);
   can->cd(2);
   oneline->Draw();
 
@@ -457,36 +474,39 @@ int draw_all(string histtype, vector<TObject*> wz, vector<TObject*> nz, string e
   TH1D* wzx = (TH1D*)wz.at(1);
   TH1D* wzy = (TH1D*)wz.at(2);
 
-  TH2D* nz2 = (TH2D*)nz.at(0);
-  TH1D* nzx = (TH1D*)nz.at(1);
-  TH1D* nzy = (TH1D*)nz.at(2);
+  TH2D* nz2 = nz.size()==0?NULL:(TH2D*)nz.at(0);
+  TH1D* nzx = nz.size()==0?NULL:(TH1D*)nz.at(1);
+  TH1D* nzy = nz.size()==0?NULL:(TH1D*)nz.at(2);
 
   //cout << wzy->GetNbinsX() << " " << wzy->GetBinLowEdge(200) << " " << nzy->GetNbinsX() << " " << nzy->GetBinLowEdge(200) << endl;
   
   format_th2d(wz2);
-  format_th2d(nz2);
+  if(nz2)format_th2d(nz2);
   format_th1d(wzx,kBlack);
   format_th1d(wzy,kBlack);
-  format_th1d(nzx,kRed);
-  format_th1d(nzy,kRed);
+  if(nzx)format_th1d(nzx,kRed);
+  if(nzy)format_th1d(nzy,kRed);
 
-  vector<TGraphErrors*> wzgs = get_th2d_mean_tgraph(wz2,0.5,1.1);//wz2->GetYaxis()->GetXmax());
-  vector<TGraphErrors*> nzgs = get_th2d_mean_tgraph(nz2,0.5,1.1);//nz2->GetYaxis()->GetXmax());
+  vector<TGraphErrors*> wzgs = get_th2d_mean_tgraph(wz2,NAN,NAN,histtype);//wz2->GetYaxis()->GetXmax());
+  vector<TGraphErrors*> nzgs = {};
+  if(nz2) nzgs = get_th2d_mean_tgraph(nz2,NAN,NAN,histtype);//nz2->GetYaxis()->GetXmax());
   TGraphErrors* wzg = wzgs.at(0);
-  TGraphErrors* nzg = nzgs.at(0);
+  TGraphErrors* nzg = nzgs.size()==0?NULL:nzgs.at(0);
   //wzg->Draw("PE");
   TGraphErrors* jsw = wzgs.at(1);
-  TGraphErrors* jsn = nzgs.at(1);
+  TGraphErrors* jsn = nzgs.size()==0?NULL:nzgs.at(1);
   TGraphErrors* jrw = wzgs.at(2);
-  TGraphErrors* jrn = nzgs.at(2);
+  TGraphErrors* jrn = nzgs.size()==0?NULL:nzgs.at(2);
 
+  /*
   for(int i=0; i<jsw->GetN(); ++i)
     {
       double x, y;
       jsn->GetPoint(i, x, y);
       cout << x << " " << y << endl;
     }
-
+  */
+  
   TCanvas* can = new TCanvas("","",1000,1000);
   can->cd();
   gPad->SetTopMargin(0.15);
@@ -497,8 +517,8 @@ int draw_all(string histtype, vector<TObject*> wz, vector<TObject*> nz, string e
   wz2->GetXaxis()->SetRangeUser(wz2->GetXaxis()->GetBinLowEdge(FindFirstBinAboveX(wz2,0)),wz2->GetXaxis()->GetBinLowEdge(FindLastBinAboveX(wz2,0)+1));
   wz2->GetYaxis()->SetRangeUser(wz2->GetYaxis()->GetBinLowEdge(FindFirstBinAboveY(wz2,0)),wz2->GetYaxis()->GetBinLowEdge(FindLastBinAboveY(wz2,0)+1));
 
-  nz2->GetXaxis()->SetRangeUser(nz2->GetXaxis()->GetBinLowEdge(FindFirstBinAboveX(nz2,0)),nz2->GetXaxis()->GetBinLowEdge(FindLastBinAboveX(nz2,0)+1));
-  nz2->GetYaxis()->SetRangeUser(nz2->GetYaxis()->GetBinLowEdge(FindFirstBinAboveY(nz2,0)),nz2->GetYaxis()->GetBinLowEdge(FindLastBinAboveY(nz2,0)+1));
+  if(nz2)nz2->GetXaxis()->SetRangeUser(nz2->GetXaxis()->GetBinLowEdge(FindFirstBinAboveX(nz2,0)),nz2->GetXaxis()->GetBinLowEdge(FindLastBinAboveX(nz2,0)+1));
+  if(nz2)nz2->GetYaxis()->SetRangeUser(nz2->GetYaxis()->GetBinLowEdge(FindFirstBinAboveY(nz2,0)),nz2->GetYaxis()->GetBinLowEdge(FindLastBinAboveY(nz2,0)+1));
 
   gPad->SetLogz();
   wz2->GetZaxis()->SetRangeUser(1e-15,wz2->GetMaximum()*2);
@@ -507,12 +527,12 @@ int draw_all(string histtype, vector<TObject*> wz, vector<TObject*> nz, string e
   //wzgs.at(3)->Draw("SAME PE");
   alltext(1,etcuttext,zcuttext);
   can->SaveAs(("../output/plots/"+histtype + "_wz.png").c_str());
-  nz2->GetZaxis()->SetRangeUser(1e-15,nz2->GetMaximum()*2);
-  nz2->Draw("COLZ");
-  nzg->Draw("SAME PE");
+  if(nz2)nz2->GetZaxis()->SetRangeUser(1e-15,nz2->GetMaximum()*2);
+  if(nz2)nz2->Draw("COLZ");
+  if(nzg)nzg->Draw("SAME PE");
   //nzgs.at(3)->Draw("SAME PE");
   alltext(0,etcuttext,zcuttext);
-  can->SaveAs(("../output/plots/"+histtype + "_nz.png").c_str());
+  if(nz2) can->SaveAs(("../output/plots/"+histtype + "_nz.png").c_str());
   gPad->SetLogz(0);
   //delete can;
   can = new TCanvas("","",1000,1500);
@@ -521,7 +541,7 @@ int draw_all(string histtype, vector<TObject*> wz, vector<TObject*> nz, string e
   gPad->SetTopMargin(0.15);
   TLegend* leg = new TLegend(0.3,0.6,0.8,0.75);
   leg->AddEntry(wzx,"Reco z_{vtx} used for jets","p");
-  leg->AddEntry(nzx,"z_{vtx} Assumed 0","p");
+  if(nzx)leg->AddEntry(nzx,"z_{vtx} Assumed 0","p");
   leg->SetBorderSize(0);
   leg->SetFillStyle(0);
 
@@ -554,20 +574,25 @@ int get_and_draw(TH3D* hw, TH3D* hn, int axis, double from, double to, string et
   histtype += to_string(to);
   
   vector<TObject*> wz = make_projections(hw, axis, from, to);
-  vector<TObject*> nz = make_projections(hn, axis, from, to);
+  vector<TObject*> nz;
+  if(hn) nz = make_projections(hn, axis, from, to);
+  else nz = {};
   vector<TObject*> wz2 = {};
   vector<TObject*> nz2 = {};
 
   if(!std::isnan(from2) && !std::isnan(to2))
     {
       wz2 = make_projections(hw, axis, from2, to2);
-      nz2 = make_projections(hn, axis, from2, to2);
+      if(hn) nz2 = make_projections(hn, axis, from2, to2);
       ((TH2D*)wz.at(0))->Add((TH2D*)wz2.at(0));
       ((TH1D*)wz.at(1))->Add((TH1D*)wz2.at(1));
       ((TH1D*)wz.at(2))->Add((TH1D*)wz2.at(2));
-      ((TH2D*)nz.at(0))->Add((TH2D*)nz2.at(0));
-      ((TH1D*)nz.at(1))->Add((TH1D*)nz2.at(1));
-      ((TH1D*)nz.at(2))->Add((TH1D*)nz2.at(2));
+      if(hn)
+	{
+	  ((TH2D*)nz.at(0))->Add((TH2D*)nz2.at(0));
+	  ((TH1D*)nz.at(1))->Add((TH1D*)nz2.at(1));
+	  ((TH1D*)nz.at(2))->Add((TH1D*)nz2.at(2));
+	}
     }
   
   draw_all(histtype,wz,nz,etcuttext,zcuttext);
@@ -590,15 +615,18 @@ int plot_th3d(string filename)
   TH3D* hwe = (TH3D*)file->Get("h3_resp_E_zvtx");
   TH3D* hne = (TH3D*)file->Get("h3_resp_E_zvtx_noz");
 
+  TH3D* teta_pt_z = (TH3D*)file->Get("h3_teta_ptd_tz");
+  
   hw->Rebin3D(1,4,1);
   hn->Rebin3D(1,4,1);
   hwe->Rebin3D(1,4,1);
   hne->Rebin3D(1,4,1);
   
-  TH2D* corre = (TH2D*)file->Get("noz_recoz_corrEt");
+  TH3D* corre = (TH3D*)file->Get("noz_recoz_corrEt");
   corre->Scale(1./corre->Integral());
-  corre->GetXaxis()->SetRangeUser(10,85);
   TH2D* etapt = (TH2D*)file->Get("etapt");
+  TH2D* temp2 = (TH2D*)file->Get("temp2");
+  get_th2d_mean_tgraph(temp2,NAN,NAN,"temp2");
   etapt->Scale(1./etapt->Integral());
   TEfficiency* eff_w = (TEfficiency*)file->Get("eff_wz");
   TEfficiency* eff_n = (TEfficiency*)file->Get("eff_nz");
@@ -611,21 +639,10 @@ int plot_th3d(string filename)
   gPad->SetBottomMargin(0.15);
   gPad->SetRightMargin(0.15);
   gPad->SetTopMargin(0.1);
-  corre->GetZaxis()->SetTitle("");
-  corre->GetZaxis()->SetRangeUser(1e-15,1);
-
-  vector<TGraphErrors*> corgraph = get_th2d_mean_tgraph(corre,NAN,NAN);
   newcan->cd();
   gPad->SetLogz();
   
-  corre->Draw("COLZ");
-  corgraph[0]->SetMarkerStyle(20);
-  corgraph[0]->SetLineWidth(2);
-  corgraph[0]->Draw("SAME PE");
-  gPad->SaveAs("../output/plots/corre.png");
-
-
-  vector<TGraphErrors*> eptgraph = get_th2d_mean_tgraph(etapt,-50,50);
+  vector<TGraphErrors*> eptgraph = get_th2d_mean_tgraph(etapt,-1.5,1.5,"etapt");
   newcan->cd();
   etapt->GetZaxis()->SetRangeUser(1e-15,1);
   gPad->SetLogz();
@@ -659,7 +676,11 @@ int plot_th3d(string filename)
   //get_and_draw(hw, hn, 2, -30, 30, "","|z_{vtx}^{truth}|<30 cm","lt30");
   //get_and_draw(hwe, hne, 2, 60, -60, "","|z_{vtx}^{truth}|>60 cm","gr60e");
   //get_and_draw(hwe, hne, 2, -30, 30, "","|z_{vtx}^{truth}|<30 cm","lt30e");  
-  //get_and_draw(hw, hn, 2, -150, 150, "","|z_{vtx}^{truth}|<150 cm","gr150");
-  get_and_draw(hw,hn,2,-60,-30,"","30cm<|z_{vtx}^{truth}|<60cm","30t60",30,60);
+  //get_and_draw(hw, hn, 2, -150, 150, "","|z_{vtx}^{truth}|<150 cm","lt150");
+  //get_and_draw(hw,hn,2,-60,-30,"","30cm<|z_{vtx}^{truth}|<60cm","30t60",30,60);
+  get_and_draw(corre,NULL,2,-30,30,"","|z_{vtx}^{truth}|<30cm","lt30");
+  get_and_draw(corre,NULL,2,75,-75,"","|z_{vtx}^{truth}|>75cm","gt75");
+  get_and_draw(corre,NULL,2,-150,150,"","|z_{vtx}^{truth}|<150cm","lt150");
+  //get_and_draw(teta_pt_z,NULL,2,75,-75,"","|z_{vtx}^{truth}|<150cm","gt75");
   return 0;
 }
