@@ -161,6 +161,9 @@ int comp_zvtx(string tag, int rn, int sampletype = 0)
   
   TH3D* h3_resp_E_zvtx = new TH3D("h3_resp_E_zvtx",";E^{reco}/E^{truth};E^{truth} [GeV];z_{vtx} [cm]",200,0,2,100,0,100,300,-150,150);
   TH3D* h3_resp_E_zvtx_noz = new TH3D("h3_resp_E_zvtx_noz",";E^{reco}/E^{truth};E^{truth} [GeV];z_{vtx} [cm]",200,0,2,100,0,100,300,-150,150);
+
+  TH3D* h3_avgeta_avgpt_tz_noz = new TH3D("h3_avgeta_avgpt_tz_noz",";<#eta>;<p_{T}> [GeV];z_{vtx}^{truth} [cm]",30,-1.5,1.5,100,0,100,300,-150,150);
+  TH3D* h3_avgeta_avgpt_tz_noz_dijet = new TH3D("h3_avgeta_avgpt_tz_noz_dijet",";<#eta_{reco}>;<p_{T}^{truth}> [GeV];z_{vtx}^{truth} [cm]",30,-1.5,1.5,100,0,100,300,-150,150);
   
   TEfficiency* eff_wz = new TEfficiency("eff_wz",";p_{T} [GeV];Matching Efficiency",25,0,100);
   TEfficiency* eff_nz = new TEfficiency("eff_nz",";p_{T} [GeV];Matching Efficiency",25,0,100);
@@ -175,7 +178,7 @@ int comp_zvtx(string tag, int rn, int sampletype = 0)
       if(!datfile) continue;
       TTree* tree = (TTree*)datfile->Get("tree");
       if(!tree) continue;
-      int njet, tnjet, njet_noz;
+      int njet, tnjet, njet_noz, nzvtx;
       double jet_pt[nmaxjet], jet_eta[nmaxjet], jet_pt_noz[nmaxjet], jet_eta_noz[nmaxjet], tjet_pt[nmaxjet], tjet_eta[nmaxjet], jet_phi[nmaxjet], tjet_phi[nmaxjet], jet_phi_noz[nmaxjet], tzvtx[nzvtx], rzvtx[nzvtx], jet_e[nmaxjet], jet_e_noz[nmaxjet], tjet_e[nmaxjet];
       
       tree->SetBranchAddress("njet",&njet);
@@ -195,11 +198,12 @@ int comp_zvtx(string tag, int rn, int sampletype = 0)
       tree->SetBranchAddress("jet_e_noz",jet_e_noz);
       tree->SetBranchAddress("jet_e",jet_e);
       tree->SetBranchAddress("tjet_e",tjet_e);
-
+      tree->SetBranchAddress("nzvtx",&nzvtx);
       
       for(int i=0; i<tree->GetEntries(); ++i)
 	{
 	  tree->GetEntry(i);
+	  if(nzvtx==0 || rzvtx[0] == 0) continue;
 	  vector<vector<double>> truthjet = make_jet_vector(tnjet, tjet_pt, tjet_eta, tjet_phi,1,tzvtx[0],sampletype,tjet_e);
 	  if(truthjet.size() == 0) continue;
 	  for(int j=0; j<truthjet.size(); ++j)
@@ -218,10 +222,35 @@ int comp_zvtx(string tag, int rn, int sampletype = 0)
 
 	  //cout << "make reco noz" << endl;
 	  vector<vector<double>> reco_noz = make_jet_vector(njet_noz, jet_pt_noz, jet_eta_noz, jet_phi_noz,0,0,sampletype,jet_e_noz);
+
+	  double avgeta = 0;
+	  double avgeta_dijet = 0;
+	  double avgpt = 0;
+	  double avgpt_dijet = 0;
 	  //cout << "recojets noz:" << endl;
-	  for(int j=0; j<reco_noz.size(); ++j)
+	  if(reco_noz.size() >= 2)
 	    {
-	      //cout << reco_noz.at(j).at(0) << " " << reco_noz.at(j).at(1) << endl;
+	      if(reco_noz.at(1).at(0) > 4)
+		{
+		  for(int j=0; j<reco_noz.size(); ++j)
+		    {
+		      if(reco_noz.at(j).at(0) < 4) continue;
+		      if(j<2)
+			{
+			  avgeta_dijet += reco_noz.at(j).at(1);
+			  avgpt_dijet += reco_noz.at(j).at(0);
+			}
+		      avgeta += reco_noz.at(j).at(1);
+		      avgpt += reco_noz.at(j).at(0);
+		    }
+		  avgeta_dijet /= 2;
+		  avgpt_dijet /= 2;
+		  avgeta /= reco_noz.size();
+		  avgpt /= reco_noz.size();
+		  
+		  h3_avgeta_avgpt_tz_noz_dijet->Fill(avgeta_dijet,avgpt_dijet,tzvtx[0],scalefactor);
+		  h3_avgeta_avgpt_tz_noz->Fill(avgeta,avgpt,tzvtx[0],scalefactor);
+		}
 	    }
 	  //cout << "make matches" << endl;
 	  vector<vector<double>> matches = truth_match(truthjet, recojets, eff_wz);
@@ -245,6 +274,7 @@ int comp_zvtx(string tag, int rn, int sampletype = 0)
 	      h3_resp_pT_zvtx->Fill(matches.at(j).at(1)/matches.at(j).at(0),matches.at(j).at(0),tzvtx[0],scalefactor);
 	      h3_resp_E_zvtx->Fill(matches.at(j).at(3)/matches.at(j).at(2),matches.at(j).at(2),tzvtx[0],scalefactor);
 	    }
+	  
 	  for(int j=0; j<matches_noz.size(); ++j)
 	    {
 	      h3_resp_pT_zvtx_noz->Fill(matches_noz.at(j).at(1)/matches_noz.at(j).at(0),matches_noz.at(j).at(0),tzvtx[0],scalefactor);
@@ -266,6 +296,8 @@ int comp_zvtx(string tag, int rn, int sampletype = 0)
   h3_teta_ptd_tz->Write();
   etapt->Write();
   temp2->Write();
+  h3_avgeta_avgpt_tz_noz->Write();
+  h3_avgeta_avgpt_tz_noz_dijet->Write();
   outfile->Write();
   outfile->Close();
   

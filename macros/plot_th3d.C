@@ -30,6 +30,9 @@ vector<TObject*> make_projections(TH3D* h, int axis, double from, double to)
   if(axis==0) projdir = "yz";
   else if(axis==1) projdir = "xz";
   else if(axis==2) projdir = "xy";
+  else if(axis==3) projdir = "zy";
+  else if(axis==4) projdir = "zx";
+  else if(axis==5) projdir = "yx";
   else return {};
 
   TH2D* proj1;
@@ -513,13 +516,21 @@ int draw_all(string histtype, vector<TObject*> wz, vector<TObject*> nz, string e
   gPad->SetBottomMargin(0.15);
   gPad->SetLeftMargin(0.15);
   gPad->SetRightMargin(0.2);
-
+  wz2->GetXaxis()->UnZoom();
+  wz2->GetYaxis()->UnZoom();
+  if(nz2)
+    {
+      nz2->GetXaxis()->UnZoom();
+      nz2->GetYaxis()->UnZoom();
+    }
+  /*
   wz2->GetXaxis()->SetRangeUser(wz2->GetXaxis()->GetBinLowEdge(FindFirstBinAboveX(wz2,0)),wz2->GetXaxis()->GetBinLowEdge(FindLastBinAboveX(wz2,0)+1));
   wz2->GetYaxis()->SetRangeUser(wz2->GetYaxis()->GetBinLowEdge(FindFirstBinAboveY(wz2,0)),wz2->GetYaxis()->GetBinLowEdge(FindLastBinAboveY(wz2,0)+1));
 
   if(nz2)nz2->GetXaxis()->SetRangeUser(nz2->GetXaxis()->GetBinLowEdge(FindFirstBinAboveX(nz2,0)),nz2->GetXaxis()->GetBinLowEdge(FindLastBinAboveX(nz2,0)+1));
   if(nz2)nz2->GetYaxis()->SetRangeUser(nz2->GetYaxis()->GetBinLowEdge(FindFirstBinAboveY(nz2,0)),nz2->GetYaxis()->GetBinLowEdge(FindLastBinAboveY(nz2,0)+1));
-
+  */
+  //wz2->GetXaxis()->SetRangeUser(wz2->GetXaxis()->GetBinLowEdge(
   gPad->SetLogz();
   wz2->GetZaxis()->SetRangeUser(1e-15,wz2->GetMaximum()*2);
   wz2->Draw("COLZ");
@@ -563,9 +574,9 @@ int get_and_draw(TH3D* hw, TH3D* hn, int axis, double from, double to, string et
 {
 
   string histtype = histbase+"_proj";
-  if(axis == 0) histtype += "x";
-  else if(axis==1) histtype += "y";
-  else if(axis==2) histtype += "z";
+  if(axis == 0 || axis==3) histtype += "x";
+  else if(axis==1 || axis==4) histtype += "y";
+  else if(axis==2 || axis==5) histtype += "z";
   else return 1;
 
   histtype += "_";
@@ -616,11 +627,16 @@ int plot_th3d(string filename)
   TH3D* hne = (TH3D*)file->Get("h3_resp_E_zvtx_noz");
 
   TH3D* teta_pt_z = (TH3D*)file->Get("h3_teta_ptd_tz");
+
+  TH3D* h3_avgeta_avgpt_tz_noz = (TH3D*)file->Get("h3_avgeta_avgpt_tz_noz");
+  TH3D* h3_avgeta_avgpt_tz_noz_dijet = (TH3D*)file->Get("h3_avgeta_avgpt_tz_noz_dijet");
   
   hw->Rebin3D(1,4,1);
   hn->Rebin3D(1,4,1);
   hwe->Rebin3D(1,4,1);
   hne->Rebin3D(1,4,1);
+  h3_avgeta_avgpt_tz_noz->Rebin3D(1,5,5);
+  h3_avgeta_avgpt_tz_noz_dijet->Rebin3D(1,5,5);
   
   TH3D* corre = (TH3D*)file->Get("noz_recoz_corrEt");
   corre->Scale(1./corre->Integral());
@@ -672,15 +688,25 @@ int plot_th3d(string filename)
   if(!hw || !hn) return 2;
   hw->Scale(1./hw->Integral());
   hn->Scale(1./hn->Integral());
+  h3_avgeta_avgpt_tz_noz->Scale(1./h3_avgeta_avgpt_tz_noz->Integral());
+  h3_avgeta_avgpt_tz_noz_dijet->Scale(1./h3_avgeta_avgpt_tz_noz_dijet->Integral());
+    
   //get_and_draw(hw, hn, 2, 60, -60, "","|z_{vtx}^{truth}|>60 cm","gt60");
   //get_and_draw(hw, hn, 2, -30, 30, "","|z_{vtx}^{truth}|<30 cm","lt30");
   //get_and_draw(hwe, hne, 2, 60, -60, "","|z_{vtx}^{truth}|>60 cm","gr60e");
   //get_and_draw(hwe, hne, 2, -30, 30, "","|z_{vtx}^{truth}|<30 cm","lt30e");  
   //get_and_draw(hw, hn, 2, -150, 150, "","|z_{vtx}^{truth}|<150 cm","lt150");
   //get_and_draw(hw,hn,2,-60,-30,"","30cm<|z_{vtx}^{truth}|<60cm","30t60",30,60);
+  /*
   get_and_draw(corre,NULL,2,-30,30,"","|z_{vtx}^{truth}|<30cm","lt30");
   get_and_draw(corre,NULL,2,75,-75,"","|z_{vtx}^{truth}|>75cm","gt75");
   get_and_draw(corre,NULL,2,-150,150,"","|z_{vtx}^{truth}|<150cm","lt150");
+  */
+  //get_and_draw(h3_avgeta_avgpt_tz_noz,h3_avgeta_avgpt_tz_noz_dijet,2,-30,30,"","|z_{vtx}^{truth}|<30cm","lt30");
+  get_and_draw(h3_avgeta_avgpt_tz_noz,h3_avgeta_avgpt_tz_noz_dijet,4,10,20,"","10 GeV<p_{T}^{reco}<20 GeV","10to20");
+  get_and_draw(h3_avgeta_avgpt_tz_noz,h3_avgeta_avgpt_tz_noz_dijet,4,35,45,"","35 GeV<p_{T}^{reco}<45 GeV","35to45");
+  get_and_draw(h3_avgeta_avgpt_tz_noz,h3_avgeta_avgpt_tz_noz_dijet,4,60,70,"","60 GeV<p_{T}^{reco}<70 GeV","60to70");
+  
   //get_and_draw(teta_pt_z,NULL,2,75,-75,"","|z_{vtx}^{truth}|<150cm","gt75");
   return 0;
 }

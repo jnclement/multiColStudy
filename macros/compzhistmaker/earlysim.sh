@@ -11,7 +11,7 @@ else
 fi
 echo "got into condor scratch dir"
 RN=$1
-TAG=20250620sim10
+TAG=20250707sim10
 #TAG=20250612sim
 #mkdir -p multicoltree
 mkdir -p ./multicolhist
@@ -23,19 +23,19 @@ echo "got all files, run code"
 if [ $RN -lt 100 ]; then
     root -b -q -l 'comp_zvtx.C("'${TAG}'",'$RN',1)'
 fi
-TAG=20250620sim30
+TAG=20250707sim30
 if [ $RN -lt 100 ]; then
     root -b -q -l 'comp_zvtx.C("'${TAG}'",'$RN',3)'
 fi
-TAG=20250620sim20
+TAG=20250707sim20
 if [ $RN -lt 100 ]; then
     root -b -q -l 'comp_zvtx.C("'${TAG}'",'$RN',2)'
 fi
-TAG=20250620sim50
+TAG=20250707sim50
 if [ $RN -lt 100 ]; then
     root -b -q -l 'comp_zvtx.C("'${TAG}'",'$RN',4)'
 fi
-TAG=20250620simmb
+TAG=20250707simmb
 root -b -q -l 'comp_zvtx.C("'${TAG}'",'$RN',0)'
 
 echo "copy file back"
